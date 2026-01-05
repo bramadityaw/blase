@@ -1,9 +1,12 @@
 [package]
-name = "blade_analyzer"
+name = "blase"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+tracing = "0.1.44"
+tracing-subscriber = "0.3.0"
+tree-sitter = "0.26.3"
 tree-sitter-blade = { path = "./crates/tree-sitter-blade" }
 tokio = { version = "1.17.0", features = ["full"] }
 tower-lsp = { version = "0.20.0", features = ["proposed"] }
