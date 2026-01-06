@@ -12,6 +12,7 @@ fn init_server(client: Client) -> Server {
 async fn main() {
     let subscriber = FmtSubscriber::builder()
         .with_max_level(Level::TRACE)
+        .with_writer(std::io::stderr)
         .finish();
 
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
