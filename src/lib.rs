@@ -7,9 +7,10 @@ use tower_lsp::{
     Client, LanguageServer,
     jsonrpc::{self, Result},
     lsp_types::{
-        Diagnostic, DiagnosticSeverity, DidOpenTextDocumentParams, InitializeParams,
-        InitializeResult, InitializedParams, MessageType, Position, Range, ServerCapabilities,
-        ServerInfo, TextDocumentItem, TextDocumentSyncCapability, TextDocumentSyncKind,
+        Diagnostic, DiagnosticSeverity, DidChangeTextDocumentParams, DidOpenTextDocumentParams,
+        InitializeParams, InitializeResult, InitializedParams, MessageType, Position, Range,
+        ServerCapabilities, ServerInfo, TextDocumentItem, TextDocumentSyncCapability,
+        TextDocumentSyncKind, Url,
     },
 };
 use tracing::{error, info};
@@ -47,6 +48,63 @@ impl LanguageServer for Server {
             }
         }
     }
+
+    async fn did_change(&self, params: DidChangeTextDocumentParams) {
+        match handle_did_change(self, &params).await {
+            Ok(_) => {}
+            Err(err) => {
+                let message = format!("failed responding to changed file: {}", err);
+                error!(message);
+                self.client.log_message(MessageType::ERROR, message).await
+            }
+        }
+    }
+}
+
+async fn handle_did_change(server: &Server, params: &DidChangeTextDocumentParams) -> Result<()> {
+    let uri = params.text_document.uri.clone();
+    let source_code = params.content_changes[0].text.clone();
+    server
+        .client
+        .log_message(MessageType::INFO, format!("File opened: {}", uri))
+        .await;
+    let tree = server.set_tree(&uri, source_code)?;
+    server
+        .client
+        .log_message(
+            MessageType::INFO,
+            format!(
+                "Tree of {}: \n {}",
+                uri.to_string(),
+                tree.root_node().to_sexp()
+            ),
+        )
+        .await;
+    Ok(())
+}
+
+async fn handle_did_open(server: &Server, params: &DidOpenTextDocumentParams) -> Result<()> {
+    let text_document = params.text_document.clone();
+    server
+        .client
+        .log_message(
+            MessageType::INFO,
+            format!("File opened: {}", &text_document.uri),
+        )
+        .await;
+    let tree = server.set_tree(&text_document.uri, text_document.text)?;
+    server
+        .client
+        .log_message(
+            MessageType::INFO,
+            format!(
+                "Tree of {}: \n {}",
+                text_document.uri.to_string(),
+                tree.root_node().to_sexp()
+            ),
+        )
+        .await;
+    Ok(())
 }
 
 impl Server {
@@ -61,39 +119,43 @@ impl Server {
             documents: Arc::new(RwLock::new(HashMap::new())),
         }
     }
-}
 
-async fn publish_diagnostics(server: &Server, document: &TextDocumentItem) -> Result<()> {
-    let diagnostics = get_diagnostics(server, document)?;
-    server
-        .client
-        .publish_diagnostics(document.uri.clone(), diagnostics, Some(document.version))
-        .await;
-    Ok(())
-}
+    pub fn get_tree(&self, uri: Url) -> Option<Tree> {
+        let uri = uri.to_string();
+        let documents = self
+            .documents
+            .write()
+            .map_err(|err| {
+                error!("Failed to open document store: {}", err);
+                jsonrpc::Error::internal_error()
+            })
+            .ok()?;
+        documents.get(&uri).cloned()
+    }
 
-fn get_diagnostics(server: &Server, document: &TextDocumentItem) -> Result<Vec<Diagnostic>> {
-    let mut parser = server.parser.write().map_err(|err| {
-        error!("Failed to get on parser: {}", err);
-        jsonrpc::Error::internal_error()
-    })?;
-    let uri = document.uri.to_string();
-    let tree = {
-        let mut documents = server.documents.write().map_err(|err| {
+    pub fn set_tree(&self, uri: &Url, source_code: impl AsRef<[u8]>) -> Result<Tree> {
+        let mut parser = self.parser.write().map_err(|err| {
+            error!("Failed to write-lock parser: {}", err);
+            jsonrpc::Error::internal_error()
+        })?;
+        let uri = uri.to_string();
+        let mut documents = self.documents.write().map_err(|err| {
             error!("Failed to open document store: {}", err);
             jsonrpc::Error::internal_error()
         })?;
         let old_tree = documents.get(&uri);
         // TODO: call old_tree.edit() with appropriate InputEdit
         let tree = parser
-            .parse(document.text.clone(), old_tree)
+            .parse(source_code.as_ref(), old_tree)
             .expect("Language is set on server creation");
-        documents
-            .insert(uri, tree)
-            .expect("Old tree has been getted before")
-    };
+        documents.insert(uri, tree.clone());
+        Ok(tree)
+    }
+}
 
-    Ok(diagnose_syntax(&tree, document.text.as_bytes()))
+fn get_diagnostics(server: &Server, uri: &Url, source_code: String) -> Result<Vec<Diagnostic>> {
+    let tree = server.set_tree(uri, &source_code)?;
+    Ok(diagnose_syntax(&tree, source_code.as_bytes()))
 }
 
 /// Convert a tree-sitter node to an LSP range
@@ -184,18 +246,6 @@ fn diagnose_syntax(tree: &Tree, source_code: &[u8]) -> Vec<Diagnostic> {
     }
 
     diagnostics
-}
-
-async fn handle_did_open(server: &Server, params: &DidOpenTextDocumentParams) -> Result<()> {
-    let text_document = params.text_document.clone();
-    server
-        .client
-        .log_message(
-            MessageType::INFO,
-            format!("File opened: {}", &text_document.uri),
-        )
-        .await;
-    publish_diagnostics(server, &text_document).await
 }
 
 fn server_capabilities() -> ServerCapabilities {
