@@ -1,4 +1,5 @@
 mod document_data;
+mod handler;
 mod line_index;
 mod lsp_to_tree;
 mod server;

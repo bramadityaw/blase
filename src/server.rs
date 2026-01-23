@@ -7,18 +7,18 @@ use tower_lsp::{
     lsp_types::{
         self, ClientCapabilities, DidChangeTextDocumentParams, DidOpenTextDocumentParams,
         InitializeParams, InitializeResult, MessageType, PositionEncodingKind, ServerCapabilities,
-        ServerInfo, TextDocumentItem, TextDocumentSyncKind, Url,
+        TextDocumentSyncKind, Url,
     },
 };
 use tree_sitter::Parser;
 
-use crate::{document_data::DocumentData, line_index::PositionEncoding};
+use crate::{document_data::DocumentData, handler, line_index::PositionEncoding};
 
 pub struct Server {
-    caps: RwLock<ClientCapabilities>,
-    client: Client,
-    documents: Arc<RwLock<HashMap<Url, DocumentData>>>,
-    parser: Arc<Mutex<Parser>>,
+    pub caps: RwLock<ClientCapabilities>,
+    pub client: Client,
+    pub documents: Arc<RwLock<HashMap<Url, DocumentData>>>,
+    pub parser: Arc<Mutex<Parser>>,
 }
 
 fn init_blade_parser() -> Parser {
@@ -40,9 +40,7 @@ Mismatched versions:
     parser
 }
 
-/// blase aims to support the following methods:
-/// - Goto Definition
-fn server_capabilities() -> ServerCapabilities {
+pub fn server_capabilities() -> ServerCapabilities {
     ServerCapabilities {
         position_encoding: Some(PositionEncodingKind::UTF8),
         text_document_sync: Some(lsp_types::TextDocumentSyncCapability::Kind(
@@ -87,23 +85,7 @@ fn server_capabilities() -> ServerCapabilities {
 #[tower_lsp::async_trait]
 impl LanguageServer for Server {
     async fn initialize(&self, params: InitializeParams) -> jsonrpc::Result<InitializeResult> {
-        let server_info = ServerInfo {
-            name: "blase".into(),
-            version: Some(env!("CARGO_PKG_VERSION").to_string()),
-        };
-
-        {
-            let mut caps = self.caps.write().await;
-            *caps = params.capabilities;
-        }
-
-        let result = InitializeResult {
-            capabilities: server_capabilities(),
-            server_info: Some(server_info),
-            offset_encoding: None,
-        };
-
-        Ok(result)
+        handler::handle_initialize(self, params).await
     }
 
     async fn shutdown(&self) -> jsonrpc::Result<()> {
@@ -111,57 +93,11 @@ impl LanguageServer for Server {
     }
 
     async fn did_open(&self, params: DidOpenTextDocumentParams) {
-        let DidOpenTextDocumentParams {
-            text_document:
-                TextDocumentItem {
-                    uri,
-                    language_id: _,
-                    version,
-                    text,
-                },
-        } = params;
-        let mut documents = self.documents.write().await;
-        let mut parser = self.parser.lock().await;
-        let tree = parser
-            .parse(&text, None)
-            .expect("Language has been set at Server construction");
-        let document = DocumentData {
-            data: text.into_bytes(),
-            tree,
-            version,
-        };
-        let msg = format!(
-            "Opened {}: {}",
-            uri.as_str(),
-            document.tree.root_node().to_sexp()
-        );
-        self.info_client(&msg).await;
-        documents.insert(uri, document);
+        handler::handle_did_open(self, params).await
     }
 
     async fn did_change(&self, params: DidChangeTextDocumentParams) {
-        let uri = params.text_document.uri;
-        let mut documents = self.documents.write().await;
-        if let Some(document) = documents.get_mut(&uri) {
-            let new_contents = crate::util::apply_document_changes(
-                self.negotiated_encoding().await,
-                std::str::from_utf8(&document.data).unwrap(),
-                params.content_changes,
-            )
-            .into_bytes();
-            let mut parser = self.parser.lock().await;
-            // Ideally, we also pass in the old tree.
-            let tree = parser
-                .parse(new_contents.as_slice(), None)
-                .expect("Language has been set at Server construction");
-            let msg = format!("Changed {}: {}", uri.as_str(), tree.root_node().to_sexp());
-            self.info_client(&msg).await;
-            *document = DocumentData {
-                version: params.text_document.version,
-                data: new_contents,
-                tree,
-            };
-        }
+        handler::handle_did_change(self, params).await
     }
 }
 
