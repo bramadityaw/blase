@@ -8,7 +8,7 @@ use tower_lsp::{
 };
 use tree_sitter::{Query, QueryCursor, StreamingIterator};
 
-use crate::{Server, document_data::DocumentData};
+use crate::{ServerState, document_data::DocumentData};
 
 fn syntax_errors(doc: &DocumentData) -> Vec<Diagnostic> {
     const ERROR_QUERY: &'static str = "(ERROR) @error";
@@ -51,7 +51,7 @@ fn syntax_errors(doc: &DocumentData) -> Vec<Diagnostic> {
         })
 }
 
-pub async fn handle_did_save(server: &Server, params: DidSaveTextDocumentParams) {
+pub async fn handle_did_save(server: &ServerState, params: DidSaveTextDocumentParams) {
     let DidSaveTextDocumentParams {
         text_document: TextDocumentIdentifier { uri },
         ..
@@ -68,7 +68,7 @@ pub async fn handle_did_save(server: &Server, params: DidSaveTextDocumentParams)
     };
 }
 
-pub async fn handle_did_change(server: &Server, params: DidChangeTextDocumentParams) {
+pub async fn handle_did_change(server: &ServerState, params: DidChangeTextDocumentParams) {
     let uri = params.text_document.uri;
     let mut documents = server.documents.write().await;
     if let Some(document) = documents.get_mut(&uri) {
@@ -98,7 +98,7 @@ pub async fn handle_did_change(server: &Server, params: DidChangeTextDocumentPar
     }
 }
 
-pub async fn handle_did_open(server: &Server, params: DidOpenTextDocumentParams) {
+pub async fn handle_did_open(server: &ServerState, params: DidOpenTextDocumentParams) {
     let DidOpenTextDocumentParams {
         text_document:
             TextDocumentItem {
@@ -122,7 +122,7 @@ pub async fn handle_did_open(server: &Server, params: DidOpenTextDocumentParams)
 }
 
 pub async fn handle_initialize(
-    server: &Server,
+    server: &ServerState,
     params: InitializeParams,
 ) -> jsonrpc::Result<InitializeResult> {
     let server_info = ServerInfo {

@@ -76,7 +76,7 @@ pub fn server_capabilities() -> ServerCapabilities {
 }
 
 #[tower_lsp::async_trait]
-impl LanguageServer for Server {
+impl LanguageServer for ServerState {
     async fn initialize(&self, params: InitializeParams) -> jsonrpc::Result<InitializeResult> {
         handler::handle_initialize(self, params).await
     }
@@ -98,7 +98,7 @@ impl LanguageServer for Server {
     }
 }
 
-pub struct Server {
+pub struct ServerState {
     pub caps: RwLock<ClientCapabilities>,
     pub client: Client,
     pub documents: Arc<RwLock<HashMap<Url, DocumentData>>>,
@@ -109,7 +109,7 @@ pub struct ServerSnapshot {
     pub documents: Arc<RwLock<HashMap<Url, DocumentData>>>,
 }
 
-impl Server {
+impl ServerState {
     pub fn new(client: Client) -> Self {
         Self {
             client,
