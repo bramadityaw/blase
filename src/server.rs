@@ -6,20 +6,13 @@ use tower_lsp::{
     Client, LanguageServer, jsonrpc,
     lsp_types::{
         self, ClientCapabilities, DidChangeTextDocumentParams, DidOpenTextDocumentParams,
-        InitializeParams, InitializeResult, MessageType, PositionEncodingKind, ServerCapabilities,
-        TextDocumentSyncKind, Url,
+        DidSaveTextDocumentParams, InitializeParams, InitializeResult, MessageType,
+        PositionEncodingKind, ServerCapabilities, TextDocumentSyncKind, Url,
     },
 };
 use tree_sitter::Parser;
 
 use crate::{document_data::DocumentData, handler, line_index::PositionEncoding};
-
-pub struct Server {
-    pub caps: RwLock<ClientCapabilities>,
-    pub client: Client,
-    pub documents: Arc<RwLock<HashMap<Url, DocumentData>>>,
-    pub parser: Arc<Mutex<Parser>>,
-}
 
 fn init_blade_parser() -> Parser {
     let mut parser = Parser::new();
@@ -99,6 +92,21 @@ impl LanguageServer for Server {
     async fn did_change(&self, params: DidChangeTextDocumentParams) {
         handler::handle_did_change(self, params).await
     }
+
+    async fn did_save(&self, params: DidSaveTextDocumentParams) {
+        handler::handle_did_save(self, params).await
+    }
+}
+
+pub struct Server {
+    pub caps: RwLock<ClientCapabilities>,
+    pub client: Client,
+    pub documents: Arc<RwLock<HashMap<Url, DocumentData>>>,
+    pub parser: Arc<Mutex<Parser>>,
+}
+
+pub struct ServerSnapshot {
+    pub documents: Arc<RwLock<HashMap<Url, DocumentData>>>,
 }
 
 impl Server {
@@ -109,6 +117,11 @@ impl Server {
             parser: Arc::new(Mutex::new(init_blade_parser())),
             caps: RwLock::new(ClientCapabilities::default()),
         }
+    }
+
+    pub fn snapshot(&self) -> ServerSnapshot {
+        let documents = Arc::clone(&self.documents);
+        ServerSnapshot { documents }
     }
 
     pub async fn info_client(&self, message: &str) {
@@ -132,5 +145,12 @@ impl Server {
         }
 
         PositionEncoding::Wide(WideEncoding::Utf16)
+    }
+}
+
+impl ServerSnapshot {
+    pub async fn get_document(&self, uri: &Url) -> Option<DocumentData> {
+        let documents = self.documents.read().await;
+        documents.get(uri).cloned()
     }
 }
