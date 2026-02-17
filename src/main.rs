@@ -1,11 +1,11 @@
-use blase::Server;
+use blase::ServerState;
 use tokio;
 use tower_lsp::{Client, LspService, Server as LspServer};
 use tracing::Level;
 use tracing_subscriber::FmtSubscriber;
 
-fn init_server(client: Client) -> Server {
-    Server::new(client)
+fn init_server(client: Client) -> ServerState {
+    ServerState::new(client)
 }
 
 #[tokio::main]
