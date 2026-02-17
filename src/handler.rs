@@ -65,9 +65,7 @@ pub fn handle_did_save(
     let snap = server.snapshot();
     if let Some(doc) = snap.get_document(&uri) {
         let diagnostics = syntax_errors(&doc);
-        if !diagnostics.is_empty() {
-            server.publish_diagnostics(uri, diagnostics, None);
-        }
+        server.publish_diagnostics(uri, diagnostics, None);
     };
 
     ControlFlow::Continue(())
@@ -100,9 +98,7 @@ pub fn handle_did_change(
     }
     if let Some(doc) = server.snapshot().get_document(&uri) {
         let diagnostics = syntax_errors(&doc);
-        if !diagnostics.is_empty() {
-            server.publish_diagnostics(uri, diagnostics, None);
-        }
+        server.publish_diagnostics(uri, diagnostics, None);
     };
     ControlFlow::Continue(())
 }
