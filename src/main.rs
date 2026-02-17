@@ -1,12 +1,5 @@
-use blase::ServerState;
-use tokio;
-use tower_lsp::{Client, LspService, Server as LspServer};
 use tracing::Level;
 use tracing_subscriber::FmtSubscriber;
-
-fn init_server(client: Client) -> ServerState {
-    ServerState::new(client)
-}
 
 #[tokio::main]
 async fn main() {
@@ -17,9 +10,21 @@ async fn main() {
 
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
 
-    let stdin = tokio::io::stdin();
-    let stdout = tokio::io::stdout();
+    // Prefer truly asynchronous piped stdin/stdout without blocking tasks.
+    #[cfg(unix)]
+    let (stdin, stdout) = (
+        async_lsp::stdio::PipeStdin::lock_tokio().unwrap(),
+        async_lsp::stdio::PipeStdout::lock_tokio().unwrap(),
+    );
+    // Fallback to spawn blocking read/write otherwise.
+    #[cfg(not(unix))]
+    let (stdin, stdout) = (
+        tokio_util::compat::TokioAsyncReadCompatExt::compat(tokio::io::stdin()),
+        tokio_util::compat::TokioAsyncWriteCompatExt::compat_write(tokio::io::stdout()),
+    );
 
-    let (service, socket) = LspService::new(init_server);
-    LspServer::new(stdin, stdout, socket).serve(service).await;
+    if let Err(e) = blase::server::run_server(stdin, stdout).await {
+        tracing::error!("Failed running server: {e}");
+        std::process::exit(-1);
+    };
 }

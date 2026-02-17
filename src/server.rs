@@ -1,18 +1,62 @@
-use std::{collections::HashMap, sync::Arc};
-
-use line_index::WideEncoding;
-use tokio::sync::{Mutex, RwLock};
-use tower_lsp::{
-    Client, LanguageServer, jsonrpc,
-    lsp_types::{
-        self, ClientCapabilities, DidChangeTextDocumentParams, DidOpenTextDocumentParams,
-        DidSaveTextDocumentParams, InitializeParams, InitializeResult, MessageType,
-        PositionEncodingKind, ServerCapabilities, TextDocumentSyncKind, Url,
-    },
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex, RwLock},
 };
+
+use async_lsp::{
+    ClientSocket,
+    client_monitor::ClientProcessMonitorLayer,
+    concurrency::ConcurrencyLayer,
+    lsp_types::{
+        self, ClientCapabilities, PositionEncodingKind, ServerCapabilities, TextDocumentSyncKind,
+        Url,
+    },
+    panic::CatchUnwindLayer,
+    router::Router,
+    server::LifecycleLayer,
+    tracing::TracingLayer,
+};
+use futures::{AsyncRead, AsyncWrite};
+use line_index::WideEncoding;
+use tower::ServiceBuilder;
 use tree_sitter::Parser;
 
 use crate::{document_data::DocumentData, handler, line_index::PositionEncoding};
+
+pub fn run_server(
+    input: impl AsyncRead,
+    output: impl AsyncWrite,
+) -> impl Future<Output = async_lsp::Result<()>> {
+    let (server, _) = async_lsp::MainLoop::new_server(|client| {
+        let mut router = Router::new(ServerState::new(client.clone()));
+
+        // Ignore any unsupported notifications;
+        router.unhandled_notification(|_, notif| {
+            tracing::info!(notif.method, "ignored unknown notification");
+            std::ops::ControlFlow::Continue(())
+        });
+
+        // Requests
+        router.request::<lsp_types::request::Initialize, _>(handler::handle_initialize);
+
+        // Notifications
+        router
+            .notification::<lsp_types::notification::DidChangeTextDocument>(
+                handler::handle_did_change,
+            )
+            .notification::<lsp_types::notification::DidOpenTextDocument>(handler::handle_did_open)
+            .notification::<lsp_types::notification::DidSaveTextDocument>(handler::handle_did_save);
+
+        ServiceBuilder::new()
+            .layer(TracingLayer::default())
+            .layer(LifecycleLayer::default())
+            .layer(CatchUnwindLayer::default())
+            .layer(ConcurrencyLayer::default())
+            .layer(ClientProcessMonitorLayer::new(client))
+            .service(router)
+    });
+    server.run_buffered(input, output)
+}
 
 fn init_blade_parser() -> Parser {
     let mut parser = Parser::new();
@@ -75,32 +119,9 @@ pub fn server_capabilities() -> ServerCapabilities {
     }
 }
 
-#[tower_lsp::async_trait]
-impl LanguageServer for ServerState {
-    async fn initialize(&self, params: InitializeParams) -> jsonrpc::Result<InitializeResult> {
-        handler::handle_initialize(self, params).await
-    }
-
-    async fn shutdown(&self) -> jsonrpc::Result<()> {
-        Ok(())
-    }
-
-    async fn did_open(&self, params: DidOpenTextDocumentParams) {
-        handler::handle_did_open(self, params).await
-    }
-
-    async fn did_change(&self, params: DidChangeTextDocumentParams) {
-        handler::handle_did_change(self, params).await
-    }
-
-    async fn did_save(&self, params: DidSaveTextDocumentParams) {
-        handler::handle_did_save(self, params).await
-    }
-}
-
 pub struct ServerState {
     pub caps: RwLock<ClientCapabilities>,
-    pub client: Client,
+    pub client: ClientSocket,
     pub documents: Arc<RwLock<HashMap<Url, DocumentData>>>,
     pub parser: Arc<Mutex<Parser>>,
 }
@@ -110,7 +131,7 @@ pub struct ServerSnapshot {
 }
 
 impl ServerState {
-    pub fn new(client: Client) -> Self {
+    pub fn new(client: ClientSocket) -> Self {
         Self {
             client,
             documents: Arc::new(RwLock::new(HashMap::new())),
@@ -124,13 +145,8 @@ impl ServerState {
         ServerSnapshot { documents }
     }
 
-    pub async fn info_client(&self, message: &str) {
-        tracing::info!("{}", message);
-        self.client.log_message(MessageType::ERROR, message).await
-    }
-
-    pub async fn negotiated_encoding(&self) -> PositionEncoding {
-        let caps = self.caps.read().await;
+    pub fn negotiated_encoding(&self) -> PositionEncoding {
+        let caps = self.caps.read().expect("poison");
         let client_encodings = match &caps.general {
             Some(general) => general.position_encodings.as_deref().unwrap_or_default(),
             None => &[],
@@ -149,8 +165,8 @@ impl ServerState {
 }
 
 impl ServerSnapshot {
-    pub async fn get_document(&self, uri: &Url) -> Option<DocumentData> {
-        let documents = self.documents.read().await;
+    pub fn get_document(&self, uri: &Url) -> Option<DocumentData> {
+        let documents = self.documents.read().expect("poison");
         documents.get(uri).cloned()
     }
 }

@@ -1,9 +1,8 @@
 use std::{ops::Range, sync::Arc};
 
 use crate::line_index::{LineEndings, LineIndex, PositionEncoding};
+use async_lsp::lsp_types::{self, Position, TextDocumentContentChangeEvent};
 use line_index::{LineCol, TextRange, TextSize, WideLineCol};
-use tower_lsp::lsp_types::{self, Position, TextDocumentContentChangeEvent};
-use tree_sitter::{InputEdit, Tree};
 
 fn offset(line_index: &LineIndex, position: Position) -> anyhow::Result<TextSize> {
     let line_col = match line_index.encoding {
