@@ -1,7 +1,6 @@
 mod document_data;
 mod handler;
 mod line_index;
-mod lsp_to_tree;
-mod server;
+mod lsp;
+pub mod server;
 mod util;
-pub use server::ServerState;

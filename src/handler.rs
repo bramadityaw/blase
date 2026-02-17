@@ -1,14 +1,17 @@
-use tower_lsp::{
-    jsonrpc,
+use std::ops::ControlFlow;
+
+use async_lsp::{
+    LanguageClient, ResponseError,
     lsp_types::{
         self, Diagnostic, DiagnosticSeverity, DidChangeTextDocumentParams,
         DidOpenTextDocumentParams, DidSaveTextDocumentParams, InitializeParams, InitializeResult,
-        ServerInfo, TextDocumentIdentifier, TextDocumentItem,
+        PublishDiagnosticsParams, ServerInfo, TextDocumentIdentifier, TextDocumentItem,
     },
 };
+use futures::future::BoxFuture;
 use tree_sitter::{Query, QueryCursor, StreamingIterator};
 
-use crate::{ServerState, document_data::DocumentData};
+use crate::{document_data::DocumentData, server::ServerState};
 
 fn syntax_errors(doc: &DocumentData) -> Vec<Diagnostic> {
     const ERROR_QUERY: &'static str = "(ERROR) @error";
@@ -51,54 +54,63 @@ fn syntax_errors(doc: &DocumentData) -> Vec<Diagnostic> {
         })
 }
 
-pub async fn handle_did_save(server: &ServerState, params: DidSaveTextDocumentParams) {
+pub fn handle_did_save(
+    server: &mut ServerState,
+    params: DidSaveTextDocumentParams,
+) -> ControlFlow<async_lsp::Result<()>> {
     let DidSaveTextDocumentParams {
         text_document: TextDocumentIdentifier { uri },
-        ..
+        text,
     } = params;
     let snap = server.snapshot();
-    if let Some(doc) = snap.get_document(&uri).await {
+    if let Some(doc) = snap.get_document(&uri) {
         let diagnostics = syntax_errors(&doc);
         if !diagnostics.is_empty() {
-            server
-                .client
-                .publish_diagnostics(uri, diagnostics, Some(doc.version))
-                .await
+            server.publish_diagnostics(uri, diagnostics, None);
         }
     };
+
+    ControlFlow::Continue(())
 }
 
-pub async fn handle_did_change(server: &ServerState, params: DidChangeTextDocumentParams) {
+pub fn handle_did_change(
+    server: &mut ServerState,
+    params: DidChangeTextDocumentParams,
+) -> ControlFlow<async_lsp::Result<()>> {
     let uri = params.text_document.uri;
-    let mut documents = server.documents.write().await;
-    if let Some(document) = documents.get_mut(&uri) {
-        let new_contents = crate::util::apply_document_changes(
-            server.negotiated_encoding().await,
-            std::str::from_utf8(&document.data).unwrap(),
-            params.content_changes,
-        )
-        .into_bytes();
-        let mut parser = server.parser.lock().await;
-        // Ideally, we also pass in the old tree.
-        let tree = parser
-            .parse(new_contents.as_slice(), None)
-            .expect("Language has been set at Server construction");
-        *document = DocumentData {
-            version: params.text_document.version,
-            data: new_contents,
-            tree,
-        };
-        let diagnostics = syntax_errors(&document);
-        if !diagnostics.is_empty() {
-            server
-                .client
-                .publish_diagnostics(uri, diagnostics, Some(params.text_document.version))
-                .await
+    {
+        let mut documents = server.documents.write().expect("poison");
+        if let Some(document) = documents.get_mut(&uri) {
+            let new_contents = crate::util::apply_document_changes(
+                server.negotiated_encoding(),
+                std::str::from_utf8(&document.data).unwrap(),
+                params.content_changes,
+            )
+            .into_bytes();
+            let mut parser = server.parser.lock().expect("poison");
+            let tree = parser
+                .parse(new_contents.as_slice(), None)
+                .expect("Language has been set at Server construction");
+            *document = DocumentData {
+                version: params.text_document.version,
+                data: new_contents,
+                tree,
+            };
         }
     }
+    if let Some(doc) = server.snapshot().get_document(&uri) {
+        let diagnostics = syntax_errors(&doc);
+        if !diagnostics.is_empty() {
+            server.publish_diagnostics(uri, diagnostics, None);
+        }
+    };
+    ControlFlow::Continue(())
 }
 
-pub async fn handle_did_open(server: &ServerState, params: DidOpenTextDocumentParams) {
+pub fn handle_did_open(
+    server: &mut ServerState,
+    params: DidOpenTextDocumentParams,
+) -> ControlFlow<async_lsp::Result<()>> {
     let DidOpenTextDocumentParams {
         text_document:
             TextDocumentItem {
@@ -108,8 +120,8 @@ pub async fn handle_did_open(server: &ServerState, params: DidOpenTextDocumentPa
                 text,
             },
     } = params;
-    let mut documents = server.documents.write().await;
-    let mut parser = server.parser.lock().await;
+    let mut documents = server.documents.write().expect("poison");
+    let mut parser = server.parser.lock().expect("poison");
     let tree = parser
         .parse(&text, None)
         .expect("Language has been set at Server construction");
@@ -119,27 +131,27 @@ pub async fn handle_did_open(server: &ServerState, params: DidOpenTextDocumentPa
         version,
     };
     documents.insert(uri, document);
+    ControlFlow::Continue(())
 }
 
-pub async fn handle_initialize(
-    server: &ServerState,
+pub fn handle_initialize(
+    server: &mut ServerState,
     params: InitializeParams,
-) -> jsonrpc::Result<InitializeResult> {
+) -> BoxFuture<'static, Result<InitializeResult, ResponseError>> {
     let server_info = ServerInfo {
         name: "blase".into(),
         version: Some(env!("CARGO_PKG_VERSION").to_string()),
     };
 
     {
-        let mut caps = server.caps.write().await;
+        let mut caps = server.caps.write().expect("poison");
         *caps = params.capabilities;
     }
 
     let result = InitializeResult {
         capabilities: crate::server::server_capabilities(),
         server_info: Some(server_info),
-        offset_encoding: None,
     };
 
-    Ok(result)
+    Box::pin(async move { Ok(result) })
 }
