@@ -1,24 +1,28 @@
 use std::ops::ControlFlow;
 
 use async_lsp::{
-    LanguageClient, ResponseError,
+    ErrorCode, ResponseError,
     lsp_types::{
         self, Diagnostic, DiagnosticSeverity, DidChangeTextDocumentParams,
         DidOpenTextDocumentParams, DidSaveTextDocumentParams, InitializeParams, InitializeResult,
-        PublishDiagnosticsParams, ServerInfo, TextDocumentIdentifier, TextDocumentItem,
+        InitializedParams, ServerInfo, TextDocumentIdentifier, TextDocumentItem,
     },
 };
 use futures::future::BoxFuture;
 use tree_sitter::{Query, QueryCursor, StreamingIterator};
 
-use crate::{document_data::DocumentData, server::ServerState};
+use crate::{
+    db::{BladeDocument, parse_document},
+    document_data::DocumentData,
+    server::ServerState,
+};
 
-fn syntax_errors(doc: &DocumentData) -> Vec<Diagnostic> {
+fn syntax_errors(doc: &BladeDocument, contents: &str) -> Vec<Diagnostic> {
     const ERROR_QUERY: &'static str = "(ERROR) @error";
     Query::new(&doc.tree.language(), ERROR_QUERY)
         .map(|query| {
             let mut cursor = QueryCursor::new();
-            let mut matches = cursor.matches(&query, doc.tree.root_node(), doc.data.as_slice());
+            let mut matches = cursor.matches(&query, doc.tree.root_node(), contents.as_bytes());
 
             let mut diags = Vec::new();
             while let Some(m) = matches.next() {
@@ -60,13 +64,15 @@ pub fn handle_did_save(
 ) -> ControlFlow<async_lsp::Result<()>> {
     let DidSaveTextDocumentParams {
         text_document: TextDocumentIdentifier { uri },
-        text,
+        ..
     } = params;
-    let snap = server.snapshot();
-    if let Some(doc) = snap.get_document(&uri) {
-        let diagnostics = syntax_errors(&doc);
-        server.publish_diagnostics(uri, diagnostics, None);
-    };
+
+    let analysis = server.snapshot().analysis;
+    let source = analysis.source_file(&uri);
+    let contents = analysis.with_db(|db| source.contents(db).clone());
+    let parsed_document = analysis.with_db(|db| parse_document(db, source));
+    let diagnostics = syntax_errors(&parsed_document, &contents);
+    server.publish_diagnostics(uri, diagnostics, None);
 
     ControlFlow::Continue(())
 }
@@ -75,31 +81,25 @@ pub fn handle_did_change(
     server: &mut ServerState,
     params: DidChangeTextDocumentParams,
 ) -> ControlFlow<async_lsp::Result<()>> {
-    let uri = params.text_document.uri;
-    {
-        let mut documents = server.documents.write().expect("poison");
-        if let Some(document) = documents.get_mut(&uri) {
-            let new_contents = crate::util::apply_document_changes(
-                server.negotiated_encoding(),
-                std::str::from_utf8(&document.data).unwrap(),
-                params.content_changes,
-            )
-            .into_bytes();
-            let mut parser = server.parser.lock().expect("poison");
-            let tree = parser
-                .parse(new_contents.as_slice(), None)
-                .expect("Language has been set at Server construction");
-            *document = DocumentData {
-                version: params.text_document.version,
-                data: new_contents,
-                tree,
-            };
-        }
+    let url = params.text_document.uri;
+    if let Some(mut document) = server.documents.get_mut(&url) {
+        let new_contents = crate::util::apply_document_changes(
+            server.negotiated_encoding(),
+            &document.contents,
+            params.content_changes,
+        );
+        let db = server.analysis_host.raw_database_mut();
+        db.set_source_file(url.clone(), &new_contents);
+        document.contents = new_contents;
     }
-    if let Some(doc) = server.snapshot().get_document(&uri) {
-        let diagnostics = syntax_errors(&doc);
-        server.publish_diagnostics(uri, diagnostics, None);
-    };
+
+    let analysis = server.snapshot().analysis;
+    let source = analysis.source_file(&url);
+    let contents = analysis.with_db(|db| source.contents(db).clone());
+    let parsed_document = analysis.with_db(|db| parse_document(db, source));
+    let diagnostics = syntax_errors(&parsed_document, &contents);
+    server.publish_diagnostics(url, diagnostics, None);
+
     ControlFlow::Continue(())
 }
 
@@ -112,21 +112,24 @@ pub fn handle_did_open(
             TextDocumentItem {
                 uri,
                 language_id: _,
-                version,
+                version: _,
                 text,
             },
     } = params;
-    let mut documents = server.documents.write().expect("poison");
-    let mut parser = server.parser.lock().expect("poison");
-    let tree = parser
-        .parse(&text, None)
-        .expect("Language has been set at Server construction");
-    let document = DocumentData {
-        data: text.into_bytes(),
-        tree,
-        version,
-    };
-    documents.insert(uri, document);
+    let document = DocumentData { contents: text };
+    server.documents.insert(uri, document);
+    ControlFlow::Continue(())
+}
+
+pub fn handle_initialized(
+    server: &mut ServerState,
+    _params: InitializedParams,
+) -> ControlFlow<async_lsp::Result<()>> {
+    let token = "blase/load_workspace".to_string();
+    let progress_sender = server.with_report_progress(token);
+
+    server.load_workspace(progress_sender);
+
     ControlFlow::Continue(())
 }
 
@@ -139,9 +142,32 @@ pub fn handle_initialize(
         version: Some(env!("CARGO_PKG_VERSION").to_string()),
     };
 
-    {
-        let mut caps = server.caps.write().expect("poison");
-        *caps = params.capabilities;
+    match params.workspace_folders {
+        None => {
+            tracing::info!(
+                "using current directory: {}",
+                server
+                    .config
+                    .read()
+                    .expect("poison")
+                    .workspace_folder
+                    .uri
+                    .to_string()
+            );
+        }
+        Some(folders) => {
+            if folders.len() > 1 {
+                let err = ResponseError::new(
+                    ErrorCode::REQUEST_FAILED,
+                    "Multiple workspaces not yet supported",
+                );
+                return Box::pin(async move { Err(err) });
+            }
+            let mut config = server.config.write().expect("poison");
+            config.capabilities = params.capabilities;
+            let workspace_folder = folders[0].clone();
+            config.workspace_folder = workspace_folder;
+        }
     }
 
     let result = InitializeResult {
