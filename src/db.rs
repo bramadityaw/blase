@@ -4,10 +4,11 @@ use std::{
     sync::{Arc, LazyLock},
 };
 
-use async_lsp::lsp_types;
+use async_lsp::lsp_types::{self, Diagnostic, DiagnosticSeverity};
 use dashmap::DashMap;
 use salsa::{Database as Db, Setter};
 use smol_str::SmolStr;
+use tree_sitter::{Query, QueryCursor, StreamingIterator};
 
 #[salsa::db]
 #[derive(Clone, Default)]
@@ -74,6 +75,50 @@ pub struct ComponentId<'db> {
 #[derive(Clone)]
 pub struct BladeDocument {
     pub tree: tree_sitter::Tree,
+}
+
+impl BladeDocument {
+    pub fn syntax_errors(&self, contents: &str) -> Vec<Diagnostic> {
+        const ERROR_QUERY: &'static str = "(ERROR) @error";
+        Query::new(&self.tree.language(), ERROR_QUERY)
+            .map(|query| {
+                let mut cursor = QueryCursor::new();
+                let mut matches =
+                    cursor.matches(&query, self.tree.root_node(), contents.as_bytes());
+
+                let mut diags = Vec::new();
+                while let Some(m) = matches.next() {
+                    for capture in m.captures.iter() {
+                        let node = capture.node;
+                        diags.push(Diagnostic {
+                            range: lsp_types::Range {
+                                start: lsp_types::Position {
+                                    line: node.start_position().row as u32,
+                                    character: node.start_position().column as u32,
+                                },
+                                end: lsp_types::Position {
+                                    line: node.end_position().row as u32,
+                                    character: node.end_position().column as u32,
+                                },
+                            },
+                            severity: Some(DiagnosticSeverity::ERROR),
+                            code: None,
+                            code_description: None,
+                            source: None,
+                            message: "Syntax error!".to_string(),
+                            related_information: None,
+                            tags: None,
+                            data: None,
+                        });
+                    }
+                }
+                diags
+            })
+            .unwrap_or_else(|e| {
+                tracing::error!("Error querying for syntax errors: {}", e);
+                Vec::new()
+            })
+    }
 }
 
 impl Debug for BladeDocument {

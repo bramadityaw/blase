@@ -67,6 +67,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "async-lsp",
+ "crossbeam-channel",
  "dashmap",
  "futures",
  "line-index",

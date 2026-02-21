@@ -1,5 +1,5 @@
 use std::{
-    sync::{Arc, RwLock, mpsc},
+    sync::{Arc, RwLock},
     thread,
 };
 
@@ -9,19 +9,18 @@ use async_lsp::{
     concurrency::ConcurrencyLayer,
     lsp_types::{
         self, ClientCapabilities, NumberOrString, PositionEncodingKind, ProgressParams,
-        ProgressParamsValue, ServerCapabilities, TextDocumentSyncKind, Url, WorkDoneProgress,
-        WorkDoneProgressBegin, WorkDoneProgressEnd, WorkDoneProgressReport, WorkspaceFolder,
+        ProgressParamsValue, ServerCapabilities, TextDocumentSyncKind, Url, WorkspaceFolder,
     },
     panic::CatchUnwindLayer,
     router::Router,
     server::LifecycleLayer,
     tracing::TracingLayer,
 };
+use crossbeam_channel::{Sender, unbounded};
 use dashmap::DashMap;
 use futures::{AsyncRead, AsyncWrite};
 use line_index::WideEncoding;
 use tower::ServiceBuilder;
-use walkdir::WalkDir;
 
 use crate::{
     analysis::{Analysis, AnalysisHost},
@@ -144,8 +143,8 @@ impl ServerState {
         }
     }
 
-    pub fn with_report_progress(&self, token: String) -> mpsc::Sender<ProgressParamsValue> {
-        let (tx, rx) = mpsc::channel();
+    pub fn with_report_progress(&self, token: String) -> Sender<ProgressParamsValue> {
+        let (tx, rx) = unbounded();
         let mut socket = self.client.clone();
 
         thread::spawn(move || {
@@ -160,68 +159,6 @@ impl ServerState {
         });
 
         tx
-    }
-
-    pub fn load_workspace(&mut self, progress_sender: mpsc::Sender<ProgressParamsValue>) {
-        // Get the workspace
-        let workspace = self
-            .config
-            .read()
-            .expect("poison")
-            .workspace_folder
-            .uri
-            .to_file_path()
-            .unwrap();
-
-        tracing::info!(
-            "walking directory: {:?}",
-            workspace.join("resources/views").as_path()
-        );
-
-        let templates = WalkDir::new(workspace.join("resources/views"))
-            .into_iter()
-            .filter_map(Result::ok)
-            .filter(|e| e.path().is_file() && e.path().is_absolute())
-            .collect::<Vec<_>>();
-
-        let total_files = templates.len();
-
-        _ = progress_sender.send(ProgressParamsValue::WorkDone(WorkDoneProgress::Begin(
-            WorkDoneProgressBegin {
-                title: "Loading files".to_string(),
-                cancellable: None,
-                message: Some(format!("{} of {}", 0, total_files)),
-                percentage: Some(0),
-            },
-        )));
-        for (i, template) in templates.into_iter().enumerate() {
-            let path = template.path();
-            if let Ok(contents) = std::fs::read_to_string(path)
-                && let Ok(url) = Url::from_file_path(path)
-            {
-                {
-                    let db = self.analysis_host.raw_database_mut();
-                    db.set_source_file(url, &contents);
-                }
-                let percentage = ((i + 1) as f64 / total_files as f64 * 100.0) as u32;
-
-                _ = progress_sender.send(ProgressParamsValue::WorkDone(WorkDoneProgress::Report(
-                    WorkDoneProgressReport {
-                        cancellable: None,
-                        message: Some(format!(
-                            "{} {} of {}",
-                            path.to_str().unwrap(),
-                            i + 1,
-                            total_files
-                        )),
-                        percentage: Some(percentage),
-                    },
-                )));
-            }
-        }
-        _ = progress_sender.send(ProgressParamsValue::WorkDone(WorkDoneProgress::End(
-            WorkDoneProgressEnd { message: None },
-        )));
     }
 
     pub fn snapshot(&self) -> ServerSnapshot {
