@@ -1,27 +1,33 @@
 use std::{
-    collections::HashMap,
-    sync::{Arc, Mutex, RwLock},
+    sync::{Arc, RwLock},
+    thread,
 };
 
 use async_lsp::{
-    ClientSocket,
+    ClientSocket, LanguageClient,
     client_monitor::ClientProcessMonitorLayer,
     concurrency::ConcurrencyLayer,
     lsp_types::{
-        self, ClientCapabilities, PositionEncodingKind, ServerCapabilities, TextDocumentSyncKind,
-        Url,
+        self, ClientCapabilities, NumberOrString, PositionEncodingKind, ProgressParams,
+        ProgressParamsValue, ServerCapabilities, TextDocumentSyncKind, Url, WorkspaceFolder,
     },
     panic::CatchUnwindLayer,
     router::Router,
     server::LifecycleLayer,
     tracing::TracingLayer,
 };
+use crossbeam_channel::{Sender, unbounded};
+use dashmap::DashMap;
 use futures::{AsyncRead, AsyncWrite};
 use line_index::WideEncoding;
 use tower::ServiceBuilder;
-use tree_sitter::Parser;
 
-use crate::{document_data::DocumentData, handler, line_index::PositionEncoding};
+use crate::{
+    analysis::{Analysis, AnalysisHost},
+    document_data::DocumentData,
+    handler,
+    line_index::PositionEncoding,
+};
 
 pub fn run_server(
     input: impl AsyncRead,
@@ -41,6 +47,7 @@ pub fn run_server(
 
         // Notifications
         router
+            .notification::<lsp_types::notification::Initialized>(handler::handle_initialized)
             .notification::<lsp_types::notification::DidChangeTextDocument>(
                 handler::handle_did_change,
             )
@@ -56,25 +63,6 @@ pub fn run_server(
             .service(router)
     });
     server.run_buffered(input, output)
-}
-
-fn init_blade_parser() -> Parser {
-    let mut parser = Parser::new();
-    let language: tree_sitter::Language = tree_sitter_blade::LANGUAGE.into();
-    if let Err(err) = parser.set_language(&language) {
-        match err {
-            tree_sitter::LanguageError::Version(ver) => panic!(
-                "
-Mismatched versions:
-   tree_sitter: {}
-   tree_sitter_blade: {}
-",
-                ver,
-                language.abi_version()
-            ),
-        };
-    }
-    parser
 }
 
 pub fn server_capabilities() -> ServerCapabilities {
@@ -119,35 +107,72 @@ pub fn server_capabilities() -> ServerCapabilities {
     }
 }
 
+pub struct Config {
+    pub capabilities: ClientCapabilities,
+    pub workspace_folder: WorkspaceFolder,
+}
+
 pub struct ServerState {
-    pub caps: RwLock<ClientCapabilities>,
+    pub config: Arc<RwLock<Config>>,
     pub client: ClientSocket,
-    pub documents: Arc<RwLock<HashMap<Url, DocumentData>>>,
-    pub parser: Arc<Mutex<Parser>>,
+    pub documents: Arc<DashMap<Url, DocumentData>>,
+    pub analysis_host: AnalysisHost,
 }
 
 pub struct ServerSnapshot {
-    pub documents: Arc<RwLock<HashMap<Url, DocumentData>>>,
+    pub documents: Arc<DashMap<Url, DocumentData>>,
+    pub analysis: Analysis,
 }
 
 impl ServerState {
     pub fn new(client: ClientSocket) -> Self {
+        let current_dir = std::env::current_dir().expect("cannot access current directory");
+        let uri = Url::from_file_path(current_dir.clone()).unwrap();
+        let config = Config {
+            capabilities: ClientCapabilities::default(),
+            workspace_folder: WorkspaceFolder {
+                uri,
+                name: current_dir.display().to_string(),
+            },
+        };
         Self {
             client,
-            documents: Arc::new(RwLock::new(HashMap::new())),
-            parser: Arc::new(Mutex::new(init_blade_parser())),
-            caps: RwLock::new(ClientCapabilities::default()),
+            documents: Arc::new(DashMap::new()),
+            config: Arc::new(RwLock::new(config)),
+            analysis_host: AnalysisHost::default(),
         }
+    }
+
+    pub fn with_report_progress(&self, token: String) -> Sender<ProgressParamsValue> {
+        let (tx, rx) = unbounded();
+        let mut socket = self.client.clone();
+
+        thread::spawn(move || {
+            while let Ok(value) = rx.recv() {
+                if let Err(e) = socket.progress(ProgressParams {
+                    token: NumberOrString::String(token.clone()),
+                    value,
+                }) {
+                    tracing::error!(error=%e, "failed to report parse progress");
+                }
+            }
+        });
+
+        tx
     }
 
     pub fn snapshot(&self) -> ServerSnapshot {
         let documents = Arc::clone(&self.documents);
-        ServerSnapshot { documents }
+        let analysis = self.analysis_host.analysis();
+        ServerSnapshot {
+            documents,
+            analysis,
+        }
     }
 
     pub fn negotiated_encoding(&self) -> PositionEncoding {
-        let caps = self.caps.read().expect("poison");
-        let client_encodings = match &caps.general {
+        let config = self.config.read().expect("poison");
+        let client_encodings = match &config.capabilities.general {
             Some(general) => general.position_encodings.as_deref().unwrap_or_default(),
             None => &[],
         };
@@ -165,8 +190,10 @@ impl ServerState {
 }
 
 impl ServerSnapshot {
-    pub fn get_document(&self, uri: &Url) -> Option<DocumentData> {
-        let documents = self.documents.read().expect("poison");
-        documents.get(uri).cloned()
+    pub fn get_document(
+        &self,
+        uri: &Url,
+    ) -> Option<dashmap::mapref::one::Ref<'_, Url, DocumentData>> {
+        self.documents.get(uri)
     }
 }
