@@ -1,4 +1,4 @@
-use std::{path::Path, sync::mpsc};
+use std::path::Path;
 
 use async_lsp::lsp_types::{
     ProgressParamsValue, Url, WorkDoneProgress, WorkDoneProgressBegin, WorkDoneProgressEnd,
@@ -74,7 +74,8 @@ impl ServerState {
                 )));
             }
         });
-        while let Ok((url, contents)) = rx.try_recv() {
+        while let Ok((url, contents)) = rx.recv() {
+            tracing::trace!(url = url.path(), len = contents.len());
             self.analysis_host.set_source_file(url, &contents);
         }
     }
