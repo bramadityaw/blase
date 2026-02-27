@@ -11,7 +11,7 @@ use async_lsp::{
         self, ClientCapabilities, NumberOrString, PositionEncodingKind, ProgressParams,
         ProgressParamsValue, ServerCapabilities, TextDocumentSyncKind, Url, WorkspaceFolder,
     },
-    panic::CatchUnwindLayer,
+    panic::CatchUnwindBuilder,
     router::Router,
     server::LifecycleLayer,
     tracing::TracingLayer,
@@ -29,6 +29,24 @@ use crate::{
     line_index::PositionEncoding,
 };
 
+/// Adds calls to tracing to the default CatchUnwindLayer handler
+#[tracing::instrument(level = "error")]
+fn panic_handler(method: &str, payload: Box<dyn std::any::Any + Send>) -> async_lsp::ResponseError {
+    let msg = match payload.downcast::<String>() {
+        Ok(msg) => *msg,
+        Err(payload) => match payload.downcast::<&'static str>() {
+            Ok(msg) => (*msg).into(),
+            Err(_payload) => "unknown".into(),
+        },
+    };
+    tracing::error!(msg);
+    async_lsp::ResponseError::new(
+        async_lsp::ErrorCode::INTERNAL_ERROR,
+        format!("Request handler of {method} panicked: {msg}"),
+    )
+}
+
+/// Runs the language server on buffered input
 pub fn run_server(
     input: impl AsyncRead,
     output: impl AsyncWrite,
@@ -43,7 +61,11 @@ pub fn run_server(
         });
 
         // Requests
-        router.request::<lsp_types::request::Initialize, _>(handler::handle_initialize);
+        router
+            .request::<lsp_types::request::Initialize, _>(handler::handle_initialize)
+            .request::<lsp_types::request::HoverRequest, _>(|state, params| {
+                handler::handle_hover(state.snapshot(), params)
+            });
 
         // Notifications
         router
@@ -57,7 +79,7 @@ pub fn run_server(
         ServiceBuilder::new()
             .layer(TracingLayer::default())
             .layer(LifecycleLayer::default())
-            .layer(CatchUnwindLayer::default())
+            .layer(CatchUnwindBuilder::new_with_handler(panic_handler))
             .layer(ConcurrencyLayer::default())
             .layer(ClientProcessMonitorLayer::new(client))
             .service(router)
@@ -71,12 +93,12 @@ pub fn server_capabilities() -> ServerCapabilities {
         text_document_sync: Some(lsp_types::TextDocumentSyncCapability::Kind(
             TextDocumentSyncKind::INCREMENTAL,
         )),
+        hover_provider: Some(lsp_types::HoverProviderCapability::Simple(true)),
         diagnostic_provider: None,
         definition_provider: None,
         completion_provider: None,
         document_formatting_provider: None,
         signature_help_provider: None,
-        hover_provider: None,
         rename_provider: None,
         semantic_tokens_provider: None,
 

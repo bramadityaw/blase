@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use async_lsp::lsp_types;
+use line_index::LineIndex;
 
 use crate::db::{BladeDocument, RootDatabase, SourceFile, parse_document};
 
@@ -8,6 +9,8 @@ use crate::db::{BladeDocument, RootDatabase, SourceFile, parse_document};
 pub struct AnalysisHost {
     db: RootDatabase,
 }
+
+mod lsp;
 
 impl AnalysisHost {
     pub fn set_source_file(&mut self, url: lsp_types::Url, contents: &str) {
@@ -36,6 +39,11 @@ pub struct Analysis {
 impl Analysis {
     pub fn source_file(&self, url: &lsp_types::Url) -> SourceFile {
         self.db.source_file(url)
+    }
+
+    pub fn line_index(&self, url: &lsp_types::Url) -> LineIndex {
+        let text = self.file_contents(url);
+        LineIndex::new(&text)
     }
 
     pub fn parsed_document(&self, url: &lsp_types::Url) -> BladeDocument {

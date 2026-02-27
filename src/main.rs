@@ -9,7 +9,7 @@ async fn main() {
     let (file_appender, _guard) = tracing_appender::non_blocking(file_appender);
     tracing_subscriber::fmt()
         .with_ansi(false)
-        .with_max_level(Level::INFO)
+        .with_max_level(Level::DEBUG)
         .with_writer(file_appender)
         .init();
 

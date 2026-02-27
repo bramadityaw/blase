@@ -3,9 +3,9 @@ use std::ops::ControlFlow;
 use async_lsp::{
     ErrorCode, ResponseError,
     lsp_types::{
-        DidChangeTextDocumentParams, DidOpenTextDocumentParams, DidSaveTextDocumentParams,
+        DidChangeTextDocumentParams, DidOpenTextDocumentParams, DidSaveTextDocumentParams, Hover,
         HoverContents, HoverParams, InitializeParams, InitializeResult, InitializedParams,
-        MarkupContent, ServerInfo, TextDocumentIdentifier, TextDocumentItem,
+        MarkupContent, MarkupKind, ServerInfo, TextDocumentIdentifier, TextDocumentItem,
         TextDocumentPositionParams,
     },
 };
@@ -13,8 +13,47 @@ use futures::future::BoxFuture;
 
 use crate::{
     document_data::DocumentData,
+    lsp,
     server::{ServerSnapshot, ServerState},
 };
+
+pub fn handle_hover(
+    snap: ServerSnapshot,
+    params: HoverParams,
+) -> BoxFuture<'static, Result<Option<Hover>, ResponseError>> {
+    let _i = tracing::info_span!("handle_hover").entered();
+    let TextDocumentPositionParams {
+        text_document,
+        position,
+    } = params.text_document_position_params;
+    let url = &text_document.uri;
+    tracing::info!(url=%url.path(), ?position);
+    let line_col = lsp::from::line_col(position);
+    let Some(text_size) = snap.analysis.line_index(url).offset(line_col) else {
+        tracing::info!(url=%url.path(), "No offset found");
+        return Box::pin(async move { Ok(None) });
+    };
+    let document = snap.analysis.parsed_document(url);
+    let result = if let Some(node) = document.get_node_at(text_size) {
+        let kind = node.kind();
+        tracing::info!(kind);
+        let contents = HoverContents::Markup(MarkupContent {
+            kind: MarkupKind::Markdown,
+            value: kind.to_string(),
+        });
+        let range = lsp::into::range(node.start_position(), node.end_position());
+        let hover = Hover {
+            contents,
+            range: Some(range),
+        };
+        Some(hover)
+    } else {
+        tracing::info!(?text_size, "no node found");
+        None
+    };
+    tracing::debug!(?result);
+    Box::pin(async move { Ok(result) })
+}
 
 pub fn handle_did_save(
     server: &mut ServerState,
@@ -45,7 +84,7 @@ pub fn handle_did_change(
         let new_contents = crate::util::apply_document_changes(
             server.negotiated_encoding(),
             &document.contents,
-            dbg!(params.content_changes),
+            params.content_changes,
         );
         server
             .analysis_host

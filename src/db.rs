@@ -78,6 +78,16 @@ pub struct BladeDocument {
 }
 
 impl BladeDocument {
+    pub fn get_node_at<'doc>(
+        &'doc self,
+        text_size: line_index::TextSize,
+    ) -> Option<tree_sitter::Node<'doc>> {
+        let offset: usize = text_size.into();
+        self.tree
+            .root_node()
+            .descendant_for_byte_range(offset, offset)
+    }
+
     pub fn syntax_errors(&self, contents: &str) -> Vec<Diagnostic> {
         const ERROR_QUERY: &'static str = "(ERROR) @error";
         Query::new(&self.tree.language(), ERROR_QUERY)

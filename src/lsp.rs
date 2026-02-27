@@ -21,3 +21,46 @@ impl ServerState {
         };
     }
 }
+
+pub mod from {
+    use async_lsp::lsp_types::{Position, Range};
+    use line_index::LineCol;
+    use tree_sitter::Point;
+
+    #[tracing::instrument]
+    pub fn line_col(position: Position) -> LineCol {
+        LineCol {
+            line: position.line,
+            col: position.character,
+        }
+    }
+
+    pub fn points(Range { start, end }: Range) -> (Point, Point) {
+        let start = Point {
+            row: start.line as usize,
+            column: start.character as usize,
+        };
+        let end = Point {
+            row: end.line as usize,
+            column: end.character as usize,
+        };
+        (start, end)
+    }
+}
+
+pub mod into {
+    use async_lsp::lsp_types::{Position, Range};
+    use tree_sitter::Point;
+
+    pub fn range(start: Point, end: Point) -> Range {
+        let start = Position {
+            line: start.row as u32,
+            character: start.column as u32,
+        };
+        let end = Position {
+            line: end.row as u32,
+            character: end.column as u32,
+        };
+        Range { start, end }
+    }
+}
