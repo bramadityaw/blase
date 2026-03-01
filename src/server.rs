@@ -1,4 +1,5 @@
 use std::{
+    path::PathBuf,
     sync::{Arc, RwLock},
     thread,
 };
@@ -8,8 +9,9 @@ use async_lsp::{
     client_monitor::ClientProcessMonitorLayer,
     concurrency::ConcurrencyLayer,
     lsp_types::{
-        self, ClientCapabilities, NumberOrString, PositionEncodingKind, ProgressParams,
-        ProgressParamsValue, ServerCapabilities, TextDocumentSyncKind, Url, WorkspaceFolder,
+        self, ClientCapabilities, HoverProviderCapability, NumberOrString, PositionEncodingKind,
+        ProgressParams, ProgressParamsValue, ServerCapabilities, TextDocumentSyncCapability,
+        TextDocumentSyncKind, Url,
     },
     panic::CatchUnwindBuilder,
     router::Router,
@@ -65,6 +67,9 @@ pub fn run_server(
             .request::<lsp_types::request::Initialize, _>(handler::handle_initialize)
             .request::<lsp_types::request::HoverRequest, _>(|state, params| {
                 handler::handle_hover(state.snapshot(), params)
+            })
+            .request::<lsp_types::request::GotoDefinition, _>(|state, params| {
+                handler::handle_goto_def(state.snapshot(), params)
             });
 
         // Notifications
@@ -90,12 +95,12 @@ pub fn run_server(
 pub fn server_capabilities() -> ServerCapabilities {
     ServerCapabilities {
         position_encoding: Some(PositionEncodingKind::UTF8),
-        text_document_sync: Some(lsp_types::TextDocumentSyncCapability::Kind(
+        text_document_sync: Some(TextDocumentSyncCapability::Kind(
             TextDocumentSyncKind::INCREMENTAL,
         )),
-        hover_provider: Some(lsp_types::HoverProviderCapability::Simple(true)),
+        hover_provider: Some(HoverProviderCapability::Simple(true)),
+        definition_provider: Some(lsp_types::OneOf::Left(true)),
         diagnostic_provider: None,
-        definition_provider: None,
         completion_provider: None,
         document_formatting_provider: None,
         signature_help_provider: None,
@@ -131,7 +136,7 @@ pub fn server_capabilities() -> ServerCapabilities {
 
 pub struct Config {
     pub capabilities: ClientCapabilities,
-    pub workspace_folder: WorkspaceFolder,
+    pub workspace_folder: PathBuf,
 }
 
 pub struct ServerState {
@@ -141,21 +146,12 @@ pub struct ServerState {
     pub analysis_host: AnalysisHost,
 }
 
-pub struct ServerSnapshot {
-    pub documents: Arc<DashMap<Url, DocumentData>>,
-    pub analysis: Analysis,
-}
-
 impl ServerState {
     pub fn new(client: ClientSocket) -> Self {
         let current_dir = std::env::current_dir().expect("cannot access current directory");
-        let uri = Url::from_file_path(current_dir.clone()).unwrap();
         let config = Config {
             capabilities: ClientCapabilities::default(),
-            workspace_folder: WorkspaceFolder {
-                uri,
-                name: current_dir.display().to_string(),
-            },
+            workspace_folder: current_dir,
         };
         Self {
             client,
@@ -184,11 +180,13 @@ impl ServerState {
     }
 
     pub fn snapshot(&self) -> ServerSnapshot {
+        let config = Arc::clone(&self.config);
         let documents = Arc::clone(&self.documents);
         let analysis = self.analysis_host.analysis();
         ServerSnapshot {
             documents,
             analysis,
+            config,
         }
     }
 
@@ -211,11 +209,22 @@ impl ServerState {
     }
 }
 
+pub struct ServerSnapshot {
+    pub config: Arc<RwLock<Config>>,
+    pub documents: Arc<DashMap<Url, DocumentData>>,
+    pub analysis: Analysis,
+}
+
 impl ServerSnapshot {
     pub fn get_document(
         &self,
         uri: &Url,
     ) -> Option<dashmap::mapref::one::Ref<'_, Url, DocumentData>> {
         self.documents.get(uri)
+    }
+
+    pub fn workspace_folder(&self) -> PathBuf {
+        let config = self.config.read().expect("poison");
+        config.workspace_folder.clone()
     }
 }

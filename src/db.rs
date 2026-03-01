@@ -1,14 +1,12 @@
-use std::{
-    cell::RefCell,
-    fmt::Debug,
-    sync::{Arc, LazyLock},
-};
+use std::{cell::RefCell, fmt::Debug, sync::Arc};
 
 use async_lsp::lsp_types::{self, Diagnostic, DiagnosticSeverity};
 use dashmap::DashMap;
 use salsa::{Database as Db, Setter};
 use smol_str::SmolStr;
 use tree_sitter::{Query, QueryCursor, StreamingIterator};
+
+use crate::util::FileType;
 
 #[salsa::db]
 #[derive(Clone, Default)]
@@ -24,6 +22,7 @@ impl salsa::Database for RootDatabase {}
 pub struct SourceFile {
     #[returns(ref)]
     pub contents: Arc<str>,
+    pub file_type: FileType,
 }
 
 #[derive(Debug, Default)]
@@ -41,14 +40,22 @@ impl Files {
         }
     }
 
+    pub fn len(&self) -> usize {
+        self.files.len()
+    }
+
     pub fn set_source_file(&self, db: &mut dyn Db, url: lsp_types::Url, contents: &str) {
-        match self.files.entry(url) {
+        match self.files.entry(url.clone()) {
             dashmap::Entry::Occupied(mut occupied) => {
                 occupied.get_mut().set_contents(db).to(Arc::from(contents));
             }
             dashmap::Entry::Vacant(vacant) => {
-                let contents = SourceFile::new(db, Arc::from(contents));
-                vacant.insert(contents);
+                if let Some(ty) = FileType::from_url(&url) {
+                    let contents = SourceFile::new(db, Arc::from(contents), ty);
+                    vacant.insert(contents);
+                } else {
+                    tracing::error!(url = url.path(), "Unknown filetype");
+                }
             }
         }
     }
@@ -58,6 +65,10 @@ impl RootDatabase {
     pub fn source_file(&self, url: &lsp_types::Url) -> SourceFile {
         let files = Arc::clone(&self.files);
         files.source_file(url)
+    }
+
+    pub fn files_count(&self) -> usize {
+        self.files.len()
     }
 
     pub fn set_source_file(&mut self, url: lsp_types::Url, contents: &str) {
@@ -73,11 +84,12 @@ pub struct ComponentId<'db> {
 }
 
 #[derive(Clone)]
-pub struct BladeDocument {
+pub struct ParsedDocument {
     pub tree: tree_sitter::Tree,
+    pub filetype: FileType,
 }
 
-impl BladeDocument {
+impl ParsedDocument {
     pub fn get_node_at<'doc>(
         &'doc self,
         text_size: line_index::TextSize,
@@ -92,6 +104,11 @@ impl BladeDocument {
         const ERROR_QUERY: &'static str = "(ERROR) @error";
         Query::new(&self.tree.language(), ERROR_QUERY)
             .map(|query| {
+                // SKip reporting PHP syntax errors
+                // That's other LSPs' responsibility
+                if self.filetype == FileType::PHP {
+                    return Vec::new();
+                }
                 let mut cursor = QueryCursor::new();
                 let mut matches =
                     cursor.matches(&query, self.tree.root_node(), contents.as_bytes());
@@ -131,7 +148,7 @@ impl BladeDocument {
     }
 }
 
-impl Debug for BladeDocument {
+impl Debug for ParsedDocument {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("BladeDocument")
             .field("tree", &self.tree.root_node().to_sexp())
@@ -139,7 +156,7 @@ impl Debug for BladeDocument {
     }
 }
 
-impl PartialEq for BladeDocument {
+impl PartialEq for ParsedDocument {
     fn eq(&self, other: &Self) -> bool {
         self.tree.root_node().to_sexp() == other.tree.root_node().to_sexp()
     }
@@ -154,10 +171,10 @@ fn test_document_eq() {
 "#;
 
     let (doc1, doc2) = RootDatabase::default().attach(|db| {
-        let source1 = SourceFile::new(db, Arc::from(contents));
+        let source1 = SourceFile::new(db, Arc::from(contents), FileType::Blade);
         let doc1 = parse_document(db, source1);
 
-        let source2 = SourceFile::new(db, Arc::from(contents));
+        let source2 = SourceFile::new(db, Arc::from(contents), FileType::Blade);
         let doc2 = parse_document(db, source2);
         (doc1, doc2)
     });
@@ -180,10 +197,10 @@ fn test_document_eq_diff_ws_contents() {
 "#;
 
     let (doc1, doc2) = RootDatabase::default().attach(|db| {
-        let source1 = SourceFile::new(db, Arc::from(contents1));
+        let source1 = SourceFile::new(db, Arc::from(contents1), FileType::Blade);
         let doc1 = parse_document(db, source1);
 
-        let source2 = SourceFile::new(db, Arc::from(contents2));
+        let source2 = SourceFile::new(db, Arc::from(contents2), FileType::Blade);
         let doc2 = parse_document(db, source2);
         (doc1, doc2)
     });
@@ -191,30 +208,28 @@ fn test_document_eq_diff_ws_contents() {
     assert_eq!(doc1, doc2);
 }
 
-impl Eq for BladeDocument {}
+impl Eq for ParsedDocument {}
 
 thread_local! {
-    static PARSER: RefCell<LazyLock<tree_sitter::Parser>> = RefCell::new(LazyLock::new(|| {
-        use tree_sitter::Parser;
-
-        let mut parser = Parser::new();
-        parser
-            .set_language(&tree_sitter_blade::LANGUAGE.into())
-            .expect("msg");
-        parser
-    }));
+    static PARSER: RefCell<tree_sitter::Parser> = RefCell::new(tree_sitter::Parser::new());
 }
 
 #[salsa::tracked]
-pub fn parse_document(db: &dyn Db, source: SourceFile) -> BladeDocument {
+pub fn parse_document(db: &dyn Db, source: SourceFile) -> ParsedDocument {
     let contents = source.contents(db);
+    let filetype = source.file_type(db);
 
     let tree = PARSER.with(|parser| {
+        let language = match filetype {
+            FileType::Blade => tree_sitter_blade::LANGUAGE.into(),
+            FileType::PHP => tree_sitter_php::LANGUAGE_PHP.into(),
+        };
+        let mut parser = parser.borrow_mut();
+        parser.set_language(&language).expect("mismatched version");
         parser
-            .borrow_mut()
             .parse(contents.as_bytes(), None)
             .expect("Language has been set at Server construction")
     });
 
-    BladeDocument { tree }
+    ParsedDocument { tree, filetype }
 }

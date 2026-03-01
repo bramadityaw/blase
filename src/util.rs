@@ -1,8 +1,27 @@
 use std::{ops::Range, sync::Arc};
 
 use crate::line_index::{LineEndings, LineIndex, PositionEncoding};
-use async_lsp::lsp_types::{self, Position, TextDocumentContentChangeEvent};
+use async_lsp::lsp_types::{self, Position, TextDocumentContentChangeEvent, Url};
 use line_index::{LineCol, TextRange, TextSize, WideLineCol};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FileType {
+    Blade,
+    PHP,
+}
+
+impl FileType {
+    pub fn from_url(url: &Url) -> Option<FileType> {
+        let path = url.path();
+        if path.ends_with(".blade.php") {
+            Some(FileType::Blade)
+        } else if path.ends_with(".php") {
+            Some(FileType::PHP)
+        } else {
+            None
+        }
+    }
+}
 
 fn offset(line_index: &LineIndex, position: Position) -> anyhow::Result<TextSize> {
     let line_col = match line_index.encoding {
@@ -180,5 +199,33 @@ mod tests {
         let text =
             apply_document_changes(encoding, &text, c![0, 1; 1, 0 => "ț\nc", 0, 2; 0, 2 => "c"]);
         assert_eq!(text, "ațc\ncb");
+    }
+
+    #[test]
+    fn test_file_type_from_url_blade() {
+        let url = Url::parse("file:///path/to/file.blade.php").unwrap();
+        let result = FileType::from_url(&url);
+        assert_eq!(result, Some(FileType::Blade));
+    }
+
+    #[test]
+    fn test_file_type_from_url_php() {
+        let url = Url::parse("file:///path/to/file.php").unwrap();
+        let result = FileType::from_url(&url);
+        assert_eq!(result, Some(FileType::PHP));
+    }
+
+    #[test]
+    fn test_file_type_from_url_unknown() {
+        let url = Url::parse("file:///path/to/file.txt").unwrap();
+        let result = FileType::from_url(&url);
+        assert_eq!(result, None);
+    }
+
+    #[test]
+    fn test_file_type_from_url_non_php() {
+        let url = Url::parse("file:///path/to/file.js").unwrap();
+        let result = FileType::from_url(&url);
+        assert_eq!(result, None);
     }
 }

@@ -19,14 +19,7 @@ fn walk_files(path: &Path) -> impl Iterator<Item = DirEntry> {
 impl ServerState {
     pub fn load_workspace(&mut self, progress_sender: Sender<ProgressParamsValue>) {
         let _p = tracing::info_span!("load_workspace").entered();
-        let workspace = self
-            .config
-            .read()
-            .expect("poison")
-            .workspace_folder
-            .uri
-            .to_file_path()
-            .unwrap();
+        let workspace = self.config.read().expect("poison").workspace_folder.clone();
 
         tracing::info!("loading workspace at: {:?}", workspace.as_path());
 

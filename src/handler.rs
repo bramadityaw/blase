@@ -3,10 +3,10 @@ use std::ops::ControlFlow;
 use async_lsp::{
     ErrorCode, ResponseError,
     lsp_types::{
-        DidChangeTextDocumentParams, DidOpenTextDocumentParams, DidSaveTextDocumentParams, Hover,
-        HoverContents, HoverParams, InitializeParams, InitializeResult, InitializedParams,
-        MarkupContent, MarkupKind, ServerInfo, TextDocumentIdentifier, TextDocumentItem,
-        TextDocumentPositionParams,
+        DidChangeTextDocumentParams, DidOpenTextDocumentParams, DidSaveTextDocumentParams,
+        GotoDefinitionParams, GotoDefinitionResponse, Hover, HoverContents, HoverParams,
+        InitializeParams, InitializeResult, InitializedParams, MarkupContent, MarkupKind,
+        ServerInfo, TextDocumentIdentifier, TextDocumentItem, TextDocumentPositionParams,
     },
 };
 use futures::future::BoxFuture;
@@ -16,6 +16,32 @@ use crate::{
     lsp,
     server::{ServerSnapshot, ServerState},
 };
+
+macro_rules! box_future {
+    ($val:expr) => {
+        Box::pin(async move { $val })
+    };
+}
+
+pub fn handle_goto_def(
+    snap: ServerSnapshot,
+    params: GotoDefinitionParams,
+) -> BoxFuture<'static, Result<Option<GotoDefinitionResponse>, ResponseError>> {
+    let _i = tracing::info_span!("handle_goto_def").entered();
+    let TextDocumentPositionParams {
+        text_document,
+        position,
+    } = params.text_document_position_params;
+    let url = &text_document.uri;
+    let locations = snap.analysis.goto_def(&snap, url, position);
+    tracing::debug!(?locations);
+    let response = match locations.len() {
+        0 => None,
+        1 => Some(GotoDefinitionResponse::Scalar(locations[0].clone())),
+        2.. => Some(GotoDefinitionResponse::Array(locations)),
+    };
+    box_future!(Ok(response))
+}
 
 pub fn handle_hover(
     snap: ServerSnapshot,
@@ -37,9 +63,13 @@ pub fn handle_hover(
     let result = if let Some(node) = document.get_node_at(text_size) {
         let kind = node.kind();
         tracing::info!(kind);
+        let value = format!(
+            "{kind}: {}",
+            &snap.analysis.file_contents(url)[node.byte_range()]
+        );
         let contents = HoverContents::Markup(MarkupContent {
             kind: MarkupKind::Markdown,
-            value: kind.to_string(),
+            value,
         });
         let range = lsp::into::range(node.start_position(), node.end_position());
         let hover = Hover {
@@ -52,7 +82,7 @@ pub fn handle_hover(
         None
     };
     tracing::debug!(?result);
-    Box::pin(async move { Ok(result) })
+    box_future!(Ok(result))
 }
 
 pub fn handle_did_save(
@@ -152,14 +182,8 @@ pub fn handle_initialize(
     match params.workspace_folders {
         None => {
             tracing::info!(
-                "using current directory: {}",
-                server
-                    .config
-                    .read()
-                    .expect("poison")
-                    .workspace_folder
-                    .uri
-                    .to_string()
+                workspace_folder = ?server.config.read().expect("poison").workspace_folder,
+                "using current directory",
             );
         }
         Some(folders) => {
@@ -168,12 +192,15 @@ pub fn handle_initialize(
                     ErrorCode::REQUEST_FAILED,
                     "Multiple workspaces not yet supported",
                 );
-                return Box::pin(async move { Err(err) });
+                return box_future!(Err(err));
             }
             let mut config = server.config.write().expect("poison");
             config.capabilities = params.capabilities;
             let workspace_folder = folders[0].clone();
-            config.workspace_folder = workspace_folder;
+            tracing::debug!(url = workspace_folder.uri.path());
+            config.workspace_folder = dbg!(workspace_folder.uri)
+                .to_file_path()
+                .expect("file:// urls should always be valid file paths");
         }
     }
 

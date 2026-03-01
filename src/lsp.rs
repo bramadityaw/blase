@@ -23,6 +23,7 @@ impl ServerState {
 }
 
 pub mod from {
+    //! Converts **from** lsp_types
     use async_lsp::lsp_types::{Position, Range};
     use line_index::LineCol;
     use tree_sitter::Point;
@@ -49,6 +50,7 @@ pub mod from {
 }
 
 pub mod into {
+    //! Converts **into** lsp_types
     use async_lsp::lsp_types::{Position, Range};
     use tree_sitter::Point;
 
