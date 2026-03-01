@@ -1,9 +1,9 @@
-mod analysis;
-mod db;
-mod document_data;
-mod handler;
-mod line_index;
-mod loader;
-mod lsp;
+pub mod analysis;
+pub mod db;
+pub mod document_data;
+pub mod handler;
+pub mod line_index;
+pub mod loader;
+pub mod lsp;
 pub mod server;
-mod util;
+pub mod util;
