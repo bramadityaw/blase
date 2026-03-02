@@ -204,8 +204,10 @@ pub fn handle_initialize(
         }
     }
 
+    let config = server.config.read().expect("poison");
+
     let result = InitializeResult {
-        capabilities: crate::server::server_capabilities(),
+        capabilities: crate::server::server_capabilities(&config),
         server_info: Some(server_info),
     };
 

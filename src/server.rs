@@ -26,6 +26,7 @@ use tower::ServiceBuilder;
 
 use crate::{
     analysis::{Analysis, AnalysisHost},
+    config::Config,
     document_data::DocumentData,
     handler,
     line_index::PositionEncoding,
@@ -92,9 +93,16 @@ pub fn run_server(
     server.run_buffered(input, output)
 }
 
-pub fn server_capabilities() -> ServerCapabilities {
+pub fn server_capabilities(config: &Config) -> ServerCapabilities {
     ServerCapabilities {
-        position_encoding: Some(PositionEncodingKind::UTF8),
+        position_encoding: match config.negotiated_encoding() {
+            PositionEncoding::Utf8 => Some(PositionEncodingKind::UTF8),
+            PositionEncoding::Wide(wide) => match wide {
+                WideEncoding::Utf16 => Some(PositionEncodingKind::UTF16),
+                WideEncoding::Utf32 => Some(PositionEncodingKind::UTF32),
+                _ => None,
+            },
+        },
         text_document_sync: Some(TextDocumentSyncCapability::Kind(
             TextDocumentSyncKind::INCREMENTAL,
         )),
@@ -134,11 +142,6 @@ pub fn server_capabilities() -> ServerCapabilities {
     }
 }
 
-pub struct Config {
-    pub capabilities: ClientCapabilities,
-    pub workspace_folder: PathBuf,
-}
-
 pub struct ServerState {
     pub config: Arc<RwLock<Config>>,
     pub client: ClientSocket,
@@ -171,7 +174,7 @@ impl ServerState {
                     token: NumberOrString::String(token.clone()),
                     value,
                 }) {
-                    tracing::error!(error=%e, "failed to report parse progress");
+                    tracing::error!(error=%e, "failed to report progress");
                 }
             }
         });
@@ -192,20 +195,7 @@ impl ServerState {
 
     pub fn negotiated_encoding(&self) -> PositionEncoding {
         let config = self.config.read().expect("poison");
-        let client_encodings = match &config.capabilities.general {
-            Some(general) => general.position_encodings.as_deref().unwrap_or_default(),
-            None => &[],
-        };
-        for enc in client_encodings {
-            if enc == &PositionEncodingKind::UTF8 {
-                return PositionEncoding::Utf8;
-            } else if enc == &PositionEncodingKind::UTF32 {
-                return PositionEncoding::Wide(WideEncoding::Utf32);
-            }
-            // NB: intentionally prefer just about anything else to utf-16.
-        }
-
-        PositionEncoding::Wide(WideEncoding::Utf16)
+        config.negotiated_encoding()
     }
 }
 

@@ -1,4 +1,5 @@
 pub mod analysis;
+pub mod config;
 pub mod db;
 pub mod document_data;
 pub mod handler;
