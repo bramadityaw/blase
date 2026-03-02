@@ -2,6 +2,7 @@ use std::{ops::Range, sync::Arc};
 
 use crate::line_index::{LineEndings, LineIndex, PositionEncoding};
 use async_lsp::lsp_types::{self, Position, TextDocumentContentChangeEvent, Url};
+use camino::Utf8Path;
 use line_index::{LineCol, TextRange, TextSize, WideLineCol};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -13,6 +14,10 @@ pub enum FileType {
 impl FileType {
     pub fn from_url(url: &Url) -> Option<FileType> {
         let path = url.path();
+        Self::from_str(path)
+    }
+
+    fn from_str(path: &str) -> Option<FileType> {
         if path.ends_with(".blade.php") {
             Some(FileType::Blade)
         } else if path.ends_with(".php") {
@@ -20,6 +25,11 @@ impl FileType {
         } else {
             None
         }
+    }
+
+    pub fn from_path(path: &Utf8Path) -> Option<FileType> {
+        let path = path.as_str();
+        Self::from_str(path)
     }
 }
 

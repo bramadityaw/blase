@@ -1,9 +1,9 @@
 use std::{cell::RefCell, fmt::Debug, sync::Arc};
 
 use async_lsp::lsp_types::{self, Diagnostic, DiagnosticSeverity};
+use camino::{Utf8Path, Utf8PathBuf};
 use dashmap::DashMap;
 use salsa::{Database as Db, Setter};
-use smol_str::SmolStr;
 use tree_sitter::{Query, QueryCursor, StreamingIterator};
 
 use crate::util::FileType;
@@ -27,15 +27,15 @@ pub struct SourceFile {
 
 #[derive(Debug, Default)]
 pub struct Files {
-    files: Arc<DashMap<lsp_types::Url, SourceFile>>,
+    files: Arc<DashMap<Utf8PathBuf, SourceFile>>,
 }
 
 impl Files {
-    pub fn source_file(&self, url: &lsp_types::Url) -> SourceFile {
-        match self.files.get(url) {
+    pub fn source_file(&self, path: &Utf8Path) -> SourceFile {
+        match self.files.get(path) {
             Some(file) => *file,
             None => {
-                panic!("Unable to fetch source file for `Url`: {url:?}; this is a bug")
+                panic!("Unable to fetch source file for {path}; this is a bug")
             }
         }
     }
@@ -44,17 +44,17 @@ impl Files {
         self.files.len()
     }
 
-    pub fn set_source_file(&self, db: &mut dyn Db, url: lsp_types::Url, contents: &str) {
-        match self.files.entry(url.clone()) {
+    pub fn set_source_file(&self, db: &mut dyn Db, path: Utf8PathBuf, contents: &str) {
+        match self.files.entry(path.clone()) {
             dashmap::Entry::Occupied(mut occupied) => {
                 occupied.get_mut().set_contents(db).to(Arc::from(contents));
             }
             dashmap::Entry::Vacant(vacant) => {
-                if let Some(ty) = FileType::from_url(&url) {
+                if let Some(ty) = FileType::from_path(&path) {
                     let contents = SourceFile::new(db, Arc::from(contents), ty);
                     vacant.insert(contents);
                 } else {
-                    tracing::error!(url = url.path(), "Unknown filetype");
+                    tracing::error!(url = path.as_str(), "Unknown filetype");
                 }
             }
         }
@@ -62,18 +62,18 @@ impl Files {
 }
 
 impl RootDatabase {
-    pub fn source_file(&self, url: &lsp_types::Url) -> SourceFile {
+    pub fn source_file(&self, path: &Utf8Path) -> SourceFile {
         let files = Arc::clone(&self.files);
-        files.source_file(url)
+        files.source_file(path)
     }
 
     pub fn files_count(&self) -> usize {
         self.files.len()
     }
 
-    pub fn set_source_file(&mut self, url: lsp_types::Url, contents: &str) {
+    pub fn set_source_file(&mut self, path: Utf8PathBuf, contents: &str) {
         let files = Arc::clone(&self.files);
-        files.set_source_file(self, url, contents);
+        files.set_source_file(self, path, contents);
     }
 }
 

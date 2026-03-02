@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
-use async_lsp::lsp_types;
+use camino::{Utf8Path, Utf8PathBuf};
 use line_index::LineIndex;
 
-use crate::db::{parse_document, ParsedDocument, RootDatabase, SourceFile};
+use crate::db::{ParsedDocument, RootDatabase, SourceFile, parse_document};
 
 #[derive(Default)]
 pub struct AnalysisHost {
@@ -13,8 +13,8 @@ pub struct AnalysisHost {
 mod lsp;
 
 impl AnalysisHost {
-    pub fn set_source_file(&mut self, url: lsp_types::Url, contents: &str) {
-        self.db.set_source_file(url, contents);
+    pub fn set_source_file(&mut self, path: Utf8PathBuf, contents: &str) {
+        self.db.set_source_file(path, contents);
     }
 
     pub fn analysis(&self) -> Analysis {
@@ -37,29 +37,29 @@ pub struct Analysis {
 }
 
 impl Analysis {
-    pub fn source_file(&self, url: &lsp_types::Url) -> SourceFile {
-        self.db.source_file(url)
+    pub fn source_file(&self, path: &Utf8Path) -> SourceFile {
+        self.db.source_file(path)
     }
 
     pub fn raw_database(&self) -> &RootDatabase {
         &self.db
     }
 
-    pub fn line_index(&self, url: &lsp_types::Url) -> LineIndex {
-        let text = self.file_contents(url);
+    pub fn line_index(&self, path: &Utf8Path) -> LineIndex {
+        let text = self.file_contents(path);
         LineIndex::new(&text)
     }
 
-    pub fn parsed_document(&self, url: &lsp_types::Url) -> ParsedDocument {
+    pub fn parsed_document(&self, path: &Utf8Path) -> ParsedDocument {
         self.with_db(|db| {
-            let source = self.source_file(url);
+            let source = self.source_file(path);
             parse_document(db, source)
         })
     }
 
-    pub fn file_contents(&self, url: &lsp_types::Url) -> Arc<str> {
+    pub fn file_contents(&self, path: &Utf8Path) -> Arc<str> {
         self.with_db(|db| {
-            let source = self.source_file(url);
+            let source = self.source_file(path);
             Arc::clone(&source.contents(db))
         })
     }

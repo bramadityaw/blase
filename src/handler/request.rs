@@ -6,6 +6,7 @@ use async_lsp::{
         TextDocumentPositionParams,
     },
 };
+use camino::Utf8PathBuf;
 use futures::future::BoxFuture;
 
 use crate::{
@@ -28,8 +29,8 @@ pub fn handle_goto_def(
         text_document,
         position,
     } = params.text_document_position_params;
-    let url = &text_document.uri;
-    let locations = snap.analysis.goto_def(&snap, url, position);
+    let path = Utf8PathBuf::from_path_buf(text_document.uri.to_file_path().unwrap()).unwrap();
+    let locations = snap.analysis.goto_def(&snap, &path, position);
     tracing::debug!(?locations);
     let response = match locations.len() {
         0 => None,
@@ -48,20 +49,20 @@ pub fn handle_hover(
         text_document,
         position,
     } = params.text_document_position_params;
-    let url = &text_document.uri;
-    tracing::info!(url=%url.path(), ?position);
+    let path = &Utf8PathBuf::from_path_buf(text_document.uri.to_file_path().unwrap()).unwrap();
+    tracing::info!(path = path.as_str(), ?position);
     let line_col = lsp::from::line_col(position);
-    let Some(text_size) = snap.analysis.line_index(url).offset(line_col) else {
-        tracing::info!(url=%url.path(), "No offset found");
+    let Some(text_size) = snap.analysis.line_index(path).offset(line_col) else {
+        tracing::info!(path = path.as_str(), "No offset found");
         return Box::pin(async move { Ok(None) });
     };
-    let document = snap.analysis.parsed_document(url);
+    let document = snap.analysis.parsed_document(path);
     let result = if let Some(node) = document.get_node_at(text_size) {
         let kind = node.kind();
         tracing::info!(kind);
         let value = format!(
             "{kind}: {}",
-            &snap.analysis.file_contents(url)[node.byte_range()]
+            &snap.analysis.file_contents(path)[node.byte_range()]
         );
         let contents = HoverContents::Markup(MarkupContent {
             kind: MarkupKind::Markdown,

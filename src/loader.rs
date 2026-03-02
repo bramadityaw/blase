@@ -1,9 +1,10 @@
 use std::path::Path;
 
 use async_lsp::lsp_types::{
-    ProgressParamsValue, Url, WorkDoneProgress, WorkDoneProgressBegin, WorkDoneProgressEnd,
+    ProgressParamsValue, WorkDoneProgress, WorkDoneProgressBegin, WorkDoneProgressEnd,
     WorkDoneProgressReport,
 };
+use camino::Utf8PathBuf;
 use crossbeam_channel::{Sender, unbounded};
 use walkdir::{DirEntry, WalkDir};
 
@@ -40,25 +41,21 @@ impl ServerState {
         std::thread::spawn({
             move || {
                 for (i, entry) in entries.into_iter().enumerate() {
-                    let path = entry.path();
-                    if let Ok(contents) = std::fs::read_to_string(path)
-                        && let Ok(url) = Url::from_file_path(path)
+                    let path = entry.path().to_owned();
+                    if let Ok(contents) = std::fs::read_to_string(&path)
+                        && let Ok(path) = Utf8PathBuf::from_path_buf(path)
                     {
-                        _ = tx.send((url, contents));
                         let percentage = ((i + 1) as f64 / total_entries as f64 * 100.0) as u32;
 
                         _ = progress_sender.send(ProgressParamsValue::WorkDone(
                             WorkDoneProgress::Report(WorkDoneProgressReport {
                                 cancellable: None,
-                                message: Some(format!(
-                                    "{} {} of {}",
-                                    path.to_str().unwrap(),
-                                    i + 1,
-                                    total_entries
-                                )),
+                                message: Some(format!("{} {} of {}", path, i + 1, total_entries)),
                                 percentage: Some(percentage),
                             }),
                         ));
+
+                        _ = tx.send((path, contents));
                     }
                 }
 
@@ -67,9 +64,9 @@ impl ServerState {
                 )));
             }
         });
-        while let Ok((url, contents)) = rx.recv() {
-            tracing::trace!(url = url.path(), len = contents.len());
-            self.analysis_host.set_source_file(url, &contents);
+        while let Ok((path, contents)) = rx.recv() {
+            tracing::trace!(%path, len = contents.len());
+            self.analysis_host.set_source_file(path, &contents);
         }
     }
 }

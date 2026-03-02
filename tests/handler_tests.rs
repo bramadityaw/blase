@@ -3,17 +3,24 @@ use std::ops::ControlFlow;
 use async_lsp::ClientSocket;
 use async_lsp::lsp_types::{
     ClientCapabilities, DidChangeTextDocumentParams, DidOpenTextDocumentParams, InitializeParams,
-    InitializedParams, Position, TextDocumentContentChangeEvent, TextDocumentItem, Url,
+    Position, TextDocumentContentChangeEvent, TextDocumentItem, Url,
     VersionedTextDocumentIdentifier, WorkspaceFolder,
 };
 
 use blase::document_data::DocumentData;
 use blase::handler;
 use blase::server::ServerState;
+use camino::Utf8PathBuf;
 
 fn create_test_server() -> ServerState {
     let client = ClientSocket::new_closed();
     ServerState::new(client)
+}
+
+fn create_test_path(path: &str) -> Utf8PathBuf {
+    let path = create_test_url(path).to_file_path().unwrap();
+
+    Utf8PathBuf::from_path_buf(path).unwrap()
 }
 
 fn create_test_url(path: &str) -> Url {
@@ -37,7 +44,8 @@ fn test_handle_initialize_with_workspace_folder() {
         ..Default::default()
     };
 
-    let result = futures::executor::block_on(handler::handle_initialize(&mut server, params));
+    let result =
+        futures::executor::block_on(handler::request::handle_initialize(&mut server, params));
 
     assert!(result.is_ok());
     let result = result.unwrap();
@@ -65,7 +73,8 @@ fn test_handle_initialize_multiple_workspaces_returns_error() {
         ..Default::default()
     };
 
-    let result = futures::executor::block_on(handler::handle_initialize(&mut server, params));
+    let result =
+        futures::executor::block_on(handler::request::handle_initialize(&mut server, params));
 
     assert!(result.is_err());
 }
@@ -74,20 +83,21 @@ fn test_handle_initialize_multiple_workspaces_returns_error() {
 fn test_handle_did_open_inserts_document() {
     let mut server = create_test_server();
     let url = create_test_url("/test/file.blade.php");
+    let path = create_test_path("/test/file.blade.php");
     let params = DidOpenTextDocumentParams {
         text_document: TextDocumentItem {
-            uri: url.clone(),
+            uri: url,
             language_id: "blade".to_string(),
             version: 1,
             text: "Hello World".to_string(),
         },
     };
 
-    let result = handler::handle_did_open(&mut server, params);
+    let result = handler::notification::handle_did_open(&mut server, params);
 
     assert!(matches!(result, ControlFlow::Continue(())));
-    assert!(server.documents.contains_key(&url));
-    let doc = server.documents.get(&url).unwrap();
+    assert!(server.documents.contains_key(&path));
+    let doc = server.documents.get(&path).unwrap();
     assert_eq!(doc.contents, "Hello World");
 }
 
@@ -95,9 +105,10 @@ fn test_handle_did_open_inserts_document() {
 fn test_handle_did_change_updates_document() {
     let mut server = create_test_server();
     let url = create_test_url("/test/file.blade.php");
+    let path = create_test_path("/test/file.blade.php");
 
     server.documents.insert(
-        url.clone(),
+        path.clone(),
         DocumentData {
             contents: "Hello World".to_string(),
         },
@@ -124,21 +135,11 @@ fn test_handle_did_change_updates_document() {
         }],
     };
 
-    let result = handler::handle_did_change(&mut server, params);
+    let result = handler::notification::handle_did_change(&mut server, params);
 
     assert!(matches!(result, ControlFlow::Continue(())));
-    let doc = server.documents.get(&url).unwrap();
+    let doc = server.documents.get(&path).unwrap();
     assert_eq!(doc.contents, "Hello Rust World");
-}
-
-#[test]
-fn test_handle_initialized_returns_continue() {
-    let mut server = create_test_server();
-    let params = InitializedParams {};
-
-    let result = handler::handle_initialized(&mut server, params);
-
-    assert!(matches!(result, ControlFlow::Continue(())));
 }
 
 #[test]
@@ -154,7 +155,8 @@ fn test_handle_initialize_does_not_load_files_into_analysis() {
         ..Default::default()
     };
 
-    let _result = futures::executor::block_on(handler::handle_initialize(&mut server, params));
+    let _result =
+        futures::executor::block_on(handler::request::handle_initialize(&mut server, params));
 
     let analysis = server.snapshot().analysis;
     let db = analysis.raw_database();
@@ -169,10 +171,10 @@ fn test_handle_initialize_does_not_load_files_into_analysis() {
 #[test]
 fn test_analysis_host_can_load_files() {
     let mut server = create_test_server();
-    let url = create_test_url("/test/resources/views/index.blade.php");
+    let path = create_test_path("/test/resources/views/index.blade.php");
     let contents = "<div>Hello World</div>";
 
-    server.analysis_host.set_source_file(url.clone(), contents);
+    server.analysis_host.set_source_file(path, contents);
 
     let analysis = server.snapshot().analysis;
     let db = analysis.raw_database();

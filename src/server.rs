@@ -11,13 +11,14 @@ use async_lsp::{
     lsp_types::{
         self, ClientCapabilities, HoverProviderCapability, NumberOrString, PositionEncodingKind,
         ProgressParams, ProgressParamsValue, ServerCapabilities, TextDocumentSyncCapability,
-        TextDocumentSyncKind, Url,
+        TextDocumentSyncKind,
     },
     panic::CatchUnwindBuilder,
     router::Router,
     server::LifecycleLayer,
     tracing::TracingLayer,
 };
+use camino::{Utf8Path, Utf8PathBuf};
 use crossbeam_channel::{Sender, unbounded};
 use dashmap::DashMap;
 use futures::{AsyncRead, AsyncWrite};
@@ -154,7 +155,7 @@ pub fn server_capabilities(config: &Config) -> ServerCapabilities {
 pub struct ServerState {
     pub config: Arc<RwLock<Config>>,
     pub client: ClientSocket,
-    pub documents: Arc<DashMap<Url, DocumentData>>,
+    pub documents: Arc<DashMap<Utf8PathBuf, DocumentData>>,
     pub analysis_host: AnalysisHost,
 }
 
@@ -210,15 +211,15 @@ impl ServerState {
 
 pub struct ServerSnapshot {
     pub config: Arc<RwLock<Config>>,
-    pub documents: Arc<DashMap<Url, DocumentData>>,
+    pub documents: Arc<DashMap<Utf8PathBuf, DocumentData>>,
     pub analysis: Analysis,
 }
 
 impl ServerSnapshot {
     pub fn get_document(
         &self,
-        uri: &Url,
-    ) -> Option<dashmap::mapref::one::Ref<'_, Url, DocumentData>> {
+        uri: &Utf8Path,
+    ) -> Option<dashmap::mapref::one::Ref<'_, Utf8PathBuf, DocumentData>> {
         self.documents.get(uri)
     }
 

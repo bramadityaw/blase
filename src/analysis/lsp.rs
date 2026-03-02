@@ -1,14 +1,20 @@
 use async_lsp::lsp_types::{Location, Position, Url};
+use camino::Utf8Path;
 use smol_str::SmolStr;
 use tree_sitter::{Node, Query, QueryCursor, StreamingIterator};
 
 use crate::{lsp, server::ServerSnapshot};
 
 impl super::Analysis {
-    pub fn goto_def(&self, snap: &ServerSnapshot, url: &Url, position: Position) -> Vec<Location> {
-        let document = self.parsed_document(url);
-        let contents = &self.file_contents(url);
-        let line_index = self.line_index(url);
+    pub fn goto_def(
+        &self,
+        snap: &ServerSnapshot,
+        path: &Utf8Path,
+        position: Position,
+    ) -> Vec<Location> {
+        let document = self.parsed_document(path);
+        let contents = &self.file_contents(path);
+        let line_index = self.line_index(path);
         let line_col = lsp::from::line_col(position);
         let Some(offset) = line_index.offset(line_col) else {
             return Vec::new();
