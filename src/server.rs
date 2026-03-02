@@ -65,22 +65,31 @@ pub fn run_server(
 
         // Requests
         router
-            .request::<lsp_types::request::Initialize, _>(handler::handle_initialize)
+            .request::<lsp_types::request::Initialize, _>(handler::request::handle_initialize)
             .request::<lsp_types::request::HoverRequest, _>(|state, params| {
-                handler::handle_hover(state.snapshot(), params)
+                handler::request::handle_hover(state.snapshot(), params)
             })
             .request::<lsp_types::request::GotoDefinition, _>(|state, params| {
-                handler::handle_goto_def(state.snapshot(), params)
+                handler::request::handle_goto_def(state.snapshot(), params)
             });
 
         // Notifications
         router
-            .notification::<lsp_types::notification::Initialized>(handler::handle_initialized)
-            .notification::<lsp_types::notification::DidChangeTextDocument>(
-                handler::handle_did_change,
+            .notification::<lsp_types::notification::Initialized>(
+                handler::notification::handle_initialized,
             )
-            .notification::<lsp_types::notification::DidOpenTextDocument>(handler::handle_did_open)
-            .notification::<lsp_types::notification::DidSaveTextDocument>(handler::handle_did_save);
+            .notification::<lsp_types::notification::DidChangeTextDocument>(
+                handler::notification::handle_did_change,
+            )
+            .notification::<lsp_types::notification::DidOpenTextDocument>(
+                handler::notification::handle_did_open,
+            )
+            .notification::<lsp_types::notification::DidCloseTextDocument>(
+                handler::notification::handle_did_close,
+            )
+            .notification::<lsp_types::notification::DidSaveTextDocument>(
+                handler::notification::handle_did_save,
+            );
 
         ServiceBuilder::new()
             .layer(TracingLayer::default())
