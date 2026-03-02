@@ -77,12 +77,6 @@ impl RootDatabase {
     }
 }
 
-#[salsa::interned(debug)]
-pub struct ComponentId<'db> {
-    #[returns(ref)]
-    name: SmolStr,
-}
-
 #[derive(Clone)]
 pub struct ParsedDocument {
     pub tree: tree_sitter::Tree,
