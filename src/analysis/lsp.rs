@@ -1,126 +1,250 @@
-use async_lsp::lsp_types::{Location, Position, Url};
-use camino::Utf8Path;
+use std::sync::Arc;
+
+use async_lsp::lsp_types::{Location, SignatureInformation};
+use camino::{Utf8Path, Utf8PathBuf};
+use line_index::LineCol;
 use smol_str::SmolStr;
 use tree_sitter::{Node, Query, QueryCursor, StreamingIterator};
 
-use crate::{lsp, server::ServerSnapshot};
+use crate::{analysis::Analysis, db::ParsedDocument, lsp, server::ServerSnapshot, util::FileType};
 
+#[derive(Debug, PartialEq)]
+pub struct Component {
+    name: SmolStr,
+}
+
+impl Component {
+    pub fn new(name: &str) -> Self {
+        let name = name.strip_prefix("x-").unwrap_or(name);
+        Self {
+            name: SmolStr::new(name),
+        }
+    }
+
+    pub fn resources_path(&self, work: &Utf8Path) -> Utf8PathBuf {
+        work.join("resources/views/components")
+            .join(self.component_path() + ".blade.php")
+    }
+
+    pub fn class_path(&self, work: &Utf8Path) -> Utf8PathBuf {
+        let class_path = self
+            .component_path()
+            .split('/')
+            .map(|p| convert_case::ccase!(pascal, p))
+            .collect::<Vec<_>>()
+            .join("/");
+        work.join("app/View/Components/").join(class_path + ".php")
+    }
+
+    fn component_path(&self) -> String {
+        self.name.replace(".", "/")
+    }
+}
+
+fn signature_help_for_component(
+    component: &Component,
+    analysis: &Analysis,
+    work: &Utf8Path,
+) -> Option<(SignatureInformation, Option<usize>)> {
+    let min_label_capacity = "<x-".len() + component.name.len() + ">".len();
+    let mut info = SignatureInformation {
+        label: String::with_capacity(min_label_capacity),
+        documentation: None,
+        parameters: None,
+        active_parameter: None,
+    };
+    let active_param = None;
+    info.label.push_str("<x-");
+    info.label.push_str(&component.name);
+    let attributes = if let Some(class_doc) =
+        analysis.parsed_document(&component.class_path(work)).ok()?
+        && class_doc.filetype == FileType::PHP
+    {
+        class_component_attrs(class_doc)
+    } else if let Some(res_doc) = analysis
+        .parsed_document(&component.resources_path(work))
+        .ok()?
+        && res_doc.filetype == FileType::Blade
+    {
+        anon_component_attrs(res_doc)
+    } else {
+        Vec::new()
+    };
+    if attributes.is_empty() {
+        info.label.push_str(" ...$attributes>");
+    }
+    Some((info, active_param))
+}
+
+fn class_component_attrs(class_doc: ParsedDocument) -> Vec<(Arc<str>, Option<Arc<str>>)> {
+    Vec::new()
+}
+
+fn anon_component_attrs(res_doc: ParsedDocument) -> Vec<(Arc<str>, Option<Arc<str>>)> {
+    Vec::new()
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Layout {
+    name: SmolStr,
+}
+
+impl Layout {
+    pub fn new(name: &str) -> Self {
+        let name = name.strip_prefix("x-").unwrap_or(name);
+        Self {
+            name: SmolStr::new(name),
+        }
+    }
+
+    pub fn resources_path(&self, work: &Utf8Path) -> Utf8PathBuf {
+        self.name
+            .strip_suffix("layout")
+            .and_then(|s| {
+                let path = if s.is_empty() {
+                    work.join("resources/views/components/layout.blade.php")
+                } else {
+                    let layout_name = s.strip_suffix('-')?;
+                    work.join(
+                        &("resources/views/layouts/".to_string() + layout_name + ".blade.php"),
+                    )
+                };
+                Some(path)
+            })
+            .unwrap()
+    }
+
+    pub fn class_path(&self, work: &Utf8Path) -> Utf8PathBuf {
+        let layout_class_name = convert_case::ccase!(pascal, self.name.clone());
+        work.join("app/View/Components/")
+            .join(layout_class_name + ".php")
+    }
+}
+
+#[salsa::tracked]
 impl super::Analysis {
+    pub fn signature_help(
+        &self,
+        snap: &ServerSnapshot,
+        path: &Utf8Path,
+        line_col: LineCol,
+    ) -> Option<(SignatureInformation, Option<usize>)> {
+        let source_file = self.source_file(path)?;
+        let document = self.parsed_document(path).ok()??;
+        let contents = &self
+            .with_db(|db| Arc::clone(source_file.contents(db)))
+            .ok()?;
+        let line_index = self.with_db(|db| source_file.line_index(db)).ok()?;
+        let offset = line_index.offset(line_col)?;
+        let node = document.get_node_at(offset)?;
+        match SyntaxKind::from_node(node, contents)? {
+            SyntaxKind::Component(component) => {
+                signature_help_for_component(&component, self, &snap.workspace_folder())
+            }
+            SyntaxKind::Directive(_) => todo!(),
+            SyntaxKind::Layout(_) => None,
+        }
+    }
+
     pub fn goto_def(
         &self,
         snap: &ServerSnapshot,
         path: &Utf8Path,
-        position: Position,
+        line_col: LineCol,
     ) -> Vec<Location> {
-        let document = self.parsed_document(path);
-        let contents = &self.file_contents(path);
-        let line_index = self.line_index(path);
-        let line_col = lsp::from::line_col(position);
+        let Some(source_file) = self.source_file(path) else {
+            return Vec::new();
+        };
+        let Ok(Some(document)) = self.parsed_document(path) else {
+            return Vec::new();
+        };
+        let Ok(contents) = &self.with_db(|db| Arc::clone(source_file.contents(db))) else {
+            return Vec::new();
+        };
+        let Ok(line_index) = self.with_db(|db| source_file.line_index(db)) else {
+            return Vec::new();
+        };
         let Some(offset) = line_index.offset(line_col) else {
             return Vec::new();
         };
         let Some(node) = document.get_node_at(offset) else {
             return Vec::new();
         };
-        NodeKind::from_node(&node, contents)
-            .map(|kind| match kind {
-                NodeKind::Component(name) => name
-                    .strip_prefix("x-")
-                    .and_then(|name| {
-                        let component_path = name.replace(".", "/");
-                        let mut locations = Vec::new();
-                        let work = snap.workspace_folder();
-                        let view_url = work
-                            .join("resources/views/components")
-                            .join(component_path.clone() + ".blade.php");
-                        tracing::debug!(?view_url);
-                        if let Ok(true) = std::fs::exists(&view_url) {
-                            locations.push(Location {
-                                uri: Url::from_file_path(&view_url).ok()?,
-                                range: Default::default(),
-                            });
-                        }
-                        let class_path = component_path
-                            .split('/')
-                            .map(|p| convert_case::ccase!(pascal, p))
-                            .collect::<Vec<_>>()
-                            .join("/");
-                        let class_url = work.join("app/View/Components/").join(class_path + ".php");
-                        tracing::debug!(?class_url);
-                        if let Ok(true) = std::fs::exists(&class_url) {
-                            locations.push(Location {
-                                uri: Url::from_file_path(&class_url).ok()?,
-                                range: Default::default(),
-                            });
-                        }
-
-                        Some(locations)
-                    })
-                    .unwrap_or_default(),
-                NodeKind::Layout(name) => name
-                    .strip_prefix("x-")
-                    .and_then(|s| s.strip_suffix("layout"))
-                    .and_then(|s| {
-                        let work = snap.workspace_folder();
-                        tracing::debug!(?work);
-                        let mut locations = Vec::new();
-                        let layout_path = if s.is_empty() {
-                            work.join("resources/views/components/layout.blade.php")
-                        } else {
-                            let layout_name = s.strip_suffix('-')?;
-                            work.join(
-                                &("resources/views/layouts/".to_string()
-                                    + layout_name
-                                    + ".blade.php"),
-                            )
-                        };
-                        tracing::debug!(url = ?layout_path);
-                        if let Ok(true) = std::fs::exists(&layout_path) {
-                            locations.push(Location {
-                                uri: Url::from_file_path(layout_path).ok()?,
-                                range: Default::default(),
-                            });
-                        };
-
-                        if !s.is_empty() {
-                            let layout_class_name = convert_case::ccase!(
-                                pascal,
-                                s.strip_suffix('-')?.to_string() + "-layout"
-                            );
-                            let layout_class_path = work
-                                .join("app/View/Components/")
-                                .join(layout_class_name + ".php");
-                            if let Ok(true) = std::fs::exists(&layout_class_path) {
-                                locations.push(Location {
-                                    uri: Url::from_file_path(layout_class_path).ok()?,
+        let work = &snap.workspace_folder();
+        SyntaxNode::new(node, contents)
+            .map(|node| match node.kind() {
+                SyntaxKind::Component(component) => {
+                    vec![component.resources_path(work), component.class_path(work)]
+                        .into_iter()
+                        .filter_map(|path| {
+                            if snap.analysis.file_exists(&path) {
+                                let uri = lsp::into::url(&path);
+                                Some(Location {
+                                    uri,
                                     range: Default::default(),
-                                });
+                                })
+                            } else {
+                                None
                             }
-                        }
-                        Some(locations)
-                    })
-                    .unwrap_or_default(),
+                        })
+                        .collect()
+                }
+                SyntaxKind::Layout(layout) => {
+                    vec![layout.resources_path(work), layout.class_path(work)]
+                        .into_iter()
+                        .filter_map(|path| {
+                            if snap.analysis.file_exists(&path) {
+                                let uri = lsp::into::url(&path);
+                                Some(Location {
+                                    uri,
+                                    range: Default::default(),
+                                })
+                            } else {
+                                None
+                            }
+                        })
+                        .collect()
+                }
                 // As we only support builtin directives,
                 // we treat directives like keywords
-                NodeKind::Directive(_) => Vec::new(),
+                SyntaxKind::Directive(_) => Vec::new(),
             })
             .unwrap_or_default()
     }
 }
 
 #[derive(Debug, PartialEq)]
+pub struct SyntaxNode<'doc> {
+    node: tree_sitter::Node<'doc>,
+    kind: SyntaxKind,
+}
+
+impl<'doc> SyntaxNode<'doc> {
+    pub fn new(node: Node<'doc>, contents: &str) -> Option<Self> {
+        Some(Self {
+            node,
+            kind: SyntaxKind::from_node(node, contents)?,
+        })
+    }
+
+    pub fn kind(&self) -> &SyntaxKind {
+        &self.kind
+    }
+}
+
+#[derive(Debug, PartialEq)]
 /// Kinds of nodes we are interested in
-pub enum NodeKind {
+pub enum SyntaxKind {
     /// <x-component foo="bar" baz>
-    Component(SmolStr),
+    Component(Component),
     /// <x-xxx-layout>
-    Layout(SmolStr),
+    Layout(Layout),
     /// @directive
     Directive(SmolStr),
 }
 
-impl NodeKind {
-    pub fn from_node(node: &Node, contents: &str) -> Option<Self> {
+impl SyntaxKind {
+    pub fn from_node(node: Node, contents: &str) -> Option<Self> {
         match node.kind() {
             "tag_name" => {
                 let tag_name = &contents[node.byte_range()];
@@ -129,26 +253,31 @@ impl NodeKind {
                 }
 
                 let kind = if tag_name.ends_with("-layout") {
-                    Self::Layout(SmolStr::new(tag_name))
+                    Self::Layout(Layout::new(tag_name))
                 } else {
-                    Self::Component(SmolStr::new(tag_name))
+                    Self::Component(Component::new(tag_name))
                 };
 
                 Some(kind)
             }
-            "element" => Query::new(&node.language(), "(_ (tag_name) @tag_name)")
-                .ok()
-                .and_then(|query| {
-                    let mut cursor = QueryCursor::new();
-                    let mut matches = cursor.matches(&query, *node, contents.as_bytes());
-                    while let Some(m) = matches.next() {
-                        for capture in m.captures {
-                            assert_eq!(query.capture_names()[capture.index as usize], "tag_name");
-                            return Self::from_node(&capture.node, contents);
+            "self_closing_tag" | "start_tag" => {
+                Query::new(&node.language(), "(_ (tag_name) @tag_name)")
+                    .ok()
+                    .and_then(|query| {
+                        let mut cursor = QueryCursor::new();
+                        let mut matches = cursor.matches(&query, node, contents.as_bytes());
+                        while let Some(m) = matches.next() {
+                            for capture in m.captures {
+                                assert_eq!(
+                                    query.capture_names()[capture.index as usize],
+                                    "tag_name"
+                                );
+                                return Self::from_node(capture.node, contents);
+                            }
                         }
-                    }
-                    None
-                }),
+                        None
+                    })
+            }
             _ if node.kind().starts_with("directive") => {
                 let range = node.byte_range();
                 // +1 to get rid of the '@'
@@ -168,7 +297,11 @@ impl NodeKind {
 mod test {
     use smol_str::SmolStr;
 
-    use crate::{analysis::lsp::NodeKind, db::ParsedDocument, util::FileType};
+    use crate::{
+        analysis::lsp::{Component, Layout, SyntaxKind},
+        db::ParsedDocument,
+        util::FileType,
+    };
     use std::cell::RefCell;
 
     thread_local! {
@@ -200,15 +333,15 @@ mod test {
         let node = document.get_node_at(line_index::TextSize::new(3)).unwrap();
         assert_eq!(node.kind(), "directive_start");
         assert_eq!(
-            Some(NodeKind::Directive(SmolStr::new("directive"))),
-            NodeKind::from_node(&node, contents)
+            Some(SyntaxKind::Directive(SmolStr::new("directive"))),
+            SyntaxKind::from_node(node, contents)
         );
 
         let node = document.get_node_at(line_index::TextSize::new(20)).unwrap();
         assert_eq!(node.kind(), "directive_end");
         assert_eq!(
-            Some(NodeKind::Directive(SmolStr::new("directive"))),
-            NodeKind::from_node(&node, contents)
+            Some(SyntaxKind::Directive(SmolStr::new("directive"))),
+            SyntaxKind::from_node(node, contents)
         );
     }
     #[test]
@@ -221,14 +354,14 @@ mod test {
         let node = document.get_node_at(line_index::TextSize::new(3)).unwrap();
         assert_eq!(node.kind(), "tag_name");
         assert_eq!(
-            Some(NodeKind::Component(SmolStr::new("x-foo"))),
-            NodeKind::from_node(&node, contents)
+            Some(SyntaxKind::Component(Component::new("x-foo"))),
+            SyntaxKind::from_node(node, contents)
         );
         let node = document.get_node_at(line_index::TextSize::new(10)).unwrap();
         assert_eq!(node.kind(), "element");
         assert_eq!(
-            Some(NodeKind::Component(SmolStr::new("x-foo"))),
-            NodeKind::from_node(&node, contents)
+            Some(SyntaxKind::Component(Component::new("x-foo"))),
+            SyntaxKind::from_node(node, contents)
         );
     }
     #[test]
@@ -241,14 +374,14 @@ mod test {
         let node = document.get_node_at(line_index::TextSize::new(3)).unwrap();
         assert_eq!(node.kind(), "tag_name");
         assert_eq!(
-            Some(NodeKind::Layout(SmolStr::new("x-foo-layout"))),
-            NodeKind::from_node(&node, contents)
+            Some(SyntaxKind::Layout(Layout::new("x-foo-layout"))),
+            SyntaxKind::from_node(node, contents)
         );
         let node = document.get_node_at(line_index::TextSize::new(15)).unwrap();
         assert_eq!(node.kind(), "element");
         assert_eq!(
-            Some(NodeKind::Layout(SmolStr::new("x-foo-layout"))),
-            NodeKind::from_node(&node, contents)
+            Some(SyntaxKind::Layout(Layout::new("x-foo-layout"))),
+            SyntaxKind::from_node(node, contents)
         );
     }
 }

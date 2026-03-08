@@ -1,5 +1,4 @@
 use std::{
-    path::PathBuf,
     sync::{Arc, RwLock},
     thread,
 };
@@ -10,8 +9,8 @@ use async_lsp::{
     concurrency::ConcurrencyLayer,
     lsp_types::{
         self, ClientCapabilities, HoverProviderCapability, NumberOrString, PositionEncodingKind,
-        ProgressParams, ProgressParamsValue, ServerCapabilities, TextDocumentSyncCapability,
-        TextDocumentSyncKind,
+        ProgressParams, ProgressParamsValue, ServerCapabilities, SignatureHelpOptions,
+        TextDocumentSyncCapability, TextDocumentSyncKind, WorkDoneProgressOptions,
     },
     panic::CatchUnwindBuilder,
     router::Router,
@@ -66,6 +65,9 @@ pub fn run_server(
 
         // Requests
         router
+            .request::<lsp_types::request::SignatureHelpRequest, _>(|state, params| {
+                handler::request::handle_signature_help(state.snapshot(), params)
+            })
             .request::<lsp_types::request::Initialize, _>(handler::request::handle_initialize)
             .request::<lsp_types::request::HoverRequest, _>(|state, params| {
                 handler::request::handle_hover(state.snapshot(), params)
@@ -118,10 +120,16 @@ pub fn server_capabilities(config: &Config) -> ServerCapabilities {
         )),
         hover_provider: Some(HoverProviderCapability::Simple(true)),
         definition_provider: Some(lsp_types::OneOf::Left(true)),
+        signature_help_provider: Some(SignatureHelpOptions {
+            trigger_characters: Some(vec!["(".to_string()]),
+            retrigger_characters: None,
+            work_done_progress_options: WorkDoneProgressOptions {
+                work_done_progress: None,
+            },
+        }),
         diagnostic_provider: None,
         completion_provider: None,
         document_formatting_provider: None,
-        signature_help_provider: None,
         rename_provider: None,
         semantic_tokens_provider: None,
 
@@ -164,7 +172,7 @@ impl ServerState {
         let current_dir = std::env::current_dir().expect("cannot access current directory");
         let config = Config {
             capabilities: ClientCapabilities::default(),
-            workspace_folder: current_dir,
+            workspace_folder: Utf8PathBuf::from_path_buf(current_dir).unwrap(),
         };
         Self {
             client,
@@ -223,7 +231,7 @@ impl ServerSnapshot {
         self.documents.get(uri)
     }
 
-    pub fn workspace_folder(&self) -> PathBuf {
+    pub fn workspace_folder(&self) -> Utf8PathBuf {
         let config = self.config.read().expect("poison");
         config.workspace_folder.clone()
     }

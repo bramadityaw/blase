@@ -1,7 +1,6 @@
-use std::sync::Arc;
+use std::panic::{AssertUnwindSafe, UnwindSafe};
 
 use camino::{Utf8Path, Utf8PathBuf};
-use line_index::LineIndex;
 
 use crate::db::{ParsedDocument, RootDatabase, SourceFile, parse_document};
 
@@ -36,38 +35,33 @@ pub struct Analysis {
     db: RootDatabase,
 }
 
+pub type Cancellable<R> = Result<R, salsa::Cancelled>;
+
 impl Analysis {
-    pub fn source_file(&self, path: &Utf8Path) -> SourceFile {
+    pub fn source_file(&self, path: &Utf8Path) -> Option<SourceFile> {
         self.db.source_file(path)
+    }
+
+    pub fn file_exists(&self, path: &Utf8Path) -> bool {
+        self.source_file(path).is_some()
     }
 
     pub fn raw_database(&self) -> &RootDatabase {
         &self.db
     }
 
-    pub fn line_index(&self, path: &Utf8Path) -> LineIndex {
-        let text = self.file_contents(path);
-        LineIndex::new(&text)
+    pub fn parsed_document(&self, path: &Utf8Path) -> Cancellable<Option<ParsedDocument>> {
+        match self.source_file(path) {
+            Some(source) => self.with_db(|db| Some(parse_document(db, source))),
+            None => Ok(None),
+        }
     }
 
-    pub fn parsed_document(&self, path: &Utf8Path) -> ParsedDocument {
-        self.with_db(|db| {
-            let source = self.source_file(path);
-            parse_document(db, source)
-        })
-    }
-
-    pub fn file_contents(&self, path: &Utf8Path) -> Arc<str> {
-        self.with_db(|db| {
-            let source = self.source_file(path);
-            Arc::clone(&source.contents(db))
-        })
-    }
-
-    pub fn with_db<F, R>(&self, fun: F) -> R
+    pub fn with_db<F, R>(&self, fun: F) -> Cancellable<R>
     where
-        F: FnOnce(&RootDatabase) -> R,
+        F: FnOnce(&dyn salsa::Database) -> R + UnwindSafe,
     {
-        fun(&self.db)
+        let service = AssertUnwindSafe(&self.db);
+        salsa::Cancelled::catch(|| fun(*service))
     }
 }

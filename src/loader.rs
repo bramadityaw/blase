@@ -10,8 +10,8 @@ use walkdir::{DirEntry, WalkDir};
 
 use crate::server::ServerState;
 
-fn walk_files(path: &Path) -> impl Iterator<Item = DirEntry> {
-    WalkDir::new(path)
+fn walk_files<P: AsRef<Path>>(path: P) -> impl Iterator<Item = DirEntry> {
+    WalkDir::new(path.as_ref())
         .into_iter()
         .filter_map(Result::ok)
         .filter(|e| e.path().is_file() && e.path().is_absolute())
@@ -25,7 +25,7 @@ impl ServerState {
         tracing::info!("loading workspace at: {:?}", workspace.as_path());
 
         let mut entries = walk_files(&workspace.join("resources/views")).collect::<Vec<_>>();
-        entries.extend(walk_files(&workspace.join("app/Views")));
+        entries.extend(walk_files(&workspace.join("app/View")));
 
         let total_entries = entries.len();
 

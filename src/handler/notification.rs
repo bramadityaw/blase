@@ -1,24 +1,28 @@
-use std::ops::ControlFlow;
+//! This module is responsible for implementing handlers for Language Server
+//! Protocol. This module specifically handles notifications.
 
 use async_lsp::lsp_types::{
     DidChangeTextDocumentParams, DidCloseTextDocumentParams, DidOpenTextDocumentParams,
     DidSaveTextDocumentParams, InitializedParams,
 };
-use camino::Utf8PathBuf;
+use std::{ops::ControlFlow, sync::Arc};
 
-use crate::{document_data::DocumentData, server::ServerState};
+use crate::{document_data::DocumentData, lsp, server::ServerState};
 
 pub fn handle_did_save(
     server: &mut ServerState,
     DidSaveTextDocumentParams { text_document, .. }: DidSaveTextDocumentParams,
 ) -> ControlFlow<async_lsp::Result<()>> {
     let _p = tracing::info_span!("handle_did_save").entered();
-    let path = Utf8PathBuf::from_path_buf(text_document.uri.to_file_path().unwrap()).unwrap();
+    let path = lsp::from::utf8_path(&text_document.uri);
     let analysis = server.snapshot().analysis;
-    let contents = analysis.file_contents(&path);
-    let parsed_document = analysis.parsed_document(&path);
-    let diagnostics = parsed_document.syntax_errors(&contents);
-    server.publish_diagnostics(text_document.uri, diagnostics, None);
+    if let Some(source_file) = analysis.source_file(&path)
+        && let Ok(contents) = &analysis.with_db(|db| Arc::clone(source_file.contents(db)))
+        && let Ok(Some(parsed_document)) = analysis.parsed_document(&path)
+    {
+        let diagnostics = parsed_document.syntax_errors(&contents);
+        server.publish_diagnostics(text_document.uri, diagnostics, None);
+    }
 
     ControlFlow::Continue(())
 }
@@ -29,7 +33,7 @@ pub fn handle_did_close(
 ) -> ControlFlow<async_lsp::Result<()>> {
     let _p = tracing::info_span!("handle_did_close").entered();
 
-    let path = Utf8PathBuf::from_path_buf(text_document.uri.to_file_path().unwrap()).unwrap();
+    let path = lsp::from::utf8_path(&text_document.uri);
     if server.documents.remove(&path).is_none() {
         tracing::error!(url = path.as_str(), "orphan DidCloseTextDocument");
     }
@@ -44,7 +48,7 @@ pub fn handle_did_change(
     }: DidChangeTextDocumentParams,
 ) -> ControlFlow<async_lsp::Result<()>> {
     let _p = tracing::info_span!("handle_did_save").entered();
-    let path = Utf8PathBuf::from_path_buf(text_document.uri.to_file_path().unwrap()).unwrap();
+    let path = lsp::from::utf8_path(&text_document.uri);
     if let Some(mut document) = server.documents.get_mut(&path) {
         let new_contents = crate::util::apply_document_changes(
             server.negotiated_encoding(),
@@ -58,11 +62,13 @@ pub fn handle_did_change(
     }
 
     let analysis = server.snapshot().analysis;
-    let contents = analysis.file_contents(&path);
-    let parsed_document = analysis.parsed_document(&path);
-    let diagnostics = parsed_document.syntax_errors(&contents);
-    server.publish_diagnostics(text_document.uri, diagnostics, None);
-
+    if let Some(source_file) = analysis.source_file(&path)
+        && let Ok(contents) = &analysis.with_db(|db| Arc::clone(source_file.contents(db)))
+        && let Ok(Some(parsed_document)) = analysis.parsed_document(&path)
+    {
+        let diagnostics = parsed_document.syntax_errors(&contents);
+        server.publish_diagnostics(text_document.uri, diagnostics, None);
+    }
     ControlFlow::Continue(())
 }
 
@@ -71,7 +77,7 @@ pub fn handle_did_open(
     DidOpenTextDocumentParams { text_document }: DidOpenTextDocumentParams,
 ) -> ControlFlow<async_lsp::Result<()>> {
     let _p = tracing::info_span!("handle_did_open").entered();
-    let path = Utf8PathBuf::from_path_buf(text_document.uri.to_file_path().unwrap()).unwrap();
+    let path = lsp::from::utf8_path(&text_document.uri);
     let document = DocumentData {
         contents: text_document.text,
     };

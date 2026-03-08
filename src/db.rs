@@ -1,8 +1,12 @@
-use std::{cell::RefCell, fmt::Debug, sync::Arc};
+use std::{
+    fmt::Debug,
+    sync::{Arc, LazyLock, RwLock},
+};
 
 use async_lsp::lsp_types::{self, Diagnostic, DiagnosticSeverity};
 use camino::{Utf8Path, Utf8PathBuf};
 use dashmap::DashMap;
+use line_index::LineIndex;
 use salsa::{Database as Db, Setter};
 use tree_sitter::{Query, QueryCursor, StreamingIterator};
 
@@ -23,6 +27,7 @@ pub struct SourceFile {
     #[returns(ref)]
     pub contents: Arc<str>,
     pub file_type: FileType,
+    pub line_index: LineIndex,
 }
 
 #[derive(Debug, Default)]
@@ -31,13 +36,8 @@ pub struct Files {
 }
 
 impl Files {
-    pub fn source_file(&self, path: &Utf8Path) -> SourceFile {
-        match self.files.get(path) {
-            Some(file) => *file,
-            None => {
-                panic!("Unable to fetch source file for {path}; this is a bug")
-            }
-        }
+    pub fn source_file(&self, path: &Utf8Path) -> Option<SourceFile> {
+        self.files.get(path).map(|x| *x)
     }
 
     pub fn len(&self) -> usize {
@@ -47,11 +47,14 @@ impl Files {
     pub fn set_source_file(&self, db: &mut dyn Db, path: Utf8PathBuf, contents: &str) {
         match self.files.entry(path.clone()) {
             dashmap::Entry::Occupied(mut occupied) => {
-                occupied.get_mut().set_contents(db).to(Arc::from(contents));
+                let source_file = occupied.get_mut();
+                source_file.set_contents(db).to(Arc::from(contents));
+                source_file.set_line_index(db).to(LineIndex::new(contents));
             }
             dashmap::Entry::Vacant(vacant) => {
                 if let Some(ty) = FileType::from_path(&path) {
-                    let contents = SourceFile::new(db, Arc::from(contents), ty);
+                    let contents =
+                        SourceFile::new(db, Arc::from(contents), ty, LineIndex::new(contents));
                     vacant.insert(contents);
                 } else {
                     tracing::error!(url = path.as_str(), "Unknown filetype");
@@ -62,7 +65,7 @@ impl Files {
 }
 
 impl RootDatabase {
-    pub fn source_file(&self, path: &Utf8Path) -> SourceFile {
+    pub fn source_file(&self, path: &Utf8Path) -> Option<SourceFile> {
         let files = Arc::clone(&self.files);
         files.source_file(path)
     }
@@ -165,10 +168,20 @@ fn test_document_eq() {
 "#;
 
     let (doc1, doc2) = RootDatabase::default().attach(|db| {
-        let source1 = SourceFile::new(db, Arc::from(contents), FileType::Blade);
+        let source1 = SourceFile::new(
+            db,
+            Arc::from(contents),
+            FileType::Blade,
+            LineIndex::new(contents),
+        );
         let doc1 = parse_document(db, source1);
 
-        let source2 = SourceFile::new(db, Arc::from(contents), FileType::Blade);
+        let source2 = SourceFile::new(
+            db,
+            Arc::from(contents),
+            FileType::Blade,
+            LineIndex::new(contents),
+        );
         let doc2 = parse_document(db, source2);
         (doc1, doc2)
     });
@@ -191,10 +204,20 @@ fn test_document_eq_diff_ws_contents() {
 "#;
 
     let (doc1, doc2) = RootDatabase::default().attach(|db| {
-        let source1 = SourceFile::new(db, Arc::from(contents1), FileType::Blade);
+        let source1 = SourceFile::new(
+            db,
+            Arc::from(contents1),
+            FileType::Blade,
+            LineIndex::new(contents1),
+        );
         let doc1 = parse_document(db, source1);
 
-        let source2 = SourceFile::new(db, Arc::from(contents2), FileType::Blade);
+        let source2 = SourceFile::new(
+            db,
+            Arc::from(contents2),
+            FileType::Blade,
+            LineIndex::new(contents2),
+        );
         let doc2 = parse_document(db, source2);
         (doc1, doc2)
     });
@@ -204,26 +227,25 @@ fn test_document_eq_diff_ws_contents() {
 
 impl Eq for ParsedDocument {}
 
-thread_local! {
-    static PARSER: RefCell<tree_sitter::Parser> = RefCell::new(tree_sitter::Parser::new());
-}
+static PARSER: LazyLock<RwLock<tree_sitter::Parser>> =
+    LazyLock::new(|| RwLock::new(tree_sitter::Parser::new()));
 
 #[salsa::tracked]
 pub fn parse_document(db: &dyn Db, source: SourceFile) -> ParsedDocument {
     let contents = source.contents(db);
     let filetype = source.file_type(db);
 
-    let tree = PARSER.with(|parser| {
+    let tree = {
         let language = match filetype {
             FileType::Blade => tree_sitter_blade::LANGUAGE.into(),
             FileType::PHP => tree_sitter_php::LANGUAGE_PHP.into(),
         };
-        let mut parser = parser.borrow_mut();
+        let mut parser = PARSER.write().expect("poison");
         parser.set_language(&language).expect("mismatched version");
         parser
             .parse(contents.as_bytes(), None)
             .expect("Language has been set at Server construction")
-    });
+    };
 
     ParsedDocument { tree, filetype }
 }

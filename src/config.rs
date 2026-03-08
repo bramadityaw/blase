@@ -1,13 +1,12 @@
-use std::path::PathBuf;
-
 use async_lsp::lsp_types::{ClientCapabilities, PositionEncodingKind};
+use camino::Utf8PathBuf;
 use line_index::WideEncoding;
 
 use crate::line_index::PositionEncoding;
 
 pub struct Config {
     pub capabilities: ClientCapabilities,
-    pub workspace_folder: PathBuf,
+    pub workspace_folder: Utf8PathBuf,
 }
 
 impl Config {
