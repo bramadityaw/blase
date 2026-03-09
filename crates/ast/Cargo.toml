@@ -1,0 +1,12 @@
+[package]
+name = "ast"
+version = "0.0.0"
+edition = "2024"
+build = "build.rs"
+
+[dependencies]
+type-sitter.workspace = true
+
+[build-dependencies]
+tree-sitter-blade.workspace = true
+type-sitter-gen.workspace = true
