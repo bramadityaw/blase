@@ -3,14 +3,14 @@ use std::{
     sync::{Arc, LazyLock, RwLock},
 };
 
-use async_lsp::lsp_types::{self, Diagnostic, DiagnosticSeverity};
+use async_lsp::lsp_types;
 use camino::{Utf8Path, Utf8PathBuf};
 use dashmap::DashMap;
 use line_index::LineIndex;
-use salsa::{Database as Db, Setter};
-use tree_sitter::{Query, QueryCursor, StreamingIterator};
+use salsa::{Accumulator, Database, Setter};
+use type_sitter::UntypedNode;
 
-use crate::util::FileType;
+use crate::{lsp, util::FileType};
 
 #[salsa::db]
 #[derive(Clone, Default)]
@@ -44,7 +44,7 @@ impl Files {
         self.files.len()
     }
 
-    pub fn set_source_file(&self, db: &mut dyn Db, path: Utf8PathBuf, contents: &str) {
+    pub fn set_source_file(&self, db: &mut dyn Database, path: Utf8PathBuf, contents: &str) {
         match self.files.entry(path.clone()) {
             dashmap::Entry::Occupied(mut occupied) => {
                 let source_file = occupied.get_mut();
@@ -80,6 +80,53 @@ impl RootDatabase {
     }
 }
 
+#[salsa::db]
+pub trait SourceDatabase: salsa::Database + 'static {
+    fn source_file(&self, path: &Utf8Path) -> Option<SourceFile>;
+
+    fn contents(&self, path: &Utf8Path) -> Option<&Arc<str>> {
+        self.source_file(path).map(|file| file.contents(self))
+    }
+
+    fn file_type(&self, path: &Utf8Path) -> Option<FileType> {
+        self.source_file(path).map(|file| file.file_type(self))
+    }
+
+    fn line_index(&self, path: &Utf8Path) -> Option<LineIndex> {
+        self.source_file(path).map(|file| file.line_index(self))
+    }
+}
+
+#[salsa::db]
+impl SourceDatabase for RootDatabase {
+    fn source_file(&self, path: &Utf8Path) -> Option<SourceFile> {
+        self.source_file(path)
+    }
+}
+
+#[salsa::db]
+pub trait DocumentDatabase: SourceDatabase + salsa::Database {
+    fn parsed_document(&self, path: &Utf8Path) -> Option<ParsedDocument>;
+    fn parse_errors(&self, path: &Utf8Path) -> Vec<ParseError>;
+}
+
+#[salsa::db]
+impl DocumentDatabase for RootDatabase {
+    fn parsed_document(&self, path: &Utf8Path) -> Option<ParsedDocument> {
+        self.source_file(path)
+            .map(|file| parse_document(self, file))
+    }
+    fn parse_errors(&self, path: &Utf8Path) -> Vec<ParseError> {
+        match self.source_file(path) {
+            Some(file) => parse_document::accumulated::<ParseErrorAccumulator>(self, file)
+                .into_iter()
+                .map(|x| x.0.clone())
+                .collect(),
+            None => Vec::new(),
+        }
+    }
+}
+
 #[derive(Clone)]
 pub struct ParsedDocument {
     pub tree: tree_sitter::Tree,
@@ -90,58 +137,12 @@ impl ParsedDocument {
     pub fn get_node_at<'doc>(
         &'doc self,
         text_size: line_index::TextSize,
-    ) -> Option<tree_sitter::Node<'doc>> {
+    ) -> Option<UntypedNode<'doc>> {
         let offset: usize = text_size.into();
         self.tree
             .root_node()
             .descendant_for_byte_range(offset, offset)
-    }
-
-    pub fn syntax_errors(&self, contents: &str) -> Vec<Diagnostic> {
-        const ERROR_QUERY: &'static str = "(ERROR) @error";
-        Query::new(&self.tree.language(), ERROR_QUERY)
-            .map(|query| {
-                // SKip reporting PHP syntax errors
-                // That's other LSPs' responsibility
-                if self.filetype == FileType::PHP {
-                    return Vec::new();
-                }
-                let mut cursor = QueryCursor::new();
-                let mut matches =
-                    cursor.matches(&query, self.tree.root_node(), contents.as_bytes());
-
-                let mut diags = Vec::new();
-                while let Some(m) = matches.next() {
-                    for capture in m.captures.iter() {
-                        let node = capture.node;
-                        diags.push(Diagnostic {
-                            range: lsp_types::Range {
-                                start: lsp_types::Position {
-                                    line: node.start_position().row as u32,
-                                    character: node.start_position().column as u32,
-                                },
-                                end: lsp_types::Position {
-                                    line: node.end_position().row as u32,
-                                    character: node.end_position().column as u32,
-                                },
-                            },
-                            severity: Some(DiagnosticSeverity::ERROR),
-                            code: None,
-                            code_description: None,
-                            source: None,
-                            message: "Syntax error!".to_string(),
-                            related_information: None,
-                            tags: None,
-                            data: None,
-                        });
-                    }
-                }
-                diags
-            })
-            .unwrap_or_else(|e| {
-                tracing::error!("Error querying for syntax errors: {}", e);
-                Vec::new()
-            })
+            .map(|node| UntypedNode::new(node))
     }
 }
 
@@ -155,7 +156,8 @@ impl Debug for ParsedDocument {
 
 impl PartialEq for ParsedDocument {
     fn eq(&self, other: &Self) -> bool {
-        self.tree.root_node().to_sexp() == other.tree.root_node().to_sexp()
+        self.filetype == other.filetype
+            && self.tree.root_node().to_sexp() == other.tree.root_node().to_sexp()
     }
 }
 
@@ -227,11 +229,52 @@ fn test_document_eq_diff_ws_contents() {
 
 impl Eq for ParsedDocument {}
 
+#[derive(Clone)]
+pub enum ParseError {
+    Missing {
+        range: tree_sitter::Range,
+        error: String,
+        // Missing node's symbol name as it appears in the grammar ignoring aliases as a string
+        grammar_name: &'static str,
+    },
+    Syntax {
+        range: tree_sitter::Range,
+        error: String,
+        affected: String,
+    },
+}
+
+impl From<ParseError> for lsp_types::Diagnostic {
+    fn from(error: ParseError) -> Self {
+        (&error).into()
+    }
+}
+
+impl From<&ParseError> for lsp_types::Diagnostic {
+    fn from(error: &ParseError) -> Self {
+        let (range, message) = match error {
+            ParseError::Missing { range, error, .. } | ParseError::Syntax { range, error, .. } => {
+                (lsp::from::range(*range), error.clone())
+            }
+        };
+        lsp_types::Diagnostic {
+            range: range.into(),
+            severity: Some(lsp_types::DiagnosticSeverity::ERROR),
+            message,
+            code: Some(lsp_types::NumberOrString::String("BLASE".into())),
+            ..Default::default()
+        }
+    }
+}
+
+#[salsa::accumulator]
+pub struct ParseErrorAccumulator(pub ParseError);
+
 static PARSER: LazyLock<RwLock<tree_sitter::Parser>> =
     LazyLock::new(|| RwLock::new(tree_sitter::Parser::new()));
 
 #[salsa::tracked]
-pub fn parse_document(db: &dyn Db, source: SourceFile) -> ParsedDocument {
+pub fn parse_document(db: &dyn DocumentDatabase, source: SourceFile) -> ParsedDocument {
     let contents = source.contents(db);
     let filetype = source.file_type(db);
 
@@ -244,8 +287,54 @@ pub fn parse_document(db: &dyn Db, source: SourceFile) -> ParsedDocument {
         parser.set_language(&language).expect("mismatched version");
         parser
             .parse(contents.as_bytes(), None)
-            .expect("Language has been set at Server construction")
+            .expect("Language has been set")
     };
 
+    get_tree_sitter_errors(db, tree.root_node(), contents);
+
     ParsedDocument { tree, filetype }
+}
+
+/// Vendored from https://github.com/adclz/auto-lsp/blob/d133723bfbd9150c0ec944b4e9f9cf96844dc167/crates/default/src/db/lexer.rs#L30
+///
+/// Traverse a tree-sitter syntax tree to collect error nodes.
+///
+/// This function traverses the syntax tree in a depth-first manner to find error nodes:
+/// - If a node `has_error()` but none of its children have errors, it is collected
+/// - If a node `has_error()` and some children have errors, traverse those children
+fn get_tree_sitter_errors(db: &dyn DocumentDatabase, node: tree_sitter::Node, source_code: &str) {
+    let mut cursor = node.walk();
+
+    if node.has_error() {
+        if node.children(&mut cursor).any(|f| f.has_error()) {
+            for child in node.children(&mut cursor) {
+                get_tree_sitter_errors(db, child, source_code);
+            }
+        } else {
+            ParseErrorAccumulator(format_error(node, source_code)).accumulate(db);
+        }
+    }
+}
+
+/// Vendored from https://github.com/adclz/auto-lsp/blob/d133723bfbd9150c0ec944b4e9f9cf96844dc167/crates/default/src/db/lexer.rs#L44
+fn format_error(node: tree_sitter::Node, source_code: &str) -> ParseError {
+    if node.is_missing() {
+        ParseError::Missing {
+            range: node.range(),
+            error: format!("Syntax error: Missing '{}'", node.grammar_name()),
+            grammar_name: node.grammar_name(),
+        }
+    } else {
+        let children_text: Vec<String> = (0..node.child_count())
+            .filter_map(|i| {
+                let child = node.child(i)?;
+                Some(source_code[child.byte_range()].to_string())
+            })
+            .collect();
+        ParseError::Syntax {
+            range: node.range(),
+            error: format!("Unexpected token(s): '{}'", children_text.join(" ")),
+            affected: children_text.join(" "),
+        }
+    }
 }

@@ -2,7 +2,7 @@ use std::panic::{AssertUnwindSafe, UnwindSafe};
 
 use camino::{Utf8Path, Utf8PathBuf};
 
-use crate::db::{ParsedDocument, RootDatabase, SourceFile, parse_document};
+use crate::db::{DocumentDatabase, ParsedDocument, RootDatabase, SourceFile, parse_document};
 
 #[derive(Default)]
 pub struct AnalysisHost {
@@ -50,6 +50,10 @@ impl Analysis {
         &self.db
     }
 
+    pub fn parse_errors(&self, path: &Utf8Path) -> Cancellable<Vec<crate::db::ParseError>> {
+        self.with_db(|db| db.parse_errors(path))
+    }
+
     pub fn parsed_document(&self, path: &Utf8Path) -> Cancellable<Option<ParsedDocument>> {
         match self.source_file(path) {
             Some(source) => self.with_db(|db| Some(parse_document(db, source))),
@@ -59,9 +63,15 @@ impl Analysis {
 
     pub fn with_db<F, R>(&self, fun: F) -> Cancellable<R>
     where
-        F: FnOnce(&dyn salsa::Database) -> R + UnwindSafe,
+        F: FnOnce(&RootDatabase) -> R + UnwindSafe,
     {
-        let service = AssertUnwindSafe(&self.db);
-        salsa::Cancelled::catch(|| fun(*service))
+        let db = AssertUnwindSafe(&self.db);
+        salsa::Cancelled::catch(|| fun(*db))
     }
+}
+
+#[test]
+fn analysis_is_send() {
+    fn is_send<T: Send>() {}
+    is_send::<Analysis>();
 }

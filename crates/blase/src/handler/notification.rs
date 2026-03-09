@@ -5,7 +5,7 @@ use async_lsp::lsp_types::{
     DidChangeTextDocumentParams, DidCloseTextDocumentParams, DidOpenTextDocumentParams,
     DidSaveTextDocumentParams, InitializedParams,
 };
-use std::{ops::ControlFlow, sync::Arc};
+use std::ops::ControlFlow;
 
 use crate::{document_data::DocumentData, lsp, server::ServerState};
 
@@ -16,12 +16,12 @@ pub fn handle_did_save(
     let _p = tracing::info_span!("handle_did_save").entered();
     let path = lsp::from::utf8_path(&text_document.uri);
     let analysis = server.snapshot().analysis;
-    if let Some(source_file) = analysis.source_file(&path)
-        && let Ok(contents) = &analysis.with_db(|db| Arc::clone(source_file.contents(db)))
-        && let Ok(Some(parsed_document)) = analysis.parsed_document(&path)
-    {
-        let diagnostics = parsed_document.syntax_errors(&contents);
-        server.publish_diagnostics(text_document.uri, diagnostics, None);
+    if let Ok(diagnostics) = analysis.parse_errors(&path) {
+        server.publish_diagnostics(
+            text_document.uri,
+            diagnostics.into_iter().map(Into::into).collect(),
+            None,
+        );
     }
 
     ControlFlow::Continue(())
@@ -62,12 +62,12 @@ pub fn handle_did_change(
     }
 
     let analysis = server.snapshot().analysis;
-    if let Some(source_file) = analysis.source_file(&path)
-        && let Ok(contents) = &analysis.with_db(|db| Arc::clone(source_file.contents(db)))
-        && let Ok(Some(parsed_document)) = analysis.parsed_document(&path)
-    {
-        let diagnostics = parsed_document.syntax_errors(&contents);
-        server.publish_diagnostics(text_document.uri, diagnostics, None);
+    if let Ok(diagnostics) = analysis.parse_errors(&path) {
+        server.publish_diagnostics(
+            text_document.uri,
+            diagnostics.into_iter().map(Into::into).collect(),
+            None,
+        );
     }
     ControlFlow::Continue(())
 }

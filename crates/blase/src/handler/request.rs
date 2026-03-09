@@ -97,6 +97,7 @@ pub fn handle_hover(
         && let Some(node) = document.get_node_at(text_size)
         && let Ok(contents) = &analysis.with_db(|db| Arc::clone(source_file.contents(db)))
     {
+        use type_sitter::Node;
         let kind = node.kind();
         tracing::info!(kind);
         let value = format!("{kind}: {}", &contents[node.byte_range()]);
