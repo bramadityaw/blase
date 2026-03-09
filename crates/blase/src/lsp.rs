@@ -24,7 +24,7 @@ impl ServerState {
 
 pub mod from {
     //! Converts **from** lsp_types
-    use async_lsp::lsp_types::{Position, Range, Url};
+    use async_lsp::lsp_types::{self, Position, Range, Url};
     use camino::Utf8PathBuf;
     use line_index::LineCol;
     use tree_sitter::Point;
@@ -54,6 +54,17 @@ pub mod from {
             column: end.character as usize,
         };
         (start, end)
+    }
+
+    pub fn range(
+        tree_sitter::Range {
+            start_byte: _,
+            end_byte: _,
+            start_point,
+            end_point,
+        }: tree_sitter::Range,
+    ) -> Range {
+        super::into::range(start_point, end_point)
     }
 }
 
