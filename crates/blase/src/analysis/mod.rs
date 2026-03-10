@@ -1,14 +1,21 @@
-use std::panic::{AssertUnwindSafe, UnwindSafe};
+use std::{
+    panic::{AssertUnwindSafe, UnwindSafe},
+    sync::Arc,
+};
 
 use camino::{Utf8Path, Utf8PathBuf};
+use line_index::LineIndex;
 
-use crate::db::{DocumentDatabase, ParsedDocument, RootDatabase, SourceFile, parse_document};
+use crate::db::{
+    DocumentDatabase, ParsedDocument, RootDatabase, SourceDatabase, SourceFile, parse_document,
+};
 
 #[derive(Default)]
 pub struct AnalysisHost {
     db: RootDatabase,
 }
 
+mod goto_definition;
 mod lsp;
 
 impl AnalysisHost {
@@ -59,6 +66,14 @@ impl Analysis {
             Some(source) => self.with_db(|db| Some(parse_document(db, source))),
             None => Ok(None),
         }
+    }
+
+    pub fn contents(&self, path: &Utf8Path) -> Cancellable<Option<Arc<str>>> {
+        self.with_db(|db| db.contents(path))
+    }
+
+    pub fn line_index(&self, path: &Utf8Path) -> Cancellable<Option<LineIndex>> {
+        self.with_db(|db| db.line_index(path))
     }
 
     pub fn with_db<F, R>(&self, fun: F) -> Cancellable<R>

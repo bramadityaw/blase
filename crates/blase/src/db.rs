@@ -84,8 +84,9 @@ impl RootDatabase {
 pub trait SourceDatabase: salsa::Database + 'static {
     fn source_file(&self, path: &Utf8Path) -> Option<SourceFile>;
 
-    fn contents(&self, path: &Utf8Path) -> Option<&Arc<str>> {
-        self.source_file(path).map(|file| file.contents(self))
+    fn contents(&self, path: &Utf8Path) -> Option<Arc<str>> {
+        self.source_file(path)
+            .map(|file| Arc::clone(file.contents(self)))
     }
 
     fn file_type(&self, path: &Utf8Path) -> Option<FileType> {
