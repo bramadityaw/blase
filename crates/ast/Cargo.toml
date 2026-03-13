@@ -9,4 +9,5 @@ type-sitter.workspace = true
 
 [build-dependencies]
 tree-sitter-blade.workspace = true
+tree-sitter-php.workspace = true
 type-sitter-gen.workspace = true

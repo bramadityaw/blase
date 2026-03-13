@@ -28,6 +28,7 @@ name = "ast"
 version = "0.0.0"
 dependencies = [
  "tree-sitter-blade",
+ "tree-sitter-php",
  "type-sitter",
  "type-sitter-gen",
 ]

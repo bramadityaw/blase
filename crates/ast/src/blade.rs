@@ -639,7 +639,7 @@ pub struct EndTag<'tree>(::type_sitter::raw::Node<'tree>);
 impl<'tree> EndTag<'tree> {
     /**Get the node's only not-extra named child.
 
-    This child has type `tag_name` ([`TagName`])*/
+This child has type `tag_name` ([`TagName`])*/
     #[inline]
     pub fn tag_name(&self) -> ::type_sitter::NodeResult<'tree, TagName<'tree>> {
         (0..::type_sitter::Node::raw(self).named_child_count())
@@ -802,7 +802,7 @@ pub struct ErroneousEndTag<'tree>(::type_sitter::raw::Node<'tree>);
 impl<'tree> ErroneousEndTag<'tree> {
     /**Get the node's only not-extra named child.
 
-    This child has type `erroneous_end_tag_name` ([`ErroneousEndTagName`])*/
+This child has type `erroneous_end_tag_name` ([`ErroneousEndTagName`])*/
     #[inline]
     pub fn erroneous_end_tag_name(
         &self,
@@ -811,7 +811,9 @@ impl<'tree> ErroneousEndTag<'tree> {
             .map(|i| ::type_sitter::Node::raw(self).named_child(i).unwrap())
             .filter(|n| !n.is_extra())
             .next()
-            .map(<ErroneousEndTagName<'tree> as ::type_sitter::Node<'tree>>::try_from_raw)
+            .map(
+                <ErroneousEndTagName<'tree> as ::type_sitter::Node<'tree>>::try_from_raw,
+            )
             .expect(
                 "required child not present, there should at least be a MISSING node in its place",
             )
@@ -975,7 +977,7 @@ pub struct Keyword<'tree>(::type_sitter::raw::Node<'tree>);
 impl<'tree> Keyword<'tree> {
     /**Get the node's only not-extra named child.
 
-    This child has type `directive` ([`Directive`])*/
+This child has type `directive` ([`Directive`])*/
     #[inline]
     pub fn directive(&self) -> ::type_sitter::NodeResult<'tree, Directive<'tree>> {
         (0..::type_sitter::Node::raw(self).named_child_count())
@@ -1238,13 +1240,14 @@ pub struct Parameter<'tree>(::type_sitter::raw::Node<'tree>);
 impl<'tree> Parameter<'tree> {
     /**Get the node's not-extra named children.
 
-    These children have type `parameter*` ([`Parameter`])*/
+These children have type `parameter*` ([`Parameter`])*/
     #[inline]
     pub fn parameters<'a>(
         &self,
         c: &'a mut ::type_sitter::TreeCursor<'tree>,
-    ) -> impl ::std::iter::Iterator<Item = ::type_sitter::NodeResult<'tree, Parameter<'tree>>> + 'a
-    {
+    ) -> impl ::std::iter::Iterator<
+        Item = ::type_sitter::NodeResult<'tree, Parameter<'tree>>,
+    > + 'a {
         ::type_sitter::Node::raw(self)
             .named_children(&mut c.0)
             .filter(|n| !n.is_extra())
@@ -1395,10 +1398,9 @@ pub struct PhpStatement<'tree>(::type_sitter::raw::Node<'tree>);
 impl<'tree> PhpStatement<'tree> {}
 #[automatically_derived]
 impl<'tree> ::type_sitter::HasChildren<'tree> for PhpStatement<'tree> {
-    type Child =
-        anon_unions::Directive_DirectiveEnd_DirectiveStart_Parameter_PhpEndTag_PhpOnly_PhpTag<
-            'tree,
-        >;
+    type Child = anon_unions::Directive_DirectiveEnd_DirectiveStart_Parameter_PhpEndTag_PhpOnly_PhpTag<
+        'tree,
+    >;
 }
 #[automatically_derived]
 impl<'tree> ::type_sitter::Node<'tree> for PhpStatement<'tree> {
@@ -1496,8 +1498,9 @@ pub struct QuotedAttributeValue<'tree>(::type_sitter::raw::Node<'tree>);
 impl<'tree> QuotedAttributeValue<'tree> {}
 #[automatically_derived]
 impl<'tree> ::type_sitter::HasChildren<'tree> for QuotedAttributeValue<'tree> {
-    type Child =
-        anon_unions::AttributeValue_Comment_Conditional_Directive_Parameter_PhpStatement<'tree>;
+    type Child = anon_unions::AttributeValue_Comment_Conditional_Directive_Parameter_PhpStatement<
+        'tree,
+    >;
 }
 #[automatically_derived]
 impl<'tree> ::type_sitter::Node<'tree> for QuotedAttributeValue<'tree> {
@@ -2137,8 +2140,8 @@ pub mod unnamed {
     use super::*;
     /**Typed node `doctype`
 
-    This node has no named children
-    */
+This node has no named children
+*/
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     #[repr(transparent)]
     #[allow(non_camel_case_types)]
@@ -2184,8 +2187,8 @@ pub mod symbols {
     use super::*;
     /**Typed node `!!}`
 
-    This node has no named children
-    */
+This node has no named children
+*/
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     #[repr(transparent)]
     #[allow(non_camel_case_types)]
@@ -2227,8 +2230,8 @@ pub mod symbols {
     }
     /**Typed node `"`
 
-    This node has no named children
-    */
+This node has no named children
+*/
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     #[repr(transparent)]
     #[allow(non_camel_case_types)]
@@ -2270,8 +2273,8 @@ pub mod symbols {
     }
     /**Typed node `'`
 
-    This node has no named children
-    */
+This node has no named children
+*/
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     #[repr(transparent)]
     #[allow(non_camel_case_types)]
@@ -2313,8 +2316,8 @@ pub mod symbols {
     }
     /**Typed node `(`
 
-    This node has no named children
-    */
+This node has no named children
+*/
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     #[repr(transparent)]
     #[allow(non_camel_case_types)]
@@ -2356,8 +2359,8 @@ pub mod symbols {
     }
     /**Typed node `)`
 
-    This node has no named children
-    */
+This node has no named children
+*/
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     #[repr(transparent)]
     #[allow(non_camel_case_types)]
@@ -2399,8 +2402,8 @@ pub mod symbols {
     }
     /**Typed node `,`
 
-    This node has no named children
-    */
+This node has no named children
+*/
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     #[repr(transparent)]
     #[allow(non_camel_case_types)]
@@ -2442,8 +2445,8 @@ pub mod symbols {
     }
     /**Typed node `/>`
 
-    This node has no named children
-    */
+This node has no named children
+*/
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     #[repr(transparent)]
     #[allow(non_camel_case_types)]
@@ -2485,8 +2488,8 @@ pub mod symbols {
     }
     /**Typed node `<`
 
-    This node has no named children
-    */
+This node has no named children
+*/
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     #[repr(transparent)]
     #[allow(non_camel_case_types)]
@@ -2528,8 +2531,8 @@ pub mod symbols {
     }
     /**Typed node `<!`
 
-    This node has no named children
-    */
+This node has no named children
+*/
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     #[repr(transparent)]
     #[allow(non_camel_case_types)]
@@ -2571,8 +2574,8 @@ pub mod symbols {
     }
     /**Typed node `</`
 
-    This node has no named children
-    */
+This node has no named children
+*/
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     #[repr(transparent)]
     #[allow(non_camel_case_types)]
@@ -2614,8 +2617,8 @@ pub mod symbols {
     }
     /**Typed node `=`
 
-    This node has no named children
-    */
+This node has no named children
+*/
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     #[repr(transparent)]
     #[allow(non_camel_case_types)]
@@ -2657,8 +2660,8 @@ pub mod symbols {
     }
     /**Typed node `>`
 
-    This node has no named children
-    */
+This node has no named children
+*/
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     #[repr(transparent)]
     #[allow(non_camel_case_types)]
@@ -2700,8 +2703,8 @@ pub mod symbols {
     }
     /**Typed node `{!!`
 
-    This node has no named children
-    */
+This node has no named children
+*/
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     #[repr(transparent)]
     #[allow(non_camel_case_types)]
@@ -2743,8 +2746,8 @@ pub mod symbols {
     }
     /**Typed node `{{`
 
-    This node has no named children
-    */
+This node has no named children
+*/
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     #[repr(transparent)]
     #[allow(non_camel_case_types)]
@@ -2786,8 +2789,8 @@ pub mod symbols {
     }
     /**Typed node `}}`
 
-    This node has no named children
-    */
+This node has no named children
+*/
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     #[repr(transparent)]
     #[allow(non_camel_case_types)]
@@ -2832,28 +2835,28 @@ pub mod anon_unions {
     #[allow(unused_imports)]
     use super::*;
     /**One of `{comment | conditional | directive | doctype | element | entity | envoy | erroneous_end_tag | fragment | keyword | livewire | loop | once | parameter | php_statement | script_element | section | stack | style_element | switch | text | verbatim}`:
-    - [`Comment`]
-    - [`Conditional`]
-    - [`Directive`]
-    - [`Doctype`]
-    - [`Element`]
-    - [`Entity`]
-    - [`Envoy`]
-    - [`ErroneousEndTag`]
-    - [`Fragment`]
-    - [`Keyword`]
-    - [`Livewire`]
-    - [`Loop`]
-    - [`Once`]
-    - [`Parameter`]
-    - [`PhpStatement`]
-    - [`ScriptElement`]
-    - [`Section`]
-    - [`Stack`]
-    - [`StyleElement`]
-    - [`Switch`]
-    - [`Text`]
-    - [`Verbatim`]*/
+- [`Comment`]
+- [`Conditional`]
+- [`Directive`]
+- [`Doctype`]
+- [`Element`]
+- [`Entity`]
+- [`Envoy`]
+- [`ErroneousEndTag`]
+- [`Fragment`]
+- [`Keyword`]
+- [`Livewire`]
+- [`Loop`]
+- [`Once`]
+- [`Parameter`]
+- [`PhpStatement`]
+- [`ScriptElement`]
+- [`Section`]
+- [`Stack`]
+- [`StyleElement`]
+- [`Switch`]
+- [`Text`]
+- [`Verbatim`]*/
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     #[allow(non_camel_case_types)]
     pub enum Anon125155986692203312381277354493354211763<'tree> {
@@ -2955,7 +2958,9 @@ pub mod anon_unions {
         }
         ///Returns the node if it is of type `erroneous_end_tag` ([`ErroneousEndTag`]), otherwise returns `None`
         #[inline]
-        pub fn as_erroneous_end_tag(self) -> ::std::option::Option<ErroneousEndTag<'tree>> {
+        pub fn as_erroneous_end_tag(
+            self,
+        ) -> ::std::option::Option<ErroneousEndTag<'tree>> {
             #[allow(irrefutable_let_patterns)]
             if let Self::ErroneousEndTag(x) = self {
                 ::std::option::Option::Some(x)
@@ -3105,7 +3110,8 @@ pub mod anon_unions {
         }
     }
     #[automatically_derived]
-    impl<'tree> ::type_sitter::Node<'tree> for Anon125155986692203312381277354493354211763<'tree> {
+    impl<'tree> ::type_sitter::Node<'tree>
+    for Anon125155986692203312381277354493354211763<'tree> {
         type WithLifetime<'a> = Anon125155986692203312381277354493354211763<'a>;
         const KIND: &'static str = "{comment | conditional | directive | doctype | element | entity | envoy | erroneous_end_tag | fragment | keyword | livewire | loop | once | parameter | php_statement | script_element | section | stack | style_element | switch | text | verbatim}";
         #[inline]
@@ -3113,126 +3119,204 @@ pub mod anon_unions {
             node: ::type_sitter::raw::Node<'tree>,
         ) -> ::type_sitter::NodeResult<'tree, Self> {
             match node.kind() {
-                "comment" => Ok(unsafe {
-                    Self::Comment(
-                        <Comment<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "conditional" => Ok(unsafe {
-                    Self::Conditional(
-                        <Conditional<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "directive" => Ok(unsafe {
-                    Self::Directive(
-                        <Directive<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "doctype" => Ok(unsafe {
-                    Self::Doctype(
-                        <Doctype<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "element" => Ok(unsafe {
-                    Self::Element(
-                        <Element<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "entity" => Ok(unsafe {
-                    Self::Entity(
-                        <Entity<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "envoy" => Ok(unsafe {
-                    Self::Envoy(
-                        <Envoy<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "erroneous_end_tag" => {
+                "comment" => {
                     Ok(unsafe {
-                        Self::ErroneousEndTag(<ErroneousEndTag<'tree> as ::type_sitter::Node<
-                            'tree,
-                        >>::from_raw_unchecked(node))
+                        Self::Comment(
+                            <Comment<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
                     })
                 }
-                "fragment" => Ok(unsafe {
-                    Self::Fragment(
-                        <Fragment<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "keyword" => Ok(unsafe {
-                    Self::Keyword(
-                        <Keyword<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "livewire" => Ok(unsafe {
-                    Self::Livewire(
-                        <Livewire<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "loop" => Ok(unsafe {
-                    Self::Loop(
-                        <Loop<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "once" => Ok(unsafe {
-                    Self::Once(
-                        <Once<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "parameter" => Ok(unsafe {
-                    Self::Parameter(
-                        <Parameter<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "php_statement" => Ok(unsafe {
-                    Self::PhpStatement(
-                        <PhpStatement<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "script_element" => Ok(unsafe {
-                    Self::ScriptElement(
-                        <ScriptElement<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "section" => Ok(unsafe {
-                    Self::Section(
-                        <Section<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "stack" => Ok(unsafe {
-                    Self::Stack(
-                        <Stack<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "style_element" => Ok(unsafe {
-                    Self::StyleElement(
-                        <StyleElement<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "switch" => Ok(unsafe {
-                    Self::Switch(
-                        <Switch<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "text" => Ok(unsafe {
-                    Self::Text(
-                        <Text<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "verbatim" => Ok(unsafe {
-                    Self::Verbatim(
-                        <Verbatim<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
+                "conditional" => {
+                    Ok(unsafe {
+                        Self::Conditional(
+                            <Conditional<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "directive" => {
+                    Ok(unsafe {
+                        Self::Directive(
+                            <Directive<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "doctype" => {
+                    Ok(unsafe {
+                        Self::Doctype(
+                            <Doctype<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "element" => {
+                    Ok(unsafe {
+                        Self::Element(
+                            <Element<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "entity" => {
+                    Ok(unsafe {
+                        Self::Entity(
+                            <Entity<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "envoy" => {
+                    Ok(unsafe {
+                        Self::Envoy(
+                            <Envoy<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "erroneous_end_tag" => {
+                    Ok(unsafe {
+                        Self::ErroneousEndTag(
+                            <ErroneousEndTag<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "fragment" => {
+                    Ok(unsafe {
+                        Self::Fragment(
+                            <Fragment<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "keyword" => {
+                    Ok(unsafe {
+                        Self::Keyword(
+                            <Keyword<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "livewire" => {
+                    Ok(unsafe {
+                        Self::Livewire(
+                            <Livewire<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "loop" => {
+                    Ok(unsafe {
+                        Self::Loop(
+                            <Loop<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "once" => {
+                    Ok(unsafe {
+                        Self::Once(
+                            <Once<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "parameter" => {
+                    Ok(unsafe {
+                        Self::Parameter(
+                            <Parameter<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "php_statement" => {
+                    Ok(unsafe {
+                        Self::PhpStatement(
+                            <PhpStatement<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "script_element" => {
+                    Ok(unsafe {
+                        Self::ScriptElement(
+                            <ScriptElement<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "section" => {
+                    Ok(unsafe {
+                        Self::Section(
+                            <Section<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "stack" => {
+                    Ok(unsafe {
+                        Self::Stack(
+                            <Stack<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "style_element" => {
+                    Ok(unsafe {
+                        Self::StyleElement(
+                            <StyleElement<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "switch" => {
+                    Ok(unsafe {
+                        Self::Switch(
+                            <Switch<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "text" => {
+                    Ok(unsafe {
+                        Self::Text(
+                            <Text<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "verbatim" => {
+                    Ok(unsafe {
+                        Self::Verbatim(
+                            <Verbatim<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
                 _ => Err(::type_sitter::IncorrectKind::new::<Self>(node)),
             }
         }
@@ -3319,27 +3403,27 @@ pub mod anon_unions {
         }
     }
     /**One of `{comment | conditional | directive | directive_end | directive_start | element | entity | erroneous_end_tag | fragment | keyword | livewire | loop | once | parameter | php_statement | script_element | stack | style_element | switch | text | verbatim}`:
-    - [`Comment`]
-    - [`Conditional`]
-    - [`Directive`]
-    - [`DirectiveEnd`]
-    - [`DirectiveStart`]
-    - [`Element`]
-    - [`Entity`]
-    - [`ErroneousEndTag`]
-    - [`Fragment`]
-    - [`Keyword`]
-    - [`Livewire`]
-    - [`Loop`]
-    - [`Once`]
-    - [`Parameter`]
-    - [`PhpStatement`]
-    - [`ScriptElement`]
-    - [`Stack`]
-    - [`StyleElement`]
-    - [`Switch`]
-    - [`Text`]
-    - [`Verbatim`]*/
+- [`Comment`]
+- [`Conditional`]
+- [`Directive`]
+- [`DirectiveEnd`]
+- [`DirectiveStart`]
+- [`Element`]
+- [`Entity`]
+- [`ErroneousEndTag`]
+- [`Fragment`]
+- [`Keyword`]
+- [`Livewire`]
+- [`Loop`]
+- [`Once`]
+- [`Parameter`]
+- [`PhpStatement`]
+- [`ScriptElement`]
+- [`Stack`]
+- [`StyleElement`]
+- [`Switch`]
+- [`Text`]
+- [`Verbatim`]*/
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     #[allow(non_camel_case_types)]
     pub enum Anon167980544356910785377397835572504828111<'tree> {
@@ -3440,7 +3524,9 @@ pub mod anon_unions {
         }
         ///Returns the node if it is of type `erroneous_end_tag` ([`ErroneousEndTag`]), otherwise returns `None`
         #[inline]
-        pub fn as_erroneous_end_tag(self) -> ::std::option::Option<ErroneousEndTag<'tree>> {
+        pub fn as_erroneous_end_tag(
+            self,
+        ) -> ::std::option::Option<ErroneousEndTag<'tree>> {
             #[allow(irrefutable_let_patterns)]
             if let Self::ErroneousEndTag(x) = self {
                 ::std::option::Option::Some(x)
@@ -3580,7 +3666,8 @@ pub mod anon_unions {
         }
     }
     #[automatically_derived]
-    impl<'tree> ::type_sitter::Node<'tree> for Anon167980544356910785377397835572504828111<'tree> {
+    impl<'tree> ::type_sitter::Node<'tree>
+    for Anon167980544356910785377397835572504828111<'tree> {
         type WithLifetime<'a> = Anon167980544356910785377397835572504828111<'a>;
         const KIND: &'static str = "{comment | conditional | directive | directive_end | directive_start | element | entity | erroneous_end_tag | fragment | keyword | livewire | loop | once | parameter | php_statement | script_element | stack | style_element | switch | text | verbatim}";
         #[inline]
@@ -3588,125 +3675,195 @@ pub mod anon_unions {
             node: ::type_sitter::raw::Node<'tree>,
         ) -> ::type_sitter::NodeResult<'tree, Self> {
             match node.kind() {
-                "comment" => Ok(unsafe {
-                    Self::Comment(
-                        <Comment<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "conditional" => Ok(unsafe {
-                    Self::Conditional(
-                        <Conditional<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "directive" => Ok(unsafe {
-                    Self::Directive(
-                        <Directive<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "directive_end" => Ok(unsafe {
-                    Self::DirectiveEnd(
-                        <DirectiveEnd<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
+                "comment" => {
+                    Ok(unsafe {
+                        Self::Comment(
+                            <Comment<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "conditional" => {
+                    Ok(unsafe {
+                        Self::Conditional(
+                            <Conditional<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "directive" => {
+                    Ok(unsafe {
+                        Self::Directive(
+                            <Directive<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "directive_end" => {
+                    Ok(unsafe {
+                        Self::DirectiveEnd(
+                            <DirectiveEnd<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
                 "directive_start" => {
                     Ok(unsafe {
-                        Self::DirectiveStart(<DirectiveStart<'tree> as ::type_sitter::Node<
-                            'tree,
-                        >>::from_raw_unchecked(node))
+                        Self::DirectiveStart(
+                            <DirectiveStart<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
                     })
                 }
-                "element" => Ok(unsafe {
-                    Self::Element(
-                        <Element<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "entity" => Ok(unsafe {
-                    Self::Entity(
-                        <Entity<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
+                "element" => {
+                    Ok(unsafe {
+                        Self::Element(
+                            <Element<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "entity" => {
+                    Ok(unsafe {
+                        Self::Entity(
+                            <Entity<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
                 "erroneous_end_tag" => {
                     Ok(unsafe {
-                        Self::ErroneousEndTag(<ErroneousEndTag<'tree> as ::type_sitter::Node<
-                            'tree,
-                        >>::from_raw_unchecked(node))
+                        Self::ErroneousEndTag(
+                            <ErroneousEndTag<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
                     })
                 }
-                "fragment" => Ok(unsafe {
-                    Self::Fragment(
-                        <Fragment<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "keyword" => Ok(unsafe {
-                    Self::Keyword(
-                        <Keyword<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "livewire" => Ok(unsafe {
-                    Self::Livewire(
-                        <Livewire<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "loop" => Ok(unsafe {
-                    Self::Loop(
-                        <Loop<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "once" => Ok(unsafe {
-                    Self::Once(
-                        <Once<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "parameter" => Ok(unsafe {
-                    Self::Parameter(
-                        <Parameter<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "php_statement" => Ok(unsafe {
-                    Self::PhpStatement(
-                        <PhpStatement<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "script_element" => Ok(unsafe {
-                    Self::ScriptElement(
-                        <ScriptElement<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "stack" => Ok(unsafe {
-                    Self::Stack(
-                        <Stack<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "style_element" => Ok(unsafe {
-                    Self::StyleElement(
-                        <StyleElement<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "switch" => Ok(unsafe {
-                    Self::Switch(
-                        <Switch<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "text" => Ok(unsafe {
-                    Self::Text(
-                        <Text<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "verbatim" => Ok(unsafe {
-                    Self::Verbatim(
-                        <Verbatim<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
+                "fragment" => {
+                    Ok(unsafe {
+                        Self::Fragment(
+                            <Fragment<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "keyword" => {
+                    Ok(unsafe {
+                        Self::Keyword(
+                            <Keyword<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "livewire" => {
+                    Ok(unsafe {
+                        Self::Livewire(
+                            <Livewire<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "loop" => {
+                    Ok(unsafe {
+                        Self::Loop(
+                            <Loop<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "once" => {
+                    Ok(unsafe {
+                        Self::Once(
+                            <Once<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "parameter" => {
+                    Ok(unsafe {
+                        Self::Parameter(
+                            <Parameter<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "php_statement" => {
+                    Ok(unsafe {
+                        Self::PhpStatement(
+                            <PhpStatement<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "script_element" => {
+                    Ok(unsafe {
+                        Self::ScriptElement(
+                            <ScriptElement<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "stack" => {
+                    Ok(unsafe {
+                        Self::Stack(
+                            <Stack<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "style_element" => {
+                    Ok(unsafe {
+                        Self::StyleElement(
+                            <StyleElement<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "switch" => {
+                    Ok(unsafe {
+                        Self::Switch(
+                            <Switch<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "text" => {
+                    Ok(unsafe {
+                        Self::Text(
+                            <Text<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "verbatim" => {
+                    Ok(unsafe {
+                        Self::Verbatim(
+                            <Verbatim<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
                 _ => Err(::type_sitter::IncorrectKind::new::<Self>(node)),
             }
         }
@@ -3790,22 +3947,22 @@ pub mod anon_unions {
         }
     }
     /**One of `{comment | conditional | directive | directive_end | directive_start | element | entity | erroneous_end_tag | keyword | livewire | loop | parameter | php_statement | script_element | style_element | text}`:
-    - [`Comment`]
-    - [`Conditional`]
-    - [`Directive`]
-    - [`DirectiveEnd`]
-    - [`DirectiveStart`]
-    - [`Element`]
-    - [`Entity`]
-    - [`ErroneousEndTag`]
-    - [`Keyword`]
-    - [`Livewire`]
-    - [`Loop`]
-    - [`Parameter`]
-    - [`PhpStatement`]
-    - [`ScriptElement`]
-    - [`StyleElement`]
-    - [`Text`]*/
+- [`Comment`]
+- [`Conditional`]
+- [`Directive`]
+- [`DirectiveEnd`]
+- [`DirectiveStart`]
+- [`Element`]
+- [`Entity`]
+- [`ErroneousEndTag`]
+- [`Keyword`]
+- [`Livewire`]
+- [`Loop`]
+- [`Parameter`]
+- [`PhpStatement`]
+- [`ScriptElement`]
+- [`StyleElement`]
+- [`Text`]*/
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     #[allow(non_camel_case_types)]
     pub enum Anon217009455819341117748124715030970988988<'tree> {
@@ -3901,7 +4058,9 @@ pub mod anon_unions {
         }
         ///Returns the node if it is of type `erroneous_end_tag` ([`ErroneousEndTag`]), otherwise returns `None`
         #[inline]
-        pub fn as_erroneous_end_tag(self) -> ::std::option::Option<ErroneousEndTag<'tree>> {
+        pub fn as_erroneous_end_tag(
+            self,
+        ) -> ::std::option::Option<ErroneousEndTag<'tree>> {
             #[allow(irrefutable_let_patterns)]
             if let Self::ErroneousEndTag(x) = self {
                 ::std::option::Option::Some(x)
@@ -3991,7 +4150,8 @@ pub mod anon_unions {
         }
     }
     #[automatically_derived]
-    impl<'tree> ::type_sitter::Node<'tree> for Anon217009455819341117748124715030970988988<'tree> {
+    impl<'tree> ::type_sitter::Node<'tree>
+    for Anon217009455819341117748124715030970988988<'tree> {
         type WithLifetime<'a> = Anon217009455819341117748124715030970988988<'a>;
         const KIND: &'static str = "{comment | conditional | directive | directive_end | directive_start | element | entity | erroneous_end_tag | keyword | livewire | loop | parameter | php_statement | script_element | style_element | text}";
         #[inline]
@@ -3999,100 +4159,150 @@ pub mod anon_unions {
             node: ::type_sitter::raw::Node<'tree>,
         ) -> ::type_sitter::NodeResult<'tree, Self> {
             match node.kind() {
-                "comment" => Ok(unsafe {
-                    Self::Comment(
-                        <Comment<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "conditional" => Ok(unsafe {
-                    Self::Conditional(
-                        <Conditional<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "directive" => Ok(unsafe {
-                    Self::Directive(
-                        <Directive<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "directive_end" => Ok(unsafe {
-                    Self::DirectiveEnd(
-                        <DirectiveEnd<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
+                "comment" => {
+                    Ok(unsafe {
+                        Self::Comment(
+                            <Comment<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "conditional" => {
+                    Ok(unsafe {
+                        Self::Conditional(
+                            <Conditional<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "directive" => {
+                    Ok(unsafe {
+                        Self::Directive(
+                            <Directive<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "directive_end" => {
+                    Ok(unsafe {
+                        Self::DirectiveEnd(
+                            <DirectiveEnd<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
                 "directive_start" => {
                     Ok(unsafe {
-                        Self::DirectiveStart(<DirectiveStart<'tree> as ::type_sitter::Node<
-                            'tree,
-                        >>::from_raw_unchecked(node))
+                        Self::DirectiveStart(
+                            <DirectiveStart<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
                     })
                 }
-                "element" => Ok(unsafe {
-                    Self::Element(
-                        <Element<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "entity" => Ok(unsafe {
-                    Self::Entity(
-                        <Entity<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
+                "element" => {
+                    Ok(unsafe {
+                        Self::Element(
+                            <Element<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "entity" => {
+                    Ok(unsafe {
+                        Self::Entity(
+                            <Entity<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
                 "erroneous_end_tag" => {
                     Ok(unsafe {
-                        Self::ErroneousEndTag(<ErroneousEndTag<'tree> as ::type_sitter::Node<
-                            'tree,
-                        >>::from_raw_unchecked(node))
+                        Self::ErroneousEndTag(
+                            <ErroneousEndTag<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
                     })
                 }
-                "keyword" => Ok(unsafe {
-                    Self::Keyword(
-                        <Keyword<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "livewire" => Ok(unsafe {
-                    Self::Livewire(
-                        <Livewire<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "loop" => Ok(unsafe {
-                    Self::Loop(
-                        <Loop<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "parameter" => Ok(unsafe {
-                    Self::Parameter(
-                        <Parameter<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "php_statement" => Ok(unsafe {
-                    Self::PhpStatement(
-                        <PhpStatement<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "script_element" => Ok(unsafe {
-                    Self::ScriptElement(
-                        <ScriptElement<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "style_element" => Ok(unsafe {
-                    Self::StyleElement(
-                        <StyleElement<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "text" => Ok(unsafe {
-                    Self::Text(
-                        <Text<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
+                "keyword" => {
+                    Ok(unsafe {
+                        Self::Keyword(
+                            <Keyword<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "livewire" => {
+                    Ok(unsafe {
+                        Self::Livewire(
+                            <Livewire<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "loop" => {
+                    Ok(unsafe {
+                        Self::Loop(
+                            <Loop<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "parameter" => {
+                    Ok(unsafe {
+                        Self::Parameter(
+                            <Parameter<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "php_statement" => {
+                    Ok(unsafe {
+                        Self::PhpStatement(
+                            <PhpStatement<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "script_element" => {
+                    Ok(unsafe {
+                        Self::ScriptElement(
+                            <ScriptElement<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "style_element" => {
+                    Ok(unsafe {
+                        Self::StyleElement(
+                            <StyleElement<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "text" => {
+                    Ok(unsafe {
+                        Self::Text(
+                            <Text<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
                 _ => Err(::type_sitter::IncorrectKind::new::<Self>(node)),
             }
         }
@@ -4161,23 +4371,23 @@ pub mod anon_unions {
         }
     }
     /**One of `{comment | conditional | directive | directive_end | directive_start | element | entity | erroneous_end_tag | keyword | loop | parameter | php_statement | script_element | style_element | switch | text | verbatim}`:
-    - [`Comment`]
-    - [`Conditional`]
-    - [`Directive`]
-    - [`DirectiveEnd`]
-    - [`DirectiveStart`]
-    - [`Element`]
-    - [`Entity`]
-    - [`ErroneousEndTag`]
-    - [`Keyword`]
-    - [`Loop`]
-    - [`Parameter`]
-    - [`PhpStatement`]
-    - [`ScriptElement`]
-    - [`StyleElement`]
-    - [`Switch`]
-    - [`Text`]
-    - [`Verbatim`]*/
+- [`Comment`]
+- [`Conditional`]
+- [`Directive`]
+- [`DirectiveEnd`]
+- [`DirectiveStart`]
+- [`Element`]
+- [`Entity`]
+- [`ErroneousEndTag`]
+- [`Keyword`]
+- [`Loop`]
+- [`Parameter`]
+- [`PhpStatement`]
+- [`ScriptElement`]
+- [`StyleElement`]
+- [`Switch`]
+- [`Text`]
+- [`Verbatim`]*/
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     #[allow(non_camel_case_types)]
     pub enum Anon220860789005696801182824190281800612819<'tree> {
@@ -4274,7 +4484,9 @@ pub mod anon_unions {
         }
         ///Returns the node if it is of type `erroneous_end_tag` ([`ErroneousEndTag`]), otherwise returns `None`
         #[inline]
-        pub fn as_erroneous_end_tag(self) -> ::std::option::Option<ErroneousEndTag<'tree>> {
+        pub fn as_erroneous_end_tag(
+            self,
+        ) -> ::std::option::Option<ErroneousEndTag<'tree>> {
             #[allow(irrefutable_let_patterns)]
             if let Self::ErroneousEndTag(x) = self {
                 ::std::option::Option::Some(x)
@@ -4374,7 +4586,8 @@ pub mod anon_unions {
         }
     }
     #[automatically_derived]
-    impl<'tree> ::type_sitter::Node<'tree> for Anon220860789005696801182824190281800612819<'tree> {
+    impl<'tree> ::type_sitter::Node<'tree>
+    for Anon220860789005696801182824190281800612819<'tree> {
         type WithLifetime<'a> = Anon220860789005696801182824190281800612819<'a>;
         const KIND: &'static str = "{comment | conditional | directive | directive_end | directive_start | element | entity | erroneous_end_tag | keyword | loop | parameter | php_statement | script_element | style_element | switch | text | verbatim}";
         #[inline]
@@ -4382,105 +4595,159 @@ pub mod anon_unions {
             node: ::type_sitter::raw::Node<'tree>,
         ) -> ::type_sitter::NodeResult<'tree, Self> {
             match node.kind() {
-                "comment" => Ok(unsafe {
-                    Self::Comment(
-                        <Comment<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "conditional" => Ok(unsafe {
-                    Self::Conditional(
-                        <Conditional<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "directive" => Ok(unsafe {
-                    Self::Directive(
-                        <Directive<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "directive_end" => Ok(unsafe {
-                    Self::DirectiveEnd(
-                        <DirectiveEnd<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
+                "comment" => {
+                    Ok(unsafe {
+                        Self::Comment(
+                            <Comment<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "conditional" => {
+                    Ok(unsafe {
+                        Self::Conditional(
+                            <Conditional<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "directive" => {
+                    Ok(unsafe {
+                        Self::Directive(
+                            <Directive<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "directive_end" => {
+                    Ok(unsafe {
+                        Self::DirectiveEnd(
+                            <DirectiveEnd<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
                 "directive_start" => {
                     Ok(unsafe {
-                        Self::DirectiveStart(<DirectiveStart<'tree> as ::type_sitter::Node<
-                            'tree,
-                        >>::from_raw_unchecked(node))
+                        Self::DirectiveStart(
+                            <DirectiveStart<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
                     })
                 }
-                "element" => Ok(unsafe {
-                    Self::Element(
-                        <Element<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "entity" => Ok(unsafe {
-                    Self::Entity(
-                        <Entity<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
+                "element" => {
+                    Ok(unsafe {
+                        Self::Element(
+                            <Element<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "entity" => {
+                    Ok(unsafe {
+                        Self::Entity(
+                            <Entity<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
                 "erroneous_end_tag" => {
                     Ok(unsafe {
-                        Self::ErroneousEndTag(<ErroneousEndTag<'tree> as ::type_sitter::Node<
-                            'tree,
-                        >>::from_raw_unchecked(node))
+                        Self::ErroneousEndTag(
+                            <ErroneousEndTag<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
                     })
                 }
-                "keyword" => Ok(unsafe {
-                    Self::Keyword(
-                        <Keyword<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "loop" => Ok(unsafe {
-                    Self::Loop(
-                        <Loop<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "parameter" => Ok(unsafe {
-                    Self::Parameter(
-                        <Parameter<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "php_statement" => Ok(unsafe {
-                    Self::PhpStatement(
-                        <PhpStatement<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "script_element" => Ok(unsafe {
-                    Self::ScriptElement(
-                        <ScriptElement<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "style_element" => Ok(unsafe {
-                    Self::StyleElement(
-                        <StyleElement<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "switch" => Ok(unsafe {
-                    Self::Switch(
-                        <Switch<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "text" => Ok(unsafe {
-                    Self::Text(
-                        <Text<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "verbatim" => Ok(unsafe {
-                    Self::Verbatim(
-                        <Verbatim<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
+                "keyword" => {
+                    Ok(unsafe {
+                        Self::Keyword(
+                            <Keyword<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "loop" => {
+                    Ok(unsafe {
+                        Self::Loop(
+                            <Loop<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "parameter" => {
+                    Ok(unsafe {
+                        Self::Parameter(
+                            <Parameter<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "php_statement" => {
+                    Ok(unsafe {
+                        Self::PhpStatement(
+                            <PhpStatement<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "script_element" => {
+                    Ok(unsafe {
+                        Self::ScriptElement(
+                            <ScriptElement<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "style_element" => {
+                    Ok(unsafe {
+                        Self::StyleElement(
+                            <StyleElement<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "switch" => {
+                    Ok(unsafe {
+                        Self::Switch(
+                            <Switch<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "text" => {
+                    Ok(unsafe {
+                        Self::Text(
+                            <Text<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "verbatim" => {
+                    Ok(unsafe {
+                        Self::Verbatim(
+                            <Verbatim<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
                 _ => Err(::type_sitter::IncorrectKind::new::<Self>(node)),
             }
         }
@@ -4552,25 +4819,25 @@ pub mod anon_unions {
         }
     }
     /**One of `{comment | conditional | directive | directive_end | directive_start | element | entity | erroneous_end_tag | keyword | livewire | loop | parameter | php_statement | script_element | stack | style_element | switch | text | verbatim}`:
-    - [`Comment`]
-    - [`Conditional`]
-    - [`Directive`]
-    - [`DirectiveEnd`]
-    - [`DirectiveStart`]
-    - [`Element`]
-    - [`Entity`]
-    - [`ErroneousEndTag`]
-    - [`Keyword`]
-    - [`Livewire`]
-    - [`Loop`]
-    - [`Parameter`]
-    - [`PhpStatement`]
-    - [`ScriptElement`]
-    - [`Stack`]
-    - [`StyleElement`]
-    - [`Switch`]
-    - [`Text`]
-    - [`Verbatim`]*/
+- [`Comment`]
+- [`Conditional`]
+- [`Directive`]
+- [`DirectiveEnd`]
+- [`DirectiveStart`]
+- [`Element`]
+- [`Entity`]
+- [`ErroneousEndTag`]
+- [`Keyword`]
+- [`Livewire`]
+- [`Loop`]
+- [`Parameter`]
+- [`PhpStatement`]
+- [`ScriptElement`]
+- [`Stack`]
+- [`StyleElement`]
+- [`Switch`]
+- [`Text`]
+- [`Verbatim`]*/
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     #[allow(non_camel_case_types)]
     pub enum Anon243545065307733425234527997183447807845<'tree> {
@@ -4669,7 +4936,9 @@ pub mod anon_unions {
         }
         ///Returns the node if it is of type `erroneous_end_tag` ([`ErroneousEndTag`]), otherwise returns `None`
         #[inline]
-        pub fn as_erroneous_end_tag(self) -> ::std::option::Option<ErroneousEndTag<'tree>> {
+        pub fn as_erroneous_end_tag(
+            self,
+        ) -> ::std::option::Option<ErroneousEndTag<'tree>> {
             #[allow(irrefutable_let_patterns)]
             if let Self::ErroneousEndTag(x) = self {
                 ::std::option::Option::Some(x)
@@ -4789,7 +5058,8 @@ pub mod anon_unions {
         }
     }
     #[automatically_derived]
-    impl<'tree> ::type_sitter::Node<'tree> for Anon243545065307733425234527997183447807845<'tree> {
+    impl<'tree> ::type_sitter::Node<'tree>
+    for Anon243545065307733425234527997183447807845<'tree> {
         type WithLifetime<'a> = Anon243545065307733425234527997183447807845<'a>;
         const KIND: &'static str = "{comment | conditional | directive | directive_end | directive_start | element | entity | erroneous_end_tag | keyword | livewire | loop | parameter | php_statement | script_element | stack | style_element | switch | text | verbatim}";
         #[inline]
@@ -4797,115 +5067,177 @@ pub mod anon_unions {
             node: ::type_sitter::raw::Node<'tree>,
         ) -> ::type_sitter::NodeResult<'tree, Self> {
             match node.kind() {
-                "comment" => Ok(unsafe {
-                    Self::Comment(
-                        <Comment<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "conditional" => Ok(unsafe {
-                    Self::Conditional(
-                        <Conditional<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "directive" => Ok(unsafe {
-                    Self::Directive(
-                        <Directive<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "directive_end" => Ok(unsafe {
-                    Self::DirectiveEnd(
-                        <DirectiveEnd<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
+                "comment" => {
+                    Ok(unsafe {
+                        Self::Comment(
+                            <Comment<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "conditional" => {
+                    Ok(unsafe {
+                        Self::Conditional(
+                            <Conditional<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "directive" => {
+                    Ok(unsafe {
+                        Self::Directive(
+                            <Directive<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "directive_end" => {
+                    Ok(unsafe {
+                        Self::DirectiveEnd(
+                            <DirectiveEnd<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
                 "directive_start" => {
                     Ok(unsafe {
-                        Self::DirectiveStart(<DirectiveStart<'tree> as ::type_sitter::Node<
-                            'tree,
-                        >>::from_raw_unchecked(node))
+                        Self::DirectiveStart(
+                            <DirectiveStart<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
                     })
                 }
-                "element" => Ok(unsafe {
-                    Self::Element(
-                        <Element<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "entity" => Ok(unsafe {
-                    Self::Entity(
-                        <Entity<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
+                "element" => {
+                    Ok(unsafe {
+                        Self::Element(
+                            <Element<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "entity" => {
+                    Ok(unsafe {
+                        Self::Entity(
+                            <Entity<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
                 "erroneous_end_tag" => {
                     Ok(unsafe {
-                        Self::ErroneousEndTag(<ErroneousEndTag<'tree> as ::type_sitter::Node<
-                            'tree,
-                        >>::from_raw_unchecked(node))
+                        Self::ErroneousEndTag(
+                            <ErroneousEndTag<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
                     })
                 }
-                "keyword" => Ok(unsafe {
-                    Self::Keyword(
-                        <Keyword<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "livewire" => Ok(unsafe {
-                    Self::Livewire(
-                        <Livewire<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "loop" => Ok(unsafe {
-                    Self::Loop(
-                        <Loop<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "parameter" => Ok(unsafe {
-                    Self::Parameter(
-                        <Parameter<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "php_statement" => Ok(unsafe {
-                    Self::PhpStatement(
-                        <PhpStatement<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "script_element" => Ok(unsafe {
-                    Self::ScriptElement(
-                        <ScriptElement<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "stack" => Ok(unsafe {
-                    Self::Stack(
-                        <Stack<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "style_element" => Ok(unsafe {
-                    Self::StyleElement(
-                        <StyleElement<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "switch" => Ok(unsafe {
-                    Self::Switch(
-                        <Switch<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "text" => Ok(unsafe {
-                    Self::Text(
-                        <Text<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "verbatim" => Ok(unsafe {
-                    Self::Verbatim(
-                        <Verbatim<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
+                "keyword" => {
+                    Ok(unsafe {
+                        Self::Keyword(
+                            <Keyword<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "livewire" => {
+                    Ok(unsafe {
+                        Self::Livewire(
+                            <Livewire<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "loop" => {
+                    Ok(unsafe {
+                        Self::Loop(
+                            <Loop<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "parameter" => {
+                    Ok(unsafe {
+                        Self::Parameter(
+                            <Parameter<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "php_statement" => {
+                    Ok(unsafe {
+                        Self::PhpStatement(
+                            <PhpStatement<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "script_element" => {
+                    Ok(unsafe {
+                        Self::ScriptElement(
+                            <ScriptElement<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "stack" => {
+                    Ok(unsafe {
+                        Self::Stack(
+                            <Stack<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "style_element" => {
+                    Ok(unsafe {
+                        Self::StyleElement(
+                            <StyleElement<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "switch" => {
+                    Ok(unsafe {
+                        Self::Switch(
+                            <Switch<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "text" => {
+                    Ok(unsafe {
+                        Self::Text(
+                            <Text<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "verbatim" => {
+                    Ok(unsafe {
+                        Self::Verbatim(
+                            <Verbatim<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
                 _ => Err(::type_sitter::IncorrectKind::new::<Self>(node)),
             }
         }
@@ -4983,27 +5315,27 @@ pub mod anon_unions {
         }
     }
     /**One of `{comment | conditional | directive | directive_end | directive_start | element | entity | erroneous_end_tag | fragment | keyword | loop | once | parameter | php_statement | script_element | section | stack | style_element | switch | text | verbatim}`:
-    - [`Comment`]
-    - [`Conditional`]
-    - [`Directive`]
-    - [`DirectiveEnd`]
-    - [`DirectiveStart`]
-    - [`Element`]
-    - [`Entity`]
-    - [`ErroneousEndTag`]
-    - [`Fragment`]
-    - [`Keyword`]
-    - [`Loop`]
-    - [`Once`]
-    - [`Parameter`]
-    - [`PhpStatement`]
-    - [`ScriptElement`]
-    - [`Section`]
-    - [`Stack`]
-    - [`StyleElement`]
-    - [`Switch`]
-    - [`Text`]
-    - [`Verbatim`]*/
+- [`Comment`]
+- [`Conditional`]
+- [`Directive`]
+- [`DirectiveEnd`]
+- [`DirectiveStart`]
+- [`Element`]
+- [`Entity`]
+- [`ErroneousEndTag`]
+- [`Fragment`]
+- [`Keyword`]
+- [`Loop`]
+- [`Once`]
+- [`Parameter`]
+- [`PhpStatement`]
+- [`ScriptElement`]
+- [`Section`]
+- [`Stack`]
+- [`StyleElement`]
+- [`Switch`]
+- [`Text`]
+- [`Verbatim`]*/
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     #[allow(non_camel_case_types)]
     pub enum Anon296218948099219678605060842541820530786<'tree> {
@@ -5104,7 +5436,9 @@ pub mod anon_unions {
         }
         ///Returns the node if it is of type `erroneous_end_tag` ([`ErroneousEndTag`]), otherwise returns `None`
         #[inline]
-        pub fn as_erroneous_end_tag(self) -> ::std::option::Option<ErroneousEndTag<'tree>> {
+        pub fn as_erroneous_end_tag(
+            self,
+        ) -> ::std::option::Option<ErroneousEndTag<'tree>> {
             #[allow(irrefutable_let_patterns)]
             if let Self::ErroneousEndTag(x) = self {
                 ::std::option::Option::Some(x)
@@ -5244,7 +5578,8 @@ pub mod anon_unions {
         }
     }
     #[automatically_derived]
-    impl<'tree> ::type_sitter::Node<'tree> for Anon296218948099219678605060842541820530786<'tree> {
+    impl<'tree> ::type_sitter::Node<'tree>
+    for Anon296218948099219678605060842541820530786<'tree> {
         type WithLifetime<'a> = Anon296218948099219678605060842541820530786<'a>;
         const KIND: &'static str = "{comment | conditional | directive | directive_end | directive_start | element | entity | erroneous_end_tag | fragment | keyword | loop | once | parameter | php_statement | script_element | section | stack | style_element | switch | text | verbatim}";
         #[inline]
@@ -5252,125 +5587,195 @@ pub mod anon_unions {
             node: ::type_sitter::raw::Node<'tree>,
         ) -> ::type_sitter::NodeResult<'tree, Self> {
             match node.kind() {
-                "comment" => Ok(unsafe {
-                    Self::Comment(
-                        <Comment<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "conditional" => Ok(unsafe {
-                    Self::Conditional(
-                        <Conditional<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "directive" => Ok(unsafe {
-                    Self::Directive(
-                        <Directive<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "directive_end" => Ok(unsafe {
-                    Self::DirectiveEnd(
-                        <DirectiveEnd<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
+                "comment" => {
+                    Ok(unsafe {
+                        Self::Comment(
+                            <Comment<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "conditional" => {
+                    Ok(unsafe {
+                        Self::Conditional(
+                            <Conditional<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "directive" => {
+                    Ok(unsafe {
+                        Self::Directive(
+                            <Directive<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "directive_end" => {
+                    Ok(unsafe {
+                        Self::DirectiveEnd(
+                            <DirectiveEnd<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
                 "directive_start" => {
                     Ok(unsafe {
-                        Self::DirectiveStart(<DirectiveStart<'tree> as ::type_sitter::Node<
-                            'tree,
-                        >>::from_raw_unchecked(node))
+                        Self::DirectiveStart(
+                            <DirectiveStart<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
                     })
                 }
-                "element" => Ok(unsafe {
-                    Self::Element(
-                        <Element<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "entity" => Ok(unsafe {
-                    Self::Entity(
-                        <Entity<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
+                "element" => {
+                    Ok(unsafe {
+                        Self::Element(
+                            <Element<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "entity" => {
+                    Ok(unsafe {
+                        Self::Entity(
+                            <Entity<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
                 "erroneous_end_tag" => {
                     Ok(unsafe {
-                        Self::ErroneousEndTag(<ErroneousEndTag<'tree> as ::type_sitter::Node<
-                            'tree,
-                        >>::from_raw_unchecked(node))
+                        Self::ErroneousEndTag(
+                            <ErroneousEndTag<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
                     })
                 }
-                "fragment" => Ok(unsafe {
-                    Self::Fragment(
-                        <Fragment<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "keyword" => Ok(unsafe {
-                    Self::Keyword(
-                        <Keyword<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "loop" => Ok(unsafe {
-                    Self::Loop(
-                        <Loop<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "once" => Ok(unsafe {
-                    Self::Once(
-                        <Once<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "parameter" => Ok(unsafe {
-                    Self::Parameter(
-                        <Parameter<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "php_statement" => Ok(unsafe {
-                    Self::PhpStatement(
-                        <PhpStatement<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "script_element" => Ok(unsafe {
-                    Self::ScriptElement(
-                        <ScriptElement<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "section" => Ok(unsafe {
-                    Self::Section(
-                        <Section<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "stack" => Ok(unsafe {
-                    Self::Stack(
-                        <Stack<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "style_element" => Ok(unsafe {
-                    Self::StyleElement(
-                        <StyleElement<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "switch" => Ok(unsafe {
-                    Self::Switch(
-                        <Switch<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "text" => Ok(unsafe {
-                    Self::Text(
-                        <Text<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "verbatim" => Ok(unsafe {
-                    Self::Verbatim(
-                        <Verbatim<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
+                "fragment" => {
+                    Ok(unsafe {
+                        Self::Fragment(
+                            <Fragment<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "keyword" => {
+                    Ok(unsafe {
+                        Self::Keyword(
+                            <Keyword<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "loop" => {
+                    Ok(unsafe {
+                        Self::Loop(
+                            <Loop<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "once" => {
+                    Ok(unsafe {
+                        Self::Once(
+                            <Once<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "parameter" => {
+                    Ok(unsafe {
+                        Self::Parameter(
+                            <Parameter<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "php_statement" => {
+                    Ok(unsafe {
+                        Self::PhpStatement(
+                            <PhpStatement<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "script_element" => {
+                    Ok(unsafe {
+                        Self::ScriptElement(
+                            <ScriptElement<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "section" => {
+                    Ok(unsafe {
+                        Self::Section(
+                            <Section<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "stack" => {
+                    Ok(unsafe {
+                        Self::Stack(
+                            <Stack<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "style_element" => {
+                    Ok(unsafe {
+                        Self::StyleElement(
+                            <StyleElement<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "switch" => {
+                    Ok(unsafe {
+                        Self::Switch(
+                            <Switch<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "text" => {
+                    Ok(unsafe {
+                        Self::Text(
+                            <Text<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "verbatim" => {
+                    Ok(unsafe {
+                        Self::Verbatim(
+                            <Verbatim<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
                 _ => Err(::type_sitter::IncorrectKind::new::<Self>(node)),
             }
         }
@@ -5454,23 +5859,23 @@ pub mod anon_unions {
         }
     }
     /**One of `{comment | conditional | directive | directive_end | directive_start | element | entity | erroneous_end_tag | keyword | livewire | loop | parameter | php_statement | script_element | style_element | switch | text}`:
-    - [`Comment`]
-    - [`Conditional`]
-    - [`Directive`]
-    - [`DirectiveEnd`]
-    - [`DirectiveStart`]
-    - [`Element`]
-    - [`Entity`]
-    - [`ErroneousEndTag`]
-    - [`Keyword`]
-    - [`Livewire`]
-    - [`Loop`]
-    - [`Parameter`]
-    - [`PhpStatement`]
-    - [`ScriptElement`]
-    - [`StyleElement`]
-    - [`Switch`]
-    - [`Text`]*/
+- [`Comment`]
+- [`Conditional`]
+- [`Directive`]
+- [`DirectiveEnd`]
+- [`DirectiveStart`]
+- [`Element`]
+- [`Entity`]
+- [`ErroneousEndTag`]
+- [`Keyword`]
+- [`Livewire`]
+- [`Loop`]
+- [`Parameter`]
+- [`PhpStatement`]
+- [`ScriptElement`]
+- [`StyleElement`]
+- [`Switch`]
+- [`Text`]*/
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     #[allow(non_camel_case_types)]
     pub enum Anon318641722947100924141238363717069648819<'tree> {
@@ -5567,7 +5972,9 @@ pub mod anon_unions {
         }
         ///Returns the node if it is of type `erroneous_end_tag` ([`ErroneousEndTag`]), otherwise returns `None`
         #[inline]
-        pub fn as_erroneous_end_tag(self) -> ::std::option::Option<ErroneousEndTag<'tree>> {
+        pub fn as_erroneous_end_tag(
+            self,
+        ) -> ::std::option::Option<ErroneousEndTag<'tree>> {
             #[allow(irrefutable_let_patterns)]
             if let Self::ErroneousEndTag(x) = self {
                 ::std::option::Option::Some(x)
@@ -5667,7 +6074,8 @@ pub mod anon_unions {
         }
     }
     #[automatically_derived]
-    impl<'tree> ::type_sitter::Node<'tree> for Anon318641722947100924141238363717069648819<'tree> {
+    impl<'tree> ::type_sitter::Node<'tree>
+    for Anon318641722947100924141238363717069648819<'tree> {
         type WithLifetime<'a> = Anon318641722947100924141238363717069648819<'a>;
         const KIND: &'static str = "{comment | conditional | directive | directive_end | directive_start | element | entity | erroneous_end_tag | keyword | livewire | loop | parameter | php_statement | script_element | style_element | switch | text}";
         #[inline]
@@ -5675,105 +6083,159 @@ pub mod anon_unions {
             node: ::type_sitter::raw::Node<'tree>,
         ) -> ::type_sitter::NodeResult<'tree, Self> {
             match node.kind() {
-                "comment" => Ok(unsafe {
-                    Self::Comment(
-                        <Comment<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "conditional" => Ok(unsafe {
-                    Self::Conditional(
-                        <Conditional<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "directive" => Ok(unsafe {
-                    Self::Directive(
-                        <Directive<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "directive_end" => Ok(unsafe {
-                    Self::DirectiveEnd(
-                        <DirectiveEnd<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
+                "comment" => {
+                    Ok(unsafe {
+                        Self::Comment(
+                            <Comment<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "conditional" => {
+                    Ok(unsafe {
+                        Self::Conditional(
+                            <Conditional<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "directive" => {
+                    Ok(unsafe {
+                        Self::Directive(
+                            <Directive<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "directive_end" => {
+                    Ok(unsafe {
+                        Self::DirectiveEnd(
+                            <DirectiveEnd<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
                 "directive_start" => {
                     Ok(unsafe {
-                        Self::DirectiveStart(<DirectiveStart<'tree> as ::type_sitter::Node<
-                            'tree,
-                        >>::from_raw_unchecked(node))
+                        Self::DirectiveStart(
+                            <DirectiveStart<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
                     })
                 }
-                "element" => Ok(unsafe {
-                    Self::Element(
-                        <Element<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "entity" => Ok(unsafe {
-                    Self::Entity(
-                        <Entity<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
+                "element" => {
+                    Ok(unsafe {
+                        Self::Element(
+                            <Element<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "entity" => {
+                    Ok(unsafe {
+                        Self::Entity(
+                            <Entity<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
                 "erroneous_end_tag" => {
                     Ok(unsafe {
-                        Self::ErroneousEndTag(<ErroneousEndTag<'tree> as ::type_sitter::Node<
-                            'tree,
-                        >>::from_raw_unchecked(node))
+                        Self::ErroneousEndTag(
+                            <ErroneousEndTag<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
                     })
                 }
-                "keyword" => Ok(unsafe {
-                    Self::Keyword(
-                        <Keyword<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "livewire" => Ok(unsafe {
-                    Self::Livewire(
-                        <Livewire<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "loop" => Ok(unsafe {
-                    Self::Loop(
-                        <Loop<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "parameter" => Ok(unsafe {
-                    Self::Parameter(
-                        <Parameter<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "php_statement" => Ok(unsafe {
-                    Self::PhpStatement(
-                        <PhpStatement<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "script_element" => Ok(unsafe {
-                    Self::ScriptElement(
-                        <ScriptElement<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "style_element" => Ok(unsafe {
-                    Self::StyleElement(
-                        <StyleElement<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "switch" => Ok(unsafe {
-                    Self::Switch(
-                        <Switch<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "text" => Ok(unsafe {
-                    Self::Text(
-                        <Text<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
+                "keyword" => {
+                    Ok(unsafe {
+                        Self::Keyword(
+                            <Keyword<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "livewire" => {
+                    Ok(unsafe {
+                        Self::Livewire(
+                            <Livewire<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "loop" => {
+                    Ok(unsafe {
+                        Self::Loop(
+                            <Loop<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "parameter" => {
+                    Ok(unsafe {
+                        Self::Parameter(
+                            <Parameter<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "php_statement" => {
+                    Ok(unsafe {
+                        Self::PhpStatement(
+                            <PhpStatement<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "script_element" => {
+                    Ok(unsafe {
+                        Self::ScriptElement(
+                            <ScriptElement<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "style_element" => {
+                    Ok(unsafe {
+                        Self::StyleElement(
+                            <StyleElement<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "switch" => {
+                    Ok(unsafe {
+                        Self::Switch(
+                            <Switch<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "text" => {
+                    Ok(unsafe {
+                        Self::Text(
+                            <Text<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
                 _ => Err(::type_sitter::IncorrectKind::new::<Self>(node)),
             }
         }
@@ -5845,20 +6307,20 @@ pub mod anon_unions {
         }
     }
     /**One of `{comment | directive | directive_end | directive_start | element | entity | erroneous_end_tag | keyword | parameter | php_statement | script_element | style_element | switch | text}`:
-    - [`Comment`]
-    - [`Directive`]
-    - [`DirectiveEnd`]
-    - [`DirectiveStart`]
-    - [`Element`]
-    - [`Entity`]
-    - [`ErroneousEndTag`]
-    - [`Keyword`]
-    - [`Parameter`]
-    - [`PhpStatement`]
-    - [`ScriptElement`]
-    - [`StyleElement`]
-    - [`Switch`]
-    - [`Text`]*/
+- [`Comment`]
+- [`Directive`]
+- [`DirectiveEnd`]
+- [`DirectiveStart`]
+- [`Element`]
+- [`Entity`]
+- [`ErroneousEndTag`]
+- [`Keyword`]
+- [`Parameter`]
+- [`PhpStatement`]
+- [`ScriptElement`]
+- [`StyleElement`]
+- [`Switch`]
+- [`Text`]*/
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     #[allow(non_camel_case_types)]
     pub enum Anon34450808297487433971579096753333213753<'tree> {
@@ -5942,7 +6404,9 @@ pub mod anon_unions {
         }
         ///Returns the node if it is of type `erroneous_end_tag` ([`ErroneousEndTag`]), otherwise returns `None`
         #[inline]
-        pub fn as_erroneous_end_tag(self) -> ::std::option::Option<ErroneousEndTag<'tree>> {
+        pub fn as_erroneous_end_tag(
+            self,
+        ) -> ::std::option::Option<ErroneousEndTag<'tree>> {
             #[allow(irrefutable_let_patterns)]
             if let Self::ErroneousEndTag(x) = self {
                 ::std::option::Option::Some(x)
@@ -6022,7 +6486,8 @@ pub mod anon_unions {
         }
     }
     #[automatically_derived]
-    impl<'tree> ::type_sitter::Node<'tree> for Anon34450808297487433971579096753333213753<'tree> {
+    impl<'tree> ::type_sitter::Node<'tree>
+    for Anon34450808297487433971579096753333213753<'tree> {
         type WithLifetime<'a> = Anon34450808297487433971579096753333213753<'a>;
         const KIND: &'static str = "{comment | directive | directive_end | directive_start | element | entity | erroneous_end_tag | keyword | parameter | php_statement | script_element | style_element | switch | text}";
         #[inline]
@@ -6030,88 +6495,132 @@ pub mod anon_unions {
             node: ::type_sitter::raw::Node<'tree>,
         ) -> ::type_sitter::NodeResult<'tree, Self> {
             match node.kind() {
-                "comment" => Ok(unsafe {
-                    Self::Comment(
-                        <Comment<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "directive" => Ok(unsafe {
-                    Self::Directive(
-                        <Directive<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "directive_end" => Ok(unsafe {
-                    Self::DirectiveEnd(
-                        <DirectiveEnd<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
+                "comment" => {
+                    Ok(unsafe {
+                        Self::Comment(
+                            <Comment<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "directive" => {
+                    Ok(unsafe {
+                        Self::Directive(
+                            <Directive<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "directive_end" => {
+                    Ok(unsafe {
+                        Self::DirectiveEnd(
+                            <DirectiveEnd<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
                 "directive_start" => {
                     Ok(unsafe {
-                        Self::DirectiveStart(<DirectiveStart<'tree> as ::type_sitter::Node<
-                            'tree,
-                        >>::from_raw_unchecked(node))
+                        Self::DirectiveStart(
+                            <DirectiveStart<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
                     })
                 }
-                "element" => Ok(unsafe {
-                    Self::Element(
-                        <Element<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "entity" => Ok(unsafe {
-                    Self::Entity(
-                        <Entity<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
+                "element" => {
+                    Ok(unsafe {
+                        Self::Element(
+                            <Element<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "entity" => {
+                    Ok(unsafe {
+                        Self::Entity(
+                            <Entity<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
                 "erroneous_end_tag" => {
                     Ok(unsafe {
-                        Self::ErroneousEndTag(<ErroneousEndTag<'tree> as ::type_sitter::Node<
-                            'tree,
-                        >>::from_raw_unchecked(node))
+                        Self::ErroneousEndTag(
+                            <ErroneousEndTag<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
                     })
                 }
-                "keyword" => Ok(unsafe {
-                    Self::Keyword(
-                        <Keyword<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "parameter" => Ok(unsafe {
-                    Self::Parameter(
-                        <Parameter<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "php_statement" => Ok(unsafe {
-                    Self::PhpStatement(
-                        <PhpStatement<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "script_element" => Ok(unsafe {
-                    Self::ScriptElement(
-                        <ScriptElement<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "style_element" => Ok(unsafe {
-                    Self::StyleElement(
-                        <StyleElement<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "switch" => Ok(unsafe {
-                    Self::Switch(
-                        <Switch<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "text" => Ok(unsafe {
-                    Self::Text(
-                        <Text<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
+                "keyword" => {
+                    Ok(unsafe {
+                        Self::Keyword(
+                            <Keyword<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "parameter" => {
+                    Ok(unsafe {
+                        Self::Parameter(
+                            <Parameter<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "php_statement" => {
+                    Ok(unsafe {
+                        Self::PhpStatement(
+                            <PhpStatement<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "script_element" => {
+                    Ok(unsafe {
+                        Self::ScriptElement(
+                            <ScriptElement<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "style_element" => {
+                    Ok(unsafe {
+                        Self::StyleElement(
+                            <StyleElement<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "switch" => {
+                    Ok(unsafe {
+                        Self::Switch(
+                            <Switch<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "text" => {
+                    Ok(unsafe {
+                        Self::Text(
+                            <Text<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
                 _ => Err(::type_sitter::IncorrectKind::new::<Self>(node)),
             }
         }
@@ -6174,31 +6683,31 @@ pub mod anon_unions {
         }
     }
     /**One of `{comment | conditional | conditional_keyword | directive | directive_end | directive_start | doctype | element | entity | envoy | erroneous_end_tag | fragment | keyword | livewire | loop | once | parameter | php_statement | script_element | section | stack | style_element | switch | text | verbatim}`:
-    - [`Comment`]
-    - [`Conditional`]
-    - [`ConditionalKeyword`]
-    - [`Directive`]
-    - [`DirectiveEnd`]
-    - [`DirectiveStart`]
-    - [`Doctype`]
-    - [`Element`]
-    - [`Entity`]
-    - [`Envoy`]
-    - [`ErroneousEndTag`]
-    - [`Fragment`]
-    - [`Keyword`]
-    - [`Livewire`]
-    - [`Loop`]
-    - [`Once`]
-    - [`Parameter`]
-    - [`PhpStatement`]
-    - [`ScriptElement`]
-    - [`Section`]
-    - [`Stack`]
-    - [`StyleElement`]
-    - [`Switch`]
-    - [`Text`]
-    - [`Verbatim`]*/
+- [`Comment`]
+- [`Conditional`]
+- [`ConditionalKeyword`]
+- [`Directive`]
+- [`DirectiveEnd`]
+- [`DirectiveStart`]
+- [`Doctype`]
+- [`Element`]
+- [`Entity`]
+- [`Envoy`]
+- [`ErroneousEndTag`]
+- [`Fragment`]
+- [`Keyword`]
+- [`Livewire`]
+- [`Loop`]
+- [`Once`]
+- [`Parameter`]
+- [`PhpStatement`]
+- [`ScriptElement`]
+- [`Section`]
+- [`Stack`]
+- [`StyleElement`]
+- [`Switch`]
+- [`Text`]
+- [`Verbatim`]*/
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     #[allow(non_camel_case_types)]
     pub enum Anon40248131041664470318391226482553460865<'tree> {
@@ -6253,7 +6762,9 @@ pub mod anon_unions {
         }
         ///Returns the node if it is of type `conditional_keyword` ([`ConditionalKeyword`]), otherwise returns `None`
         #[inline]
-        pub fn as_conditional_keyword(self) -> ::std::option::Option<ConditionalKeyword<'tree>> {
+        pub fn as_conditional_keyword(
+            self,
+        ) -> ::std::option::Option<ConditionalKeyword<'tree>> {
             #[allow(irrefutable_let_patterns)]
             if let Self::ConditionalKeyword(x) = self {
                 ::std::option::Option::Some(x)
@@ -6333,7 +6844,9 @@ pub mod anon_unions {
         }
         ///Returns the node if it is of type `erroneous_end_tag` ([`ErroneousEndTag`]), otherwise returns `None`
         #[inline]
-        pub fn as_erroneous_end_tag(self) -> ::std::option::Option<ErroneousEndTag<'tree>> {
+        pub fn as_erroneous_end_tag(
+            self,
+        ) -> ::std::option::Option<ErroneousEndTag<'tree>> {
             #[allow(irrefutable_let_patterns)]
             if let Self::ErroneousEndTag(x) = self {
                 ::std::option::Option::Some(x)
@@ -6483,7 +6996,8 @@ pub mod anon_unions {
         }
     }
     #[automatically_derived]
-    impl<'tree> ::type_sitter::Node<'tree> for Anon40248131041664470318391226482553460865<'tree> {
+    impl<'tree> ::type_sitter::Node<'tree>
+    for Anon40248131041664470318391226482553460865<'tree> {
         type WithLifetime<'a> = Anon40248131041664470318391226482553460865<'a>;
         const KIND: &'static str = "{comment | conditional | conditional_keyword | directive | directive_end | directive_start | doctype | element | entity | envoy | erroneous_end_tag | fragment | keyword | livewire | loop | once | parameter | php_statement | script_element | section | stack | style_element | switch | text | verbatim}";
         #[inline]
@@ -6491,145 +7005,231 @@ pub mod anon_unions {
             node: ::type_sitter::raw::Node<'tree>,
         ) -> ::type_sitter::NodeResult<'tree, Self> {
             match node.kind() {
-                "comment" => Ok(unsafe {
-                    Self::Comment(
-                        <Comment<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "conditional" => Ok(unsafe {
-                    Self::Conditional(
-                        <Conditional<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "conditional_keyword" => Ok(unsafe {
-                    Self::ConditionalKeyword(<ConditionalKeyword<'tree> as ::type_sitter::Node<
-                        'tree,
-                    >>::from_raw_unchecked(node))
-                }),
-                "directive" => Ok(unsafe {
-                    Self::Directive(
-                        <Directive<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "directive_end" => Ok(unsafe {
-                    Self::DirectiveEnd(
-                        <DirectiveEnd<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
+                "comment" => {
+                    Ok(unsafe {
+                        Self::Comment(
+                            <Comment<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "conditional" => {
+                    Ok(unsafe {
+                        Self::Conditional(
+                            <Conditional<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "conditional_keyword" => {
+                    Ok(unsafe {
+                        Self::ConditionalKeyword(
+                            <ConditionalKeyword<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "directive" => {
+                    Ok(unsafe {
+                        Self::Directive(
+                            <Directive<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "directive_end" => {
+                    Ok(unsafe {
+                        Self::DirectiveEnd(
+                            <DirectiveEnd<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
                 "directive_start" => {
                     Ok(unsafe {
-                        Self::DirectiveStart(<DirectiveStart<'tree> as ::type_sitter::Node<
-                            'tree,
-                        >>::from_raw_unchecked(node))
+                        Self::DirectiveStart(
+                            <DirectiveStart<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
                     })
                 }
-                "doctype" => Ok(unsafe {
-                    Self::Doctype(
-                        <Doctype<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "element" => Ok(unsafe {
-                    Self::Element(
-                        <Element<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "entity" => Ok(unsafe {
-                    Self::Entity(
-                        <Entity<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "envoy" => Ok(unsafe {
-                    Self::Envoy(
-                        <Envoy<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
+                "doctype" => {
+                    Ok(unsafe {
+                        Self::Doctype(
+                            <Doctype<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "element" => {
+                    Ok(unsafe {
+                        Self::Element(
+                            <Element<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "entity" => {
+                    Ok(unsafe {
+                        Self::Entity(
+                            <Entity<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "envoy" => {
+                    Ok(unsafe {
+                        Self::Envoy(
+                            <Envoy<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
                 "erroneous_end_tag" => {
                     Ok(unsafe {
-                        Self::ErroneousEndTag(<ErroneousEndTag<'tree> as ::type_sitter::Node<
-                            'tree,
-                        >>::from_raw_unchecked(node))
+                        Self::ErroneousEndTag(
+                            <ErroneousEndTag<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
                     })
                 }
-                "fragment" => Ok(unsafe {
-                    Self::Fragment(
-                        <Fragment<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "keyword" => Ok(unsafe {
-                    Self::Keyword(
-                        <Keyword<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "livewire" => Ok(unsafe {
-                    Self::Livewire(
-                        <Livewire<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "loop" => Ok(unsafe {
-                    Self::Loop(
-                        <Loop<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "once" => Ok(unsafe {
-                    Self::Once(
-                        <Once<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "parameter" => Ok(unsafe {
-                    Self::Parameter(
-                        <Parameter<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "php_statement" => Ok(unsafe {
-                    Self::PhpStatement(
-                        <PhpStatement<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "script_element" => Ok(unsafe {
-                    Self::ScriptElement(
-                        <ScriptElement<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "section" => Ok(unsafe {
-                    Self::Section(
-                        <Section<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "stack" => Ok(unsafe {
-                    Self::Stack(
-                        <Stack<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "style_element" => Ok(unsafe {
-                    Self::StyleElement(
-                        <StyleElement<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "switch" => Ok(unsafe {
-                    Self::Switch(
-                        <Switch<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "text" => Ok(unsafe {
-                    Self::Text(
-                        <Text<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "verbatim" => Ok(unsafe {
-                    Self::Verbatim(
-                        <Verbatim<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
+                "fragment" => {
+                    Ok(unsafe {
+                        Self::Fragment(
+                            <Fragment<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "keyword" => {
+                    Ok(unsafe {
+                        Self::Keyword(
+                            <Keyword<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "livewire" => {
+                    Ok(unsafe {
+                        Self::Livewire(
+                            <Livewire<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "loop" => {
+                    Ok(unsafe {
+                        Self::Loop(
+                            <Loop<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "once" => {
+                    Ok(unsafe {
+                        Self::Once(
+                            <Once<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "parameter" => {
+                    Ok(unsafe {
+                        Self::Parameter(
+                            <Parameter<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "php_statement" => {
+                    Ok(unsafe {
+                        Self::PhpStatement(
+                            <PhpStatement<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "script_element" => {
+                    Ok(unsafe {
+                        Self::ScriptElement(
+                            <ScriptElement<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "section" => {
+                    Ok(unsafe {
+                        Self::Section(
+                            <Section<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "stack" => {
+                    Ok(unsafe {
+                        Self::Stack(
+                            <Stack<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "style_element" => {
+                    Ok(unsafe {
+                        Self::StyleElement(
+                            <StyleElement<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "switch" => {
+                    Ok(unsafe {
+                        Self::Switch(
+                            <Switch<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "text" => {
+                    Ok(unsafe {
+                        Self::Text(
+                            <Text<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "verbatim" => {
+                    Ok(unsafe {
+                        Self::Verbatim(
+                            <Verbatim<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
                 _ => Err(::type_sitter::IncorrectKind::new::<Self>(node)),
             }
         }
@@ -6725,22 +7325,22 @@ pub mod anon_unions {
         }
     }
     /**One of `{comment | conditional | directive | directive_end | directive_start | element | entity | erroneous_end_tag | keyword | loop | parameter | php_statement | script_element | style_element | switch | text}`:
-    - [`Comment`]
-    - [`Conditional`]
-    - [`Directive`]
-    - [`DirectiveEnd`]
-    - [`DirectiveStart`]
-    - [`Element`]
-    - [`Entity`]
-    - [`ErroneousEndTag`]
-    - [`Keyword`]
-    - [`Loop`]
-    - [`Parameter`]
-    - [`PhpStatement`]
-    - [`ScriptElement`]
-    - [`StyleElement`]
-    - [`Switch`]
-    - [`Text`]*/
+- [`Comment`]
+- [`Conditional`]
+- [`Directive`]
+- [`DirectiveEnd`]
+- [`DirectiveStart`]
+- [`Element`]
+- [`Entity`]
+- [`ErroneousEndTag`]
+- [`Keyword`]
+- [`Loop`]
+- [`Parameter`]
+- [`PhpStatement`]
+- [`ScriptElement`]
+- [`StyleElement`]
+- [`Switch`]
+- [`Text`]*/
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     #[allow(non_camel_case_types)]
     pub enum Anon7748293708392891243390944054945158570<'tree> {
@@ -6836,7 +7436,9 @@ pub mod anon_unions {
         }
         ///Returns the node if it is of type `erroneous_end_tag` ([`ErroneousEndTag`]), otherwise returns `None`
         #[inline]
-        pub fn as_erroneous_end_tag(self) -> ::std::option::Option<ErroneousEndTag<'tree>> {
+        pub fn as_erroneous_end_tag(
+            self,
+        ) -> ::std::option::Option<ErroneousEndTag<'tree>> {
             #[allow(irrefutable_let_patterns)]
             if let Self::ErroneousEndTag(x) = self {
                 ::std::option::Option::Some(x)
@@ -6926,7 +7528,8 @@ pub mod anon_unions {
         }
     }
     #[automatically_derived]
-    impl<'tree> ::type_sitter::Node<'tree> for Anon7748293708392891243390944054945158570<'tree> {
+    impl<'tree> ::type_sitter::Node<'tree>
+    for Anon7748293708392891243390944054945158570<'tree> {
         type WithLifetime<'a> = Anon7748293708392891243390944054945158570<'a>;
         const KIND: &'static str = "{comment | conditional | directive | directive_end | directive_start | element | entity | erroneous_end_tag | keyword | loop | parameter | php_statement | script_element | style_element | switch | text}";
         #[inline]
@@ -6934,100 +7537,150 @@ pub mod anon_unions {
             node: ::type_sitter::raw::Node<'tree>,
         ) -> ::type_sitter::NodeResult<'tree, Self> {
             match node.kind() {
-                "comment" => Ok(unsafe {
-                    Self::Comment(
-                        <Comment<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "conditional" => Ok(unsafe {
-                    Self::Conditional(
-                        <Conditional<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "directive" => Ok(unsafe {
-                    Self::Directive(
-                        <Directive<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "directive_end" => Ok(unsafe {
-                    Self::DirectiveEnd(
-                        <DirectiveEnd<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
+                "comment" => {
+                    Ok(unsafe {
+                        Self::Comment(
+                            <Comment<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "conditional" => {
+                    Ok(unsafe {
+                        Self::Conditional(
+                            <Conditional<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "directive" => {
+                    Ok(unsafe {
+                        Self::Directive(
+                            <Directive<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "directive_end" => {
+                    Ok(unsafe {
+                        Self::DirectiveEnd(
+                            <DirectiveEnd<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
                 "directive_start" => {
                     Ok(unsafe {
-                        Self::DirectiveStart(<DirectiveStart<'tree> as ::type_sitter::Node<
-                            'tree,
-                        >>::from_raw_unchecked(node))
+                        Self::DirectiveStart(
+                            <DirectiveStart<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
                     })
                 }
-                "element" => Ok(unsafe {
-                    Self::Element(
-                        <Element<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "entity" => Ok(unsafe {
-                    Self::Entity(
-                        <Entity<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
+                "element" => {
+                    Ok(unsafe {
+                        Self::Element(
+                            <Element<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "entity" => {
+                    Ok(unsafe {
+                        Self::Entity(
+                            <Entity<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
                 "erroneous_end_tag" => {
                     Ok(unsafe {
-                        Self::ErroneousEndTag(<ErroneousEndTag<'tree> as ::type_sitter::Node<
-                            'tree,
-                        >>::from_raw_unchecked(node))
+                        Self::ErroneousEndTag(
+                            <ErroneousEndTag<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
                     })
                 }
-                "keyword" => Ok(unsafe {
-                    Self::Keyword(
-                        <Keyword<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "loop" => Ok(unsafe {
-                    Self::Loop(
-                        <Loop<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "parameter" => Ok(unsafe {
-                    Self::Parameter(
-                        <Parameter<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "php_statement" => Ok(unsafe {
-                    Self::PhpStatement(
-                        <PhpStatement<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "script_element" => Ok(unsafe {
-                    Self::ScriptElement(
-                        <ScriptElement<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "style_element" => Ok(unsafe {
-                    Self::StyleElement(
-                        <StyleElement<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "switch" => Ok(unsafe {
-                    Self::Switch(
-                        <Switch<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "text" => Ok(unsafe {
-                    Self::Text(
-                        <Text<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
+                "keyword" => {
+                    Ok(unsafe {
+                        Self::Keyword(
+                            <Keyword<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "loop" => {
+                    Ok(unsafe {
+                        Self::Loop(
+                            <Loop<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "parameter" => {
+                    Ok(unsafe {
+                        Self::Parameter(
+                            <Parameter<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "php_statement" => {
+                    Ok(unsafe {
+                        Self::PhpStatement(
+                            <PhpStatement<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "script_element" => {
+                    Ok(unsafe {
+                        Self::ScriptElement(
+                            <ScriptElement<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "style_element" => {
+                    Ok(unsafe {
+                        Self::StyleElement(
+                            <StyleElement<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "switch" => {
+                    Ok(unsafe {
+                        Self::Switch(
+                            <Switch<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "text" => {
+                    Ok(unsafe {
+                        Self::Text(
+                            <Text<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
                 _ => Err(::type_sitter::IncorrectKind::new::<Self>(node)),
             }
         }
@@ -7096,31 +7749,31 @@ pub mod anon_unions {
         }
     }
     /**One of `{comment | conditional | directive | doctype | element | end_tag | entity | envoy | erroneous_end_tag | fragment | keyword | livewire | loop | once | parameter | php_statement | script_element | section | self_closing_tag | stack | start_tag | style_element | switch | text | verbatim}`:
-    - [`Comment`]
-    - [`Conditional`]
-    - [`Directive`]
-    - [`Doctype`]
-    - [`Element`]
-    - [`EndTag`]
-    - [`Entity`]
-    - [`Envoy`]
-    - [`ErroneousEndTag`]
-    - [`Fragment`]
-    - [`Keyword`]
-    - [`Livewire`]
-    - [`Loop`]
-    - [`Once`]
-    - [`Parameter`]
-    - [`PhpStatement`]
-    - [`ScriptElement`]
-    - [`Section`]
-    - [`SelfClosingTag`]
-    - [`Stack`]
-    - [`StartTag`]
-    - [`StyleElement`]
-    - [`Switch`]
-    - [`Text`]
-    - [`Verbatim`]*/
+- [`Comment`]
+- [`Conditional`]
+- [`Directive`]
+- [`Doctype`]
+- [`Element`]
+- [`EndTag`]
+- [`Entity`]
+- [`Envoy`]
+- [`ErroneousEndTag`]
+- [`Fragment`]
+- [`Keyword`]
+- [`Livewire`]
+- [`Loop`]
+- [`Once`]
+- [`Parameter`]
+- [`PhpStatement`]
+- [`ScriptElement`]
+- [`Section`]
+- [`SelfClosingTag`]
+- [`Stack`]
+- [`StartTag`]
+- [`StyleElement`]
+- [`Switch`]
+- [`Text`]
+- [`Verbatim`]*/
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     #[allow(non_camel_case_types)]
     pub enum Anon87989396667188848098758835341468324800<'tree> {
@@ -7235,7 +7888,9 @@ pub mod anon_unions {
         }
         ///Returns the node if it is of type `erroneous_end_tag` ([`ErroneousEndTag`]), otherwise returns `None`
         #[inline]
-        pub fn as_erroneous_end_tag(self) -> ::std::option::Option<ErroneousEndTag<'tree>> {
+        pub fn as_erroneous_end_tag(
+            self,
+        ) -> ::std::option::Option<ErroneousEndTag<'tree>> {
             #[allow(irrefutable_let_patterns)]
             if let Self::ErroneousEndTag(x) = self {
                 ::std::option::Option::Some(x)
@@ -7335,7 +7990,9 @@ pub mod anon_unions {
         }
         ///Returns the node if it is of type `self_closing_tag` ([`SelfClosingTag`]), otherwise returns `None`
         #[inline]
-        pub fn as_self_closing_tag(self) -> ::std::option::Option<SelfClosingTag<'tree>> {
+        pub fn as_self_closing_tag(
+            self,
+        ) -> ::std::option::Option<SelfClosingTag<'tree>> {
             #[allow(irrefutable_let_patterns)]
             if let Self::SelfClosingTag(x) = self {
                 ::std::option::Option::Some(x)
@@ -7405,7 +8062,8 @@ pub mod anon_unions {
         }
     }
     #[automatically_derived]
-    impl<'tree> ::type_sitter::Node<'tree> for Anon87989396667188848098758835341468324800<'tree> {
+    impl<'tree> ::type_sitter::Node<'tree>
+    for Anon87989396667188848098758835341468324800<'tree> {
         type WithLifetime<'a> = Anon87989396667188848098758835341468324800<'a>;
         const KIND: &'static str = "{comment | conditional | directive | doctype | element | end_tag | entity | envoy | erroneous_end_tag | fragment | keyword | livewire | loop | once | parameter | php_statement | script_element | section | self_closing_tag | stack | start_tag | style_element | switch | text | verbatim}";
         #[inline]
@@ -7413,143 +8071,231 @@ pub mod anon_unions {
             node: ::type_sitter::raw::Node<'tree>,
         ) -> ::type_sitter::NodeResult<'tree, Self> {
             match node.kind() {
-                "comment" => Ok(unsafe {
-                    Self::Comment(
-                        <Comment<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "conditional" => Ok(unsafe {
-                    Self::Conditional(
-                        <Conditional<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "directive" => Ok(unsafe {
-                    Self::Directive(
-                        <Directive<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "doctype" => Ok(unsafe {
-                    Self::Doctype(
-                        <Doctype<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "element" => Ok(unsafe {
-                    Self::Element(
-                        <Element<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "end_tag" => Ok(unsafe {
-                    Self::EndTag(
-                        <EndTag<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "entity" => Ok(unsafe {
-                    Self::Entity(
-                        <Entity<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "envoy" => Ok(unsafe {
-                    Self::Envoy(
-                        <Envoy<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
+                "comment" => {
+                    Ok(unsafe {
+                        Self::Comment(
+                            <Comment<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "conditional" => {
+                    Ok(unsafe {
+                        Self::Conditional(
+                            <Conditional<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "directive" => {
+                    Ok(unsafe {
+                        Self::Directive(
+                            <Directive<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "doctype" => {
+                    Ok(unsafe {
+                        Self::Doctype(
+                            <Doctype<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "element" => {
+                    Ok(unsafe {
+                        Self::Element(
+                            <Element<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "end_tag" => {
+                    Ok(unsafe {
+                        Self::EndTag(
+                            <EndTag<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "entity" => {
+                    Ok(unsafe {
+                        Self::Entity(
+                            <Entity<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "envoy" => {
+                    Ok(unsafe {
+                        Self::Envoy(
+                            <Envoy<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
                 "erroneous_end_tag" => {
                     Ok(unsafe {
-                        Self::ErroneousEndTag(<ErroneousEndTag<'tree> as ::type_sitter::Node<
-                            'tree,
-                        >>::from_raw_unchecked(node))
+                        Self::ErroneousEndTag(
+                            <ErroneousEndTag<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
                     })
                 }
-                "fragment" => Ok(unsafe {
-                    Self::Fragment(
-                        <Fragment<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "keyword" => Ok(unsafe {
-                    Self::Keyword(
-                        <Keyword<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "livewire" => Ok(unsafe {
-                    Self::Livewire(
-                        <Livewire<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "loop" => Ok(unsafe {
-                    Self::Loop(
-                        <Loop<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "once" => Ok(unsafe {
-                    Self::Once(
-                        <Once<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "parameter" => Ok(unsafe {
-                    Self::Parameter(
-                        <Parameter<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "php_statement" => Ok(unsafe {
-                    Self::PhpStatement(
-                        <PhpStatement<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "script_element" => Ok(unsafe {
-                    Self::ScriptElement(
-                        <ScriptElement<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "section" => Ok(unsafe {
-                    Self::Section(
-                        <Section<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
+                "fragment" => {
+                    Ok(unsafe {
+                        Self::Fragment(
+                            <Fragment<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "keyword" => {
+                    Ok(unsafe {
+                        Self::Keyword(
+                            <Keyword<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "livewire" => {
+                    Ok(unsafe {
+                        Self::Livewire(
+                            <Livewire<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "loop" => {
+                    Ok(unsafe {
+                        Self::Loop(
+                            <Loop<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "once" => {
+                    Ok(unsafe {
+                        Self::Once(
+                            <Once<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "parameter" => {
+                    Ok(unsafe {
+                        Self::Parameter(
+                            <Parameter<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "php_statement" => {
+                    Ok(unsafe {
+                        Self::PhpStatement(
+                            <PhpStatement<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "script_element" => {
+                    Ok(unsafe {
+                        Self::ScriptElement(
+                            <ScriptElement<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "section" => {
+                    Ok(unsafe {
+                        Self::Section(
+                            <Section<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
                 "self_closing_tag" => {
                     Ok(unsafe {
-                        Self::SelfClosingTag(<SelfClosingTag<'tree> as ::type_sitter::Node<
-                            'tree,
-                        >>::from_raw_unchecked(node))
+                        Self::SelfClosingTag(
+                            <SelfClosingTag<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
                     })
                 }
-                "stack" => Ok(unsafe {
-                    Self::Stack(
-                        <Stack<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "start_tag" => Ok(unsafe {
-                    Self::StartTag(
-                        <StartTag<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "style_element" => Ok(unsafe {
-                    Self::StyleElement(
-                        <StyleElement<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "switch" => Ok(unsafe {
-                    Self::Switch(
-                        <Switch<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "text" => Ok(unsafe {
-                    Self::Text(
-                        <Text<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "verbatim" => Ok(unsafe {
-                    Self::Verbatim(
-                        <Verbatim<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
+                "stack" => {
+                    Ok(unsafe {
+                        Self::Stack(
+                            <Stack<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "start_tag" => {
+                    Ok(unsafe {
+                        Self::StartTag(
+                            <StartTag<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "style_element" => {
+                    Ok(unsafe {
+                        Self::StyleElement(
+                            <StyleElement<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "switch" => {
+                    Ok(unsafe {
+                        Self::Switch(
+                            <Switch<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "text" => {
+                    Ok(unsafe {
+                        Self::Text(
+                            <Text<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "verbatim" => {
+                    Ok(unsafe {
+                        Self::Verbatim(
+                            <Verbatim<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
                 _ => Err(::type_sitter::IncorrectKind::new::<Self>(node)),
             }
         }
@@ -7645,12 +8391,12 @@ pub mod anon_unions {
         }
     }
     /**One of `{attribute_name | attribute_value | directive | parameter | php_statement | quoted_attribute_value}`:
-    - [`AttributeName`]
-    - [`AttributeValue`]
-    - [`Directive`]
-    - [`Parameter`]
-    - [`PhpStatement`]
-    - [`QuotedAttributeValue`]*/
+- [`AttributeName`]
+- [`AttributeValue`]
+- [`Directive`]
+- [`Parameter`]
+- [`PhpStatement`]
+- [`QuotedAttributeValue`]*/
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     #[allow(non_camel_case_types)]
     pub enum AttributeName_AttributeValue_Directive_Parameter_PhpStatement_QuotedAttributeValue<
@@ -7665,9 +8411,11 @@ pub mod anon_unions {
     }
     #[automatically_derived]
     #[allow(unused)]
-    impl<'tree>
-        AttributeName_AttributeValue_Directive_Parameter_PhpStatement_QuotedAttributeValue<'tree>
-    {
+    impl<
+        'tree,
+    > AttributeName_AttributeValue_Directive_Parameter_PhpStatement_QuotedAttributeValue<
+        'tree,
+    > {
         ///Returns the node if it is of type `attribute_name` ([`AttributeName`]), otherwise returns `None`
         #[inline]
         pub fn as_attribute_name(self) -> ::std::option::Option<AttributeName<'tree>> {
@@ -7733,56 +8481,72 @@ pub mod anon_unions {
     }
     #[automatically_derived]
     impl<'tree> ::type_sitter::Node<'tree>
-        for AttributeName_AttributeValue_Directive_Parameter_PhpStatement_QuotedAttributeValue<
-            'tree,
-        >
-    {
-        type WithLifetime<'a> =
-            AttributeName_AttributeValue_Directive_Parameter_PhpStatement_QuotedAttributeValue<'a>;
+    for AttributeName_AttributeValue_Directive_Parameter_PhpStatement_QuotedAttributeValue<
+        'tree,
+    > {
+        type WithLifetime<'a> = AttributeName_AttributeValue_Directive_Parameter_PhpStatement_QuotedAttributeValue<
+            'a,
+        >;
         const KIND: &'static str = "{attribute_name | attribute_value | directive | parameter | php_statement | quoted_attribute_value}";
         #[inline]
         fn try_from_raw(
             node: ::type_sitter::raw::Node<'tree>,
         ) -> ::type_sitter::NodeResult<'tree, Self> {
             match node.kind() {
-                "attribute_name" => Ok(unsafe {
-                    Self::AttributeName(
-                        <AttributeName<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "attribute_value" => {
+                "attribute_name" => {
                     Ok(unsafe {
-                        Self::AttributeValue(<AttributeValue<'tree> as ::type_sitter::Node<
-                            'tree,
-                        >>::from_raw_unchecked(node))
+                        Self::AttributeName(
+                            <AttributeName<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
                     })
                 }
-                "directive" => Ok(unsafe {
-                    Self::Directive(
-                        <Directive<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "parameter" => Ok(unsafe {
-                    Self::Parameter(
-                        <Parameter<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "php_statement" => Ok(unsafe {
-                    Self::PhpStatement(
-                        <PhpStatement<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "quoted_attribute_value" => Ok(unsafe {
-                    Self::QuotedAttributeValue(
+                "attribute_value" => {
+                    Ok(unsafe {
+                        Self::AttributeValue(
+                            <AttributeValue<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "directive" => {
+                    Ok(unsafe {
+                        Self::Directive(
+                            <Directive<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "parameter" => {
+                    Ok(unsafe {
+                        Self::Parameter(
+                            <Parameter<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "php_statement" => {
+                    Ok(unsafe {
+                        Self::PhpStatement(
+                            <PhpStatement<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "quoted_attribute_value" => {
+                    Ok(unsafe {
+                        Self::QuotedAttributeValue(
                             <QuotedAttributeValue<
                                 'tree,
                             > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
                         )
-                }),
+                    })
+                }
                 _ => Err(::type_sitter::IncorrectKind::new::<Self>(node)),
             }
         }
@@ -7821,12 +8585,12 @@ pub mod anon_unions {
         }
     }
     /**One of `{attribute_value | comment | conditional | directive | parameter | php_statement}`:
-    - [`AttributeValue`]
-    - [`Comment`]
-    - [`Conditional`]
-    - [`Directive`]
-    - [`Parameter`]
-    - [`PhpStatement`]*/
+- [`AttributeValue`]
+- [`Comment`]
+- [`Conditional`]
+- [`Directive`]
+- [`Parameter`]
+- [`PhpStatement`]*/
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     #[allow(non_camel_case_types)]
     pub enum AttributeValue_Comment_Conditional_Directive_Parameter_PhpStatement<'tree> {
@@ -7839,7 +8603,9 @@ pub mod anon_unions {
     }
     #[automatically_derived]
     #[allow(unused)]
-    impl<'tree> AttributeValue_Comment_Conditional_Directive_Parameter_PhpStatement<'tree> {
+    impl<
+        'tree,
+    > AttributeValue_Comment_Conditional_Directive_Parameter_PhpStatement<'tree> {
         ///Returns the node if it is of type `attribute_value` ([`AttributeValue`]), otherwise returns `None`
         #[inline]
         pub fn as_attribute_value(self) -> ::std::option::Option<AttributeValue<'tree>> {
@@ -7903,12 +8669,11 @@ pub mod anon_unions {
     }
     #[automatically_derived]
     impl<'tree> ::type_sitter::Node<'tree>
-        for AttributeValue_Comment_Conditional_Directive_Parameter_PhpStatement<'tree>
-    {
-        type WithLifetime<'a> =
-            AttributeValue_Comment_Conditional_Directive_Parameter_PhpStatement<'a>;
-        const KIND: &'static str =
-            "{attribute_value | comment | conditional | directive | parameter | php_statement}";
+    for AttributeValue_Comment_Conditional_Directive_Parameter_PhpStatement<'tree> {
+        type WithLifetime<'a> = AttributeValue_Comment_Conditional_Directive_Parameter_PhpStatement<
+            'a,
+        >;
+        const KIND: &'static str = "{attribute_value | comment | conditional | directive | parameter | php_statement}";
         #[inline]
         fn try_from_raw(
             node: ::type_sitter::raw::Node<'tree>,
@@ -7916,40 +8681,58 @@ pub mod anon_unions {
             match node.kind() {
                 "attribute_value" => {
                     Ok(unsafe {
-                        Self::AttributeValue(<AttributeValue<'tree> as ::type_sitter::Node<
-                            'tree,
-                        >>::from_raw_unchecked(node))
+                        Self::AttributeValue(
+                            <AttributeValue<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
                     })
                 }
-                "comment" => Ok(unsafe {
-                    Self::Comment(
-                        <Comment<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "conditional" => Ok(unsafe {
-                    Self::Conditional(
-                        <Conditional<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "directive" => Ok(unsafe {
-                    Self::Directive(
-                        <Directive<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "parameter" => Ok(unsafe {
-                    Self::Parameter(
-                        <Parameter<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "php_statement" => Ok(unsafe {
-                    Self::PhpStatement(
-                        <PhpStatement<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
+                "comment" => {
+                    Ok(unsafe {
+                        Self::Comment(
+                            <Comment<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "conditional" => {
+                    Ok(unsafe {
+                        Self::Conditional(
+                            <Conditional<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "directive" => {
+                    Ok(unsafe {
+                        Self::Directive(
+                            <Directive<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "parameter" => {
+                    Ok(unsafe {
+                        Self::Parameter(
+                            <Parameter<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "php_statement" => {
+                    Ok(unsafe {
+                        Self::PhpStatement(
+                            <PhpStatement<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
                 _ => Err(::type_sitter::IncorrectKind::new::<Self>(node)),
             }
         }
@@ -7988,8 +8771,8 @@ pub mod anon_unions {
         }
     }
     /**One of `{attribute | tag_name}`:
-    - [`Attribute`]
-    - [`TagName`]*/
+- [`Attribute`]
+- [`TagName`]*/
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     #[allow(non_camel_case_types)]
     pub enum Attribute_TagName<'tree> {
@@ -8029,16 +8812,24 @@ pub mod anon_unions {
             node: ::type_sitter::raw::Node<'tree>,
         ) -> ::type_sitter::NodeResult<'tree, Self> {
             match node.kind() {
-                "attribute" => Ok(unsafe {
-                    Self::Attribute(
-                        <Attribute<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "tag_name" => Ok(unsafe {
-                    Self::TagName(
-                        <TagName<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
+                "attribute" => {
+                    Ok(unsafe {
+                        Self::Attribute(
+                            <Attribute<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "tag_name" => {
+                    Ok(unsafe {
+                        Self::TagName(
+                            <TagName<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
                 _ => Err(::type_sitter::IncorrectKind::new::<Self>(node)),
             }
         }
@@ -8065,16 +8856,18 @@ pub mod anon_unions {
         }
     }
     /**One of `{conditional_keyword | directive | directive_end | directive_start | parameter | php_only | text}`:
-    - [`ConditionalKeyword`]
-    - [`Directive`]
-    - [`DirectiveEnd`]
-    - [`DirectiveStart`]
-    - [`Parameter`]
-    - [`PhpOnly`]
-    - [`Text`]*/
+- [`ConditionalKeyword`]
+- [`Directive`]
+- [`DirectiveEnd`]
+- [`DirectiveStart`]
+- [`Parameter`]
+- [`PhpOnly`]
+- [`Text`]*/
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     #[allow(non_camel_case_types)]
-    pub enum ConditionalKeyword_Directive_DirectiveEnd_DirectiveStart_Parameter_PhpOnly_Text<'tree> {
+    pub enum ConditionalKeyword_Directive_DirectiveEnd_DirectiveStart_Parameter_PhpOnly_Text<
+        'tree,
+    > {
         ConditionalKeyword(ConditionalKeyword<'tree>),
         Directive(Directive<'tree>),
         DirectiveEnd(DirectiveEnd<'tree>),
@@ -8085,10 +8878,16 @@ pub mod anon_unions {
     }
     #[automatically_derived]
     #[allow(unused)]
-    impl<'tree> ConditionalKeyword_Directive_DirectiveEnd_DirectiveStart_Parameter_PhpOnly_Text<'tree> {
+    impl<
+        'tree,
+    > ConditionalKeyword_Directive_DirectiveEnd_DirectiveStart_Parameter_PhpOnly_Text<
+        'tree,
+    > {
         ///Returns the node if it is of type `conditional_keyword` ([`ConditionalKeyword`]), otherwise returns `None`
         #[inline]
-        pub fn as_conditional_keyword(self) -> ::std::option::Option<ConditionalKeyword<'tree>> {
+        pub fn as_conditional_keyword(
+            self,
+        ) -> ::std::option::Option<ConditionalKeyword<'tree>> {
             #[allow(irrefutable_let_patterns)]
             if let Self::ConditionalKeyword(x) = self {
                 ::std::option::Option::Some(x)
@@ -8159,55 +8958,81 @@ pub mod anon_unions {
     }
     #[automatically_derived]
     impl<'tree> ::type_sitter::Node<'tree>
-        for ConditionalKeyword_Directive_DirectiveEnd_DirectiveStart_Parameter_PhpOnly_Text<'tree>
-    {
-        type WithLifetime<'a> =
-            ConditionalKeyword_Directive_DirectiveEnd_DirectiveStart_Parameter_PhpOnly_Text<'a>;
+    for ConditionalKeyword_Directive_DirectiveEnd_DirectiveStart_Parameter_PhpOnly_Text<
+        'tree,
+    > {
+        type WithLifetime<'a> = ConditionalKeyword_Directive_DirectiveEnd_DirectiveStart_Parameter_PhpOnly_Text<
+            'a,
+        >;
         const KIND: &'static str = "{conditional_keyword | directive | directive_end | directive_start | parameter | php_only | text}";
         #[inline]
         fn try_from_raw(
             node: ::type_sitter::raw::Node<'tree>,
         ) -> ::type_sitter::NodeResult<'tree, Self> {
             match node.kind() {
-                "conditional_keyword" => Ok(unsafe {
-                    Self::ConditionalKeyword(<ConditionalKeyword<'tree> as ::type_sitter::Node<
-                        'tree,
-                    >>::from_raw_unchecked(node))
-                }),
-                "directive" => Ok(unsafe {
-                    Self::Directive(
-                        <Directive<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "directive_end" => Ok(unsafe {
-                    Self::DirectiveEnd(
-                        <DirectiveEnd<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "directive_start" => {
+                "conditional_keyword" => {
                     Ok(unsafe {
-                        Self::DirectiveStart(<DirectiveStart<'tree> as ::type_sitter::Node<
-                            'tree,
-                        >>::from_raw_unchecked(node))
+                        Self::ConditionalKeyword(
+                            <ConditionalKeyword<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
                     })
                 }
-                "parameter" => Ok(unsafe {
-                    Self::Parameter(
-                        <Parameter<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "php_only" => Ok(unsafe {
-                    Self::PhpOnly(
-                        <PhpOnly<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "text" => Ok(unsafe {
-                    Self::Text(
-                        <Text<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
+                "directive" => {
+                    Ok(unsafe {
+                        Self::Directive(
+                            <Directive<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "directive_end" => {
+                    Ok(unsafe {
+                        Self::DirectiveEnd(
+                            <DirectiveEnd<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "directive_start" => {
+                    Ok(unsafe {
+                        Self::DirectiveStart(
+                            <DirectiveStart<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "parameter" => {
+                    Ok(unsafe {
+                        Self::Parameter(
+                            <Parameter<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "php_only" => {
+                    Ok(unsafe {
+                        Self::PhpOnly(
+                            <PhpOnly<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "text" => {
+                    Ok(unsafe {
+                        Self::Text(
+                            <Text<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
                 _ => Err(::type_sitter::IncorrectKind::new::<Self>(node)),
             }
         }
@@ -8249,16 +9074,18 @@ pub mod anon_unions {
         }
     }
     /**One of `{directive | directive_end | directive_start | parameter | php_end_tag | php_only | php_tag}`:
-    - [`Directive`]
-    - [`DirectiveEnd`]
-    - [`DirectiveStart`]
-    - [`Parameter`]
-    - [`PhpEndTag`]
-    - [`PhpOnly`]
-    - [`PhpTag`]*/
+- [`Directive`]
+- [`DirectiveEnd`]
+- [`DirectiveStart`]
+- [`Parameter`]
+- [`PhpEndTag`]
+- [`PhpOnly`]
+- [`PhpTag`]*/
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     #[allow(non_camel_case_types)]
-    pub enum Directive_DirectiveEnd_DirectiveStart_Parameter_PhpEndTag_PhpOnly_PhpTag<'tree> {
+    pub enum Directive_DirectiveEnd_DirectiveStart_Parameter_PhpEndTag_PhpOnly_PhpTag<
+        'tree,
+    > {
         Directive(Directive<'tree>),
         DirectiveEnd(DirectiveEnd<'tree>),
         DirectiveStart(DirectiveStart<'tree>),
@@ -8269,7 +9096,9 @@ pub mod anon_unions {
     }
     #[automatically_derived]
     #[allow(unused)]
-    impl<'tree> Directive_DirectiveEnd_DirectiveStart_Parameter_PhpEndTag_PhpOnly_PhpTag<'tree> {
+    impl<
+        'tree,
+    > Directive_DirectiveEnd_DirectiveStart_Parameter_PhpEndTag_PhpOnly_PhpTag<'tree> {
         ///Returns the node if it is of type `directive` ([`Directive`]), otherwise returns `None`
         #[inline]
         pub fn as_directive(self) -> ::std::option::Option<Directive<'tree>> {
@@ -8343,55 +9172,79 @@ pub mod anon_unions {
     }
     #[automatically_derived]
     impl<'tree> ::type_sitter::Node<'tree>
-        for Directive_DirectiveEnd_DirectiveStart_Parameter_PhpEndTag_PhpOnly_PhpTag<'tree>
-    {
-        type WithLifetime<'a> =
-            Directive_DirectiveEnd_DirectiveStart_Parameter_PhpEndTag_PhpOnly_PhpTag<'a>;
+    for Directive_DirectiveEnd_DirectiveStart_Parameter_PhpEndTag_PhpOnly_PhpTag<'tree> {
+        type WithLifetime<'a> = Directive_DirectiveEnd_DirectiveStart_Parameter_PhpEndTag_PhpOnly_PhpTag<
+            'a,
+        >;
         const KIND: &'static str = "{directive | directive_end | directive_start | parameter | php_end_tag | php_only | php_tag}";
         #[inline]
         fn try_from_raw(
             node: ::type_sitter::raw::Node<'tree>,
         ) -> ::type_sitter::NodeResult<'tree, Self> {
             match node.kind() {
-                "directive" => Ok(unsafe {
-                    Self::Directive(
-                        <Directive<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "directive_end" => Ok(unsafe {
-                    Self::DirectiveEnd(
-                        <DirectiveEnd<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(
-                            node,
-                        ),
-                    )
-                }),
-                "directive_start" => {
+                "directive" => {
                     Ok(unsafe {
-                        Self::DirectiveStart(<DirectiveStart<'tree> as ::type_sitter::Node<
-                            'tree,
-                        >>::from_raw_unchecked(node))
+                        Self::Directive(
+                            <Directive<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
                     })
                 }
-                "parameter" => Ok(unsafe {
-                    Self::Parameter(
-                        <Parameter<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "php_end_tag" => Ok(unsafe {
-                    Self::PhpEndTag(
-                        <PhpEndTag<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "php_only" => Ok(unsafe {
-                    Self::PhpOnly(
-                        <PhpOnly<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "php_tag" => Ok(unsafe {
-                    Self::PhpTag(
-                        <PhpTag<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
+                "directive_end" => {
+                    Ok(unsafe {
+                        Self::DirectiveEnd(
+                            <DirectiveEnd<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "directive_start" => {
+                    Ok(unsafe {
+                        Self::DirectiveStart(
+                            <DirectiveStart<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "parameter" => {
+                    Ok(unsafe {
+                        Self::Parameter(
+                            <Parameter<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "php_end_tag" => {
+                    Ok(unsafe {
+                        Self::PhpEndTag(
+                            <PhpEndTag<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "php_only" => {
+                    Ok(unsafe {
+                        Self::PhpOnly(
+                            <PhpOnly<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "php_tag" => {
+                    Ok(unsafe {
+                        Self::PhpTag(
+                            <PhpTag<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
                 _ => Err(::type_sitter::IncorrectKind::new::<Self>(node)),
             }
         }
@@ -8433,8 +9286,8 @@ pub mod anon_unions {
         }
     }
     /**One of `{directive | parameter}`:
-    - [`Directive`]
-    - [`Parameter`]*/
+- [`Directive`]
+- [`Parameter`]*/
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     #[allow(non_camel_case_types)]
     pub enum Directive_Parameter<'tree> {
@@ -8474,16 +9327,24 @@ pub mod anon_unions {
             node: ::type_sitter::raw::Node<'tree>,
         ) -> ::type_sitter::NodeResult<'tree, Self> {
             match node.kind() {
-                "directive" => Ok(unsafe {
-                    Self::Directive(
-                        <Directive<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "parameter" => Ok(unsafe {
-                    Self::Parameter(
-                        <Parameter<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
+                "directive" => {
+                    Ok(unsafe {
+                        Self::Directive(
+                            <Directive<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "parameter" => {
+                    Ok(unsafe {
+                        Self::Parameter(
+                            <Parameter<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
                 _ => Err(::type_sitter::IncorrectKind::new::<Self>(node)),
             }
         }
@@ -8510,9 +9371,9 @@ pub mod anon_unions {
         }
     }
     /**One of `{end_tag | raw_text | start_tag}`:
-    - [`EndTag`]
-    - [`RawText`]
-    - [`StartTag`]*/
+- [`EndTag`]
+- [`RawText`]
+- [`StartTag`]*/
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     #[allow(non_camel_case_types)]
     pub enum EndTag_RawText_StartTag<'tree> {
@@ -8563,21 +9424,33 @@ pub mod anon_unions {
             node: ::type_sitter::raw::Node<'tree>,
         ) -> ::type_sitter::NodeResult<'tree, Self> {
             match node.kind() {
-                "end_tag" => Ok(unsafe {
-                    Self::EndTag(
-                        <EndTag<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "raw_text" => Ok(unsafe {
-                    Self::RawText(
-                        <RawText<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
-                "start_tag" => Ok(unsafe {
-                    Self::StartTag(
-                        <StartTag<'tree> as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
-                    )
-                }),
+                "end_tag" => {
+                    Ok(unsafe {
+                        Self::EndTag(
+                            <EndTag<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "raw_text" => {
+                    Ok(unsafe {
+                        Self::RawText(
+                            <RawText<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "start_tag" => {
+                    Ok(unsafe {
+                        Self::StartTag(
+                            <StartTag<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
                 _ => Err(::type_sitter::IncorrectKind::new::<Self>(node)),
             }
         }
