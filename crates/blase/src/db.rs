@@ -12,6 +12,8 @@ use type_sitter::UntypedNode;
 
 use crate::{lsp, util::FileType};
 
+pub mod def;
+
 #[salsa::db]
 #[derive(Clone, Default)]
 pub struct RootDatabase {
@@ -24,6 +26,8 @@ impl salsa::Database for RootDatabase {}
 
 #[salsa::input(debug)]
 pub struct SourceFile {
+    #[returns(ref)]
+    pub path: Utf8PathBuf,
     #[returns(ref)]
     pub contents: Arc<str>,
     pub file_type: FileType,
@@ -53,8 +57,13 @@ impl Files {
             }
             dashmap::Entry::Vacant(vacant) => {
                 if let Some(ty) = FileType::from_path(&path) {
-                    let contents =
-                        SourceFile::new(db, Arc::from(contents), ty, LineIndex::new(contents));
+                    let contents = SourceFile::new(
+                        db,
+                        path,
+                        Arc::from(contents),
+                        ty,
+                        LineIndex::new(contents),
+                    );
                     vacant.insert(contents);
                 } else {
                     tracing::error!(url = path.as_str(), "Unknown filetype");
@@ -112,6 +121,7 @@ pub trait DocumentDatabase: SourceDatabase + salsa::Database {
 }
 
 #[salsa::db]
+#[salsa::tracked]
 impl DocumentDatabase for RootDatabase {
     fn parsed_document(&self, path: &Utf8Path) -> Option<ParsedDocument> {
         self.source_file(path)
@@ -130,11 +140,17 @@ impl DocumentDatabase for RootDatabase {
 
 #[derive(Clone)]
 pub struct ParsedDocument {
+    pub source: SourceFile,
     pub tree: tree_sitter::Tree,
     pub filetype: FileType,
 }
 
 impl ParsedDocument {
+    pub fn root_node<'doc>(&'doc self) -> UntypedNode<'doc> {
+        let root_node = self.tree.root_node();
+        UntypedNode::new(root_node)
+    }
+
     pub fn get_node_at<'doc>(
         &'doc self,
         text_size: line_index::TextSize,
@@ -144,6 +160,15 @@ impl ParsedDocument {
             .root_node()
             .descendant_for_byte_range(offset, offset)
             .map(|node| UntypedNode::new(node))
+    }
+
+    pub fn text_for_node<'db>(
+        &'db self,
+        db: &'db dyn DocumentDatabase,
+        node: impl type_sitter::Node<'db>,
+    ) -> Option<&'db str> {
+        let contents = self.source.contents(db);
+        contents.get(node.byte_range())
     }
 }
 
@@ -164,6 +189,9 @@ impl PartialEq for ParsedDocument {
 
 #[test]
 fn test_document_eq() {
+    use std::path::PathBuf;
+    let path = PathBuf::from("C:\\foo\\bar\\baz.blade.php");
+    let path = Utf8PathBuf::from_path_buf(path).unwrap();
     let contents = r#"
 @if($foo)
   {{ $bar }}
@@ -173,6 +201,7 @@ fn test_document_eq() {
     let (doc1, doc2) = RootDatabase::default().attach(|db| {
         let source1 = SourceFile::new(
             db,
+            path.clone(),
             Arc::from(contents),
             FileType::Blade,
             LineIndex::new(contents),
@@ -181,6 +210,7 @@ fn test_document_eq() {
 
         let source2 = SourceFile::new(
             db,
+            path,
             Arc::from(contents),
             FileType::Blade,
             LineIndex::new(contents),
@@ -193,6 +223,9 @@ fn test_document_eq() {
 
 #[test]
 fn test_document_eq_diff_ws_contents() {
+    use std::path::PathBuf;
+    let path = PathBuf::from("C:\\foo\\bar\\baz.blade.php");
+    let path = Utf8PathBuf::from_path_buf(path).unwrap();
     let contents1 = r#"
 @if($foo)
   {{ $bar }}
@@ -209,6 +242,7 @@ fn test_document_eq_diff_ws_contents() {
     let (doc1, doc2) = RootDatabase::default().attach(|db| {
         let source1 = SourceFile::new(
             db,
+            path.clone(),
             Arc::from(contents1),
             FileType::Blade,
             LineIndex::new(contents1),
@@ -217,6 +251,7 @@ fn test_document_eq_diff_ws_contents() {
 
         let source2 = SourceFile::new(
             db,
+            path.clone(),
             Arc::from(contents2),
             FileType::Blade,
             LineIndex::new(contents2),
@@ -293,7 +328,11 @@ pub fn parse_document(db: &dyn DocumentDatabase, source: SourceFile) -> ParsedDo
 
     get_tree_sitter_errors(db, tree.root_node(), contents);
 
-    ParsedDocument { tree, filetype }
+    ParsedDocument {
+        source,
+        tree,
+        filetype,
+    }
 }
 
 /// Vendored from https://github.com/adclz/auto-lsp/blob/d133723bfbd9150c0ec944b4e9f9cf96844dc167/crates/default/src/db/lexer.rs#L30

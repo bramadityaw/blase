@@ -24,7 +24,7 @@ impl ServerState {
 
 pub mod from {
     //! Converts **from** lsp_types
-    use async_lsp::lsp_types::{self, Position, Range, Url};
+    use async_lsp::lsp_types::{Position, Range, Url};
     use camino::Utf8PathBuf;
     use line_index::LineCol;
     use tree_sitter::Point;
@@ -70,9 +70,60 @@ pub mod from {
 
 pub mod into {
     //! Converts **into** lsp_types
-    use async_lsp::lsp_types::{Position, Range, Url};
+    use crate::analysis::signature_help;
+    use async_lsp::lsp_types::{self, Position, Range, Url};
     use camino::Utf8Path;
     use tree_sitter::Point;
+
+    pub fn signature_help(
+        help: signature_help::SignatureHelp,
+        label_offsets: bool,
+    ) -> lsp_types::SignatureHelp {
+        let (label, params) = if label_offsets {
+            let params = help
+                .parameter_ranges()
+                .iter()
+                .map(|it| {
+                    let start = help.signature[..it.start().into()]
+                        .chars()
+                        .map(|c| c.len_utf16())
+                        .sum::<usize>() as u32;
+                    let end = start
+                        + help.signature[it.start().into()..it.end().into()]
+                            .chars()
+                            .map(|c| c.len_utf16())
+                            .sum::<usize>() as u32;
+                    [start, end]
+                })
+                .map(|label_offsets| lsp_types::ParameterInformation {
+                    label: lsp_types::ParameterLabel::LabelOffsets(label_offsets),
+                    documentation: None,
+                })
+                .collect::<Vec<_>>();
+            (help.signature, params)
+        } else {
+            let params = help
+                .parameter_labels()
+                .map(|label| lsp_types::ParameterInformation {
+                    label: lsp_types::ParameterLabel::Simple(label.to_owned()),
+                    documentation: None,
+                })
+                .collect::<Vec<_>>();
+            (help.signature, params)
+        };
+        let active_parameter = help.active_parameter.map(|it| it as u32);
+        let signature = lsp_types::SignatureInformation {
+            label,
+            documentation: None,
+            parameters: Some(params),
+            active_parameter,
+        };
+        lsp_types::SignatureHelp {
+            signatures: vec![signature],
+            active_signature: Some(0),
+            active_parameter,
+        }
+    }
 
     pub fn url(path: &Utf8Path) -> Url {
         Url::from_file_path(path.as_std_path()).unwrap()

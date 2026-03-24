@@ -6,5 +6,6 @@ pub mod handler;
 pub mod line_index;
 pub mod loader;
 pub mod lsp;
+pub mod resolve_path;
 pub mod server;
 pub mod util;

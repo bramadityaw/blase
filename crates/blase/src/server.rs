@@ -121,7 +121,10 @@ pub fn server_capabilities(config: &Config) -> ServerCapabilities {
         hover_provider: Some(HoverProviderCapability::Simple(true)),
         definition_provider: Some(lsp_types::OneOf::Left(true)),
         signature_help_provider: Some(SignatureHelpOptions {
-            trigger_characters: Some(vec!["(".to_string()]),
+            trigger_characters: {
+                let trigger_chars = ['(', '"', '\''];
+                Some(trigger_chars.into_iter().map(String::from).collect())
+            },
             retrigger_characters: None,
             work_done_progress_options: WorkDoneProgressOptions {
                 work_done_progress: None,
@@ -233,6 +236,6 @@ impl ServerSnapshot {
 
     pub fn workspace_folder(&self) -> Utf8PathBuf {
         let config = self.config.read().expect("poison");
-        config.workspace_folder.clone()
+        config.workspace_folder()
     }
 }

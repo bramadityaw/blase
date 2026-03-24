@@ -1,10 +1,9 @@
-use async_lsp::lsp_types::{Location, SignatureInformation};
+use async_lsp::lsp_types::Location;
 use camino::Utf8Path;
 use line_index::LineCol;
 
 use crate::{
-    analysis::{Analysis, goto_definition},
-    db::SourceDatabase,
+    analysis::{Analysis, goto_definition, signature_help},
     server::ServerSnapshot,
 };
 
@@ -12,14 +11,16 @@ impl Analysis {
     pub fn signature_help(
         &self,
         snap: &ServerSnapshot,
-        path: &Utf8Path,
+        doc_path: &Utf8Path,
         line_col: LineCol,
-    ) -> Option<(SignatureInformation, Option<usize>)> {
-        let document = self.parsed_document(path).ok()??;
-        let line_index = self.with_db(|db| db.line_index(path)).ok()??;
-        let offset = line_index.offset(line_col)?;
-        let node = document.get_node_at(offset)?;
-        todo!()
+    ) -> Option<signature_help::SignatureHelp> {
+        let config = &snap.config.read().expect("poison");
+        let result =
+            self.with_db(|db| signature_help::signature_help(db, config, doc_path, line_col));
+        match result {
+            Ok(result) => result,
+            Err(_) => None,
+        }
     }
 
     pub fn goto_def(
@@ -28,9 +29,9 @@ impl Analysis {
         doc_path: &Utf8Path,
         line_col: LineCol,
     ) -> Vec<Location> {
-        let work_path = &snap.workspace_folder();
+        let config = &snap.config.read().expect("poison");
         self.with_db(|db| {
-            goto_definition::goto_definition(db, doc_path, work_path, line_col).unwrap_or_default()
+            goto_definition::goto_definition(db, doc_path, config, line_col).unwrap_or_default()
         })
         .unwrap()
     }

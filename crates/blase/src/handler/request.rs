@@ -29,6 +29,7 @@ pub fn handle_signature_help(
     snap: ServerSnapshot,
     params: SignatureHelpParams,
 ) -> BoxFuture<'static, Result<Option<SignatureHelp>, ResponseError>> {
+    let config = snap.config.read().expect("poison");
     let _i = tracing::info_span!("handle_signature_help").entered();
     let TextDocumentPositionParams {
         text_document,
@@ -39,11 +40,7 @@ pub fn handle_signature_help(
     let help = snap
         .analysis
         .signature_help(&snap, &path, line_col)
-        .map(|(info, active)| SignatureHelp {
-            signatures: vec![info],
-            active_signature: Some(0),
-            active_parameter: active.map(|x| x as u32),
-        });
+        .map(|help| lsp::into::signature_help(help, config.signature_help_label_offsets()));
     box_future!(Ok(help))
 }
 

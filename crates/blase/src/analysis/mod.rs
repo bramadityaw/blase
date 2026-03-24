@@ -17,6 +17,7 @@ pub struct AnalysisHost {
 
 mod goto_definition;
 mod lsp;
+pub mod signature_help;
 
 impl AnalysisHost {
     pub fn set_source_file(&mut self, path: Utf8PathBuf, contents: &str) {

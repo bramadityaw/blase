@@ -10,6 +10,26 @@ pub struct Config {
 }
 
 impl Config {
+    pub fn signature_help_label_offsets(&self) -> bool {
+        (|| {
+            self.capabilities
+                .text_document
+                .as_ref()?
+                .signature_help
+                .as_ref()?
+                .signature_information
+                .as_ref()?
+                .parameter_information
+                .as_ref()?
+                .label_offset_support
+        })()
+        .unwrap_or_default()
+    }
+
+    pub fn workspace_folder(&self) -> Utf8PathBuf {
+        self.workspace_folder.clone()
+    }
+
     pub fn negotiated_encoding(&self) -> PositionEncoding {
         let client_encodings = match &self.capabilities.general {
             Some(general) => general.position_encodings.as_deref().unwrap_or_default(),
