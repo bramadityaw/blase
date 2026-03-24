@@ -10,7 +10,6 @@ fn main() {
     .into_iter()
     .for_each(|(path, types)| {
         let path = std::env::current_dir().unwrap().join(path);
-        std::fs::remove_file(&path).unwrap();
 
         let generated = generate_nodes(types).unwrap();
 
