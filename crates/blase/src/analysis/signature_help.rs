@@ -81,17 +81,3 @@ fn signature_help_for_attr(
     res.signature.push('>');
     Some(res)
 }
-
-fn get_tag_attrs<'tree, Tag: Node<'tree>>(tag: Tag) -> Option<Vec<ast::blade::Attribute<'tree>>> {
-    ast::match_node!(tag, {
-        ast::blade::SelfClosingTag(self_tag) => {
-            let mut cursor = self_tag.walk();
-            Some(self_tag.attributes(&mut cursor).filter_map(Result::ok).collect())
-        },
-        ast::blade::StartTag(start_tag) => {
-            let mut cursor = start_tag.walk();
-            Some(start_tag.attributes(&mut cursor).filter_map(Result::ok).collect())
-        },
-        _ => None,
-    })
-}
