@@ -72,7 +72,7 @@ fn signature_help_for_attr(
         active_parameter,
         parameters: Vec::new(),
     };
-    format_to!(res.signature, "<{}", component.name(db));
+    format_to!(res.signature, "<x-{}", component.name(db));
     if let Some(attrs) = component.attrs(db) {
         for attr in attrs {
             res.push_attr(attr.name.as_str(), attr.default_value.as_deref());
