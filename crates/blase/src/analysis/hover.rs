@@ -23,10 +23,17 @@ impl From<Markup> for String {
 
 fn markup(rel_path: String, source_code: String, doc: Option<String>) -> Markup {
     let mut buf = String::new();
-    format_to!(buf, "*Location*: {}\n\n", rel_path);
+
+    #[cfg(not(windows))]
+    let path = rel_path.replace('\\', "/");
+    #[cfg(windows)]
+    let path = rel_path.replace('/', "\\");
+
     format_to!(buf, "```blade\n{}\n```", source_code);
+    buf.push_str("\n---\n");
+    format_to!(buf, "*Project Path*: {}\n", path);
     if let Some(doc) = doc {
-        format_to!(buf, "\n___\n{}", doc);
+        format_to!(buf, "\n---\n{}", doc);
     }
     Markup(buf)
 }
