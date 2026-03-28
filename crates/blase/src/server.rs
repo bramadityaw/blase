@@ -25,8 +25,9 @@ use line_index::WideEncoding;
 use tower::ServiceBuilder;
 
 use crate::{
-    analysis::{Analysis, AnalysisHost},
+    analysis::{Analysis, AnalysisHost, Cancellable},
     config::Config,
+    db::SourceDatabase,
     document_data::DocumentData,
     handler,
     line_index::PositionEncoding,
@@ -237,5 +238,23 @@ impl ServerSnapshot {
     pub fn workspace_folder(&self) -> Utf8PathBuf {
         let config = self.config.read().expect("poison");
         config.workspace_folder()
+    }
+
+    pub(crate) fn file_line_index(
+        &self,
+        path: &Utf8Path,
+    ) -> Cancellable<Option<crate::line_index::LineIndex>> {
+        let config = self.config.read().expect("poison");
+        let line_index = self.analysis.with_db(|db| db.line_index(path))?;
+        let endings = self
+            .analysis
+            .with_db(|db| db.source_file(path).map(|file| file.endings(db)))?;
+        Ok(line_index.and_then(|index| {
+            Some(crate::line_index::LineIndex {
+                index,
+                endings: endings?,
+                encoding: config.negotiated_encoding(),
+            })
+        }))
     }
 }
