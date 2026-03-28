@@ -15,6 +15,10 @@ use crate::{
 #[derive(Clone, Debug, Default, Hash, PartialEq, Eq)]
 pub struct Markup(String);
 
+impl Markup {
+    pub const HORIZONTAL_RULE: &'static str = "\n---\n";
+}
+
 impl From<Markup> for String {
     fn from(value: Markup) -> Self {
         value.0
@@ -30,10 +34,11 @@ fn markup(rel_path: String, source_code: String, doc: Option<String>) -> Markup 
     let path = rel_path.replace('/', "\\");
 
     format_to!(buf, "```blade\n{}\n```", source_code);
-    buf.push_str("\n---\n");
+    buf.push_str(Markup::HORIZONTAL_RULE);
     format_to!(buf, "*Project Path*: {}\n", path);
     if let Some(doc) = doc {
-        format_to!(buf, "\n---\n{}", doc);
+        buf.push_str(Markup::HORIZONTAL_RULE);
+        format_to!(buf, "{}", doc);
     }
     Markup(buf)
 }
