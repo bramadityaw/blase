@@ -10,7 +10,7 @@ use line_index::LineIndex;
 use salsa::{Accumulator, Database, Setter};
 use type_sitter::UntypedNode;
 
-use crate::{lsp, util::FileType};
+use crate::{line_index::LineEndings, lsp, util::FileType};
 
 pub mod def;
 
@@ -31,7 +31,8 @@ pub struct SourceFile {
     #[returns(ref)]
     pub contents: Arc<str>,
     pub file_type: FileType,
-    pub line_index: LineIndex,
+    pub line_index: Arc<LineIndex>,
+    pub endings: LineEndings,
 }
 
 #[derive(Debug, Default)]
@@ -52,17 +53,25 @@ impl Files {
         match self.files.entry(path.clone()) {
             dashmap::Entry::Occupied(mut occupied) => {
                 let source_file = occupied.get_mut();
-                source_file.set_contents(db).to(Arc::from(contents));
-                source_file.set_line_index(db).to(LineIndex::new(contents));
+                let (contents, endings) = LineEndings::normalize(contents.to_string());
+                source_file
+                    .set_contents(db)
+                    .to(Arc::from(contents.as_str()));
+                source_file
+                    .set_line_index(db)
+                    .to(Arc::new(LineIndex::new(contents.as_str())));
+                source_file.set_endings(db).to(endings);
             }
             dashmap::Entry::Vacant(vacant) => {
                 if let Some(ty) = FileType::from_path(&path) {
+                    let (contents, endings) = LineEndings::normalize(contents.to_string());
                     let contents = SourceFile::new(
                         db,
                         path,
-                        Arc::from(contents),
+                        Arc::from(contents.as_str()),
                         ty,
-                        LineIndex::new(contents),
+                        Arc::new(LineIndex::new(contents.as_str())),
+                        endings,
                     );
                     vacant.insert(contents);
                 } else {
@@ -102,7 +111,7 @@ pub trait SourceDatabase: salsa::Database + 'static {
         self.source_file(path).map(|file| file.file_type(self))
     }
 
-    fn line_index(&self, path: &Utf8Path) -> Option<LineIndex> {
+    fn line_index(&self, path: &Utf8Path) -> Option<Arc<LineIndex>> {
         self.source_file(path).map(|file| file.line_index(self))
     }
 }
@@ -146,6 +155,10 @@ pub struct ParsedDocument {
 }
 
 impl ParsedDocument {
+    pub fn contents(&self, db: &dyn DocumentDatabase) -> Arc<str> {
+        Arc::clone(self.source.contents(db))
+    }
+
     pub fn root_node<'doc>(&'doc self) -> UntypedNode<'doc> {
         let root_node = self.tree.root_node();
         UntypedNode::new(root_node)
@@ -159,7 +172,7 @@ impl ParsedDocument {
         self.tree
             .root_node()
             .descendant_for_byte_range(offset, offset)
-            .map(|node| UntypedNode::new(node))
+            .map(UntypedNode::new)
     }
 
     pub fn text_for_node<'db>(
