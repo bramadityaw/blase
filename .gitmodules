@@ -1,3 +1,4 @@
 [submodule "crates/tree-sitter-blade"]
 	path = crates/tree-sitter-blade
 	url = git@github.com:bramadityaw/tree-sitter-blade.git
+	branch = fix/php-grammar-integration
