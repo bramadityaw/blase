@@ -74,7 +74,7 @@ fn goto_def_for_component(
         .into_iter()
         .filter_map(|path| {
             if db.parsed_document(&path).is_some() {
-                let uri = lsp::into::url(&path);
+                let uri = lsp::into_proto::url(&path);
                 Some(lsp_types::Location {
                     uri,
                     range: Default::default(),
