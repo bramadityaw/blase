@@ -14,7 +14,7 @@ pub fn handle_did_save(
     DidSaveTextDocumentParams { text_document, .. }: DidSaveTextDocumentParams,
 ) -> ControlFlow<async_lsp::Result<()>> {
     let _p = tracing::info_span!("handle_did_save").entered();
-    let path = lsp::from::utf8_path(&text_document.uri);
+    let path = lsp::from_proto::utf8_path(&text_document.uri);
     let analysis = server.snapshot().analysis;
     if let Ok(diagnostics) = analysis.parse_errors(&path) {
         server.publish_diagnostics(
@@ -33,7 +33,7 @@ pub fn handle_did_close(
 ) -> ControlFlow<async_lsp::Result<()>> {
     let _p = tracing::info_span!("handle_did_close").entered();
 
-    let path = lsp::from::utf8_path(&text_document.uri);
+    let path = lsp::from_proto::utf8_path(&text_document.uri);
     if server.documents.remove(&path).is_none() {
         tracing::error!(url = path.as_str(), "orphan DidCloseTextDocument");
     }
@@ -48,7 +48,7 @@ pub fn handle_did_change(
     }: DidChangeTextDocumentParams,
 ) -> ControlFlow<async_lsp::Result<()>> {
     let _p = tracing::info_span!("handle_did_save").entered();
-    let path = lsp::from::utf8_path(&text_document.uri);
+    let path = lsp::from_proto::utf8_path(&text_document.uri);
     if let Some(mut document) = server.documents.get_mut(&path) {
         let new_contents = crate::util::apply_document_changes(
             server.negotiated_encoding(),
@@ -77,7 +77,7 @@ pub fn handle_did_open(
     DidOpenTextDocumentParams { text_document }: DidOpenTextDocumentParams,
 ) -> ControlFlow<async_lsp::Result<()>> {
     let _p = tracing::info_span!("handle_did_open").entered();
-    let path = lsp::from::utf8_path(&text_document.uri);
+    let path = lsp::from_proto::utf8_path(&text_document.uri);
     let document = DocumentData {
         contents: text_document.text,
     };

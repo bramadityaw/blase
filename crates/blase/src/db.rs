@@ -217,7 +217,8 @@ fn test_document_eq() {
             path.clone(),
             Arc::from(contents),
             FileType::Blade,
-            LineIndex::new(contents),
+            Arc::new(LineIndex::new(contents)),
+            LineEndings::Unix,
         );
         let doc1 = parse_document(db, source1);
 
@@ -226,7 +227,8 @@ fn test_document_eq() {
             path,
             Arc::from(contents),
             FileType::Blade,
-            LineIndex::new(contents),
+            Arc::new(LineIndex::new(contents)),
+            LineEndings::Unix,
         );
         let doc2 = parse_document(db, source2);
         (doc1, doc2)
@@ -258,7 +260,8 @@ fn test_document_eq_diff_ws_contents() {
             path.clone(),
             Arc::from(contents1),
             FileType::Blade,
-            LineIndex::new(contents1),
+            Arc::new(LineIndex::new(contents1)),
+            LineEndings::Unix,
         );
         let doc1 = parse_document(db, source1);
 
@@ -267,7 +270,8 @@ fn test_document_eq_diff_ws_contents() {
             path.clone(),
             Arc::from(contents2),
             FileType::Blade,
-            LineIndex::new(contents2),
+            Arc::new(LineIndex::new(contents2)),
+            LineEndings::Unix,
         );
         let doc2 = parse_document(db, source2);
         (doc1, doc2)
@@ -303,7 +307,7 @@ impl From<&ParseError> for lsp_types::Diagnostic {
     fn from(error: &ParseError) -> Self {
         let (range, message) = match error {
             ParseError::Missing { range, error, .. } | ParseError::Syntax { range, error, .. } => {
-                (lsp::from::range(*range), error.clone())
+                (lsp::from_proto::range(*range), error.clone())
             }
         };
         lsp_types::Diagnostic {
