@@ -16,6 +16,7 @@ pub struct AnalysisHost {
 }
 
 mod goto_definition;
+pub mod hover;
 mod lsp;
 pub mod signature_help;
 
@@ -73,7 +74,7 @@ impl Analysis {
         self.with_db(|db| db.contents(path))
     }
 
-    pub fn line_index(&self, path: &Utf8Path) -> Cancellable<Option<LineIndex>> {
+    pub fn line_index(&self, path: &Utf8Path) -> Cancellable<Option<Arc<LineIndex>>> {
         self.with_db(|db| db.line_index(path))
     }
 

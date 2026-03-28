@@ -1,8 +1,6 @@
 //! This module is responsible for implementing handlers for Language Server
 //! Protocol. This module specifically handles requests.
 
-use std::sync::Arc;
-
 use async_lsp::{
     ErrorCode, ResponseError,
     lsp_types::{
@@ -29,91 +27,84 @@ pub fn handle_signature_help(
     snap: ServerSnapshot,
     params: SignatureHelpParams,
 ) -> BoxFuture<'static, Result<Option<SignatureHelp>, ResponseError>> {
-    let config = snap.config.read().expect("poison");
-    let _i = tracing::info_span!("handle_signature_help").entered();
-    let TextDocumentPositionParams {
-        text_document,
-        position,
-    } = params.text_document_position_params;
-    let path = lsp::from::utf8_path(&text_document.uri);
-    let line_col = lsp::from::line_col(position);
-    let help = snap
-        .analysis
-        .signature_help(&snap, &path, line_col)
-        .map(|help| lsp::into::signature_help(help, config.signature_help_label_offsets()));
-    box_future!(Ok(help))
+    fn inner(
+        snap: ServerSnapshot,
+        params: SignatureHelpParams,
+    ) -> Result<Option<SignatureHelp>, ResponseError> {
+        let _i = tracing::info_span!("handle_signature_help").entered();
+        let config = snap.config.read().expect("poison");
+        let TextDocumentPositionParams {
+            text_document,
+            position,
+        } = params.text_document_position_params;
+        let path = lsp::from_proto::utf8_path(&text_document.uri);
+        let line_col = lsp::from_proto::line_col(position);
+        let help = snap.analysis.signature_help(&snap, &path, line_col);
+        let help = lsp::into_proto::cancellable(help)?.map(|help| {
+            lsp::into_proto::signature_help(help, config.signature_help_label_offsets())
+        });
+        Ok(help)
+    }
+
+    box_future!(inner(snap, params))
 }
 
 pub fn handle_goto_def(
     snap: ServerSnapshot,
     params: GotoDefinitionParams,
 ) -> BoxFuture<'static, Result<Option<GotoDefinitionResponse>, ResponseError>> {
-    let _i = tracing::info_span!("handle_goto_def").entered();
-    let TextDocumentPositionParams {
-        text_document,
-        position,
-    } = params.text_document_position_params;
-    let path = lsp::from::utf8_path(&text_document.uri);
-    let line_col = lsp::from::line_col(position);
-    let locations = snap.analysis.goto_def(&snap, &path, line_col);
-    tracing::debug!(?locations);
-    let response = match locations.len() {
-        0 => None,
-        1 => Some(GotoDefinitionResponse::Scalar(locations[0].clone())),
-        2.. => Some(GotoDefinitionResponse::Array(locations)),
-    };
-    box_future!(Ok(response))
+    fn inner(
+        snap: ServerSnapshot,
+        params: GotoDefinitionParams,
+    ) -> Result<Option<GotoDefinitionResponse>, ResponseError> {
+        let _i = tracing::info_span!("handle_goto_def").entered();
+        let TextDocumentPositionParams {
+            text_document,
+            position,
+        } = params.text_document_position_params;
+        let path = lsp::from_proto::utf8_path(&text_document.uri);
+        let line_col = lsp::from_proto::line_col(position);
+        let locations =
+            lsp::into_proto::cancellable(snap.analysis.goto_def(&snap, &path, line_col))?;
+        tracing::debug!(?locations);
+        let response = match locations.len() {
+            0 => None,
+            1 => Some(GotoDefinitionResponse::Scalar(locations[0].clone())),
+            2.. => Some(GotoDefinitionResponse::Array(locations)),
+        };
+        Ok(response)
+    }
+
+    box_future!(inner(snap, params))
 }
 
 pub fn handle_hover(
     snap: ServerSnapshot,
     params: HoverParams,
 ) -> BoxFuture<'static, Result<Option<Hover>, ResponseError>> {
-    let _i = tracing::info_span!("handle_hover").entered();
-    let TextDocumentPositionParams {
-        text_document,
-        position,
-    } = params.text_document_position_params;
-    let path = &lsp::from::utf8_path(&text_document.uri);
-    tracing::info!(path = path.as_str(), ?position);
-    let analysis = snap.analysis;
-    let line_col = lsp::from::line_col(position);
-    let Some(source_file) = analysis.source_file(path) else {
-        tracing::info!(path = path.as_str(), "No source file found");
-        return box_future!(Ok(None));
-    };
-    let Some(text_size) = analysis
-        .with_db(|db| source_file.line_index(db))
-        .ok()
-        .and_then(|idx| idx.offset(line_col))
-    else {
-        tracing::info!(path = path.as_str(), "No offset found");
-        return box_future!(Ok(None));
-    };
-    let result = if let Ok(Some(document)) = analysis.parsed_document(path)
-        && let Some(node) = document.get_node_at(text_size)
-        && let Ok(contents) = &analysis.with_db(|db| Arc::clone(source_file.contents(db)))
-    {
-        use type_sitter::Node;
-        let kind = node.kind();
-        tracing::info!(kind);
-        let value = format!("{kind}: {}", &contents[node.byte_range()]);
-        let contents = HoverContents::Markup(MarkupContent {
-            kind: MarkupKind::Markdown,
-            value,
-        });
-        let range = lsp::into::range(node.start_position(), node.end_position());
-        let hover = Hover {
-            contents,
-            range: Some(range),
+    fn inner(snap: ServerSnapshot, params: HoverParams) -> Result<Option<Hover>, ResponseError> {
+        let _i = tracing::info_span!("handle_hover").entered();
+        let TextDocumentPositionParams {
+            text_document,
+            position,
+        } = params.text_document_position_params;
+        let path = &lsp::from_proto::utf8_path(&text_document.uri);
+        let line_col = lsp::from_proto::line_col(position);
+        let hover = lsp::into_proto::cancellable(snap.analysis.hover(&snap, path, line_col))?;
+        let line_index = lsp::into_proto::cancellable(snap.file_line_index(path))?;
+        let hover_result = || {
+            let hover = hover?;
+            Some(Hover {
+                contents: HoverContents::Markup(MarkupContent {
+                    kind: MarkupKind::Markdown,
+                    value: hover.markup.into(),
+                }),
+                range: Some(lsp::into_proto::range(&line_index?, hover.range)),
+            })
         };
-        Some(hover)
-    } else {
-        tracing::info!(?text_size, "no node found");
-        None
-    };
-    tracing::debug!(?result);
-    box_future!(Ok(result))
+        Ok(hover_result())
+    }
+    box_future!(inner(snap, params))
 }
 
 pub fn handle_initialize(
@@ -145,7 +136,8 @@ pub fn handle_initialize(
             config.capabilities = params.capabilities;
             let workspace_folder = folders[0].clone();
             tracing::debug!(url = workspace_folder.uri.path());
-            let work = dbg!(workspace_folder.uri)
+            let work = workspace_folder
+                .uri
                 .to_file_path()
                 .expect("file:// urls should always be valid file paths");
             config.workspace_folder = Utf8PathBuf::from_path_buf(work).unwrap();
