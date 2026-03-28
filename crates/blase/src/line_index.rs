@@ -18,14 +18,14 @@ pub enum PositionEncoding {
     Wide(WideEncoding),
 }
 
-pub(crate) struct LineIndex {
-    pub(crate) index: Arc<line_index::LineIndex>,
-    pub(crate) endings: LineEndings,
-    pub(crate) encoding: PositionEncoding,
+pub struct LineIndex {
+    pub index: Arc<line_index::LineIndex>,
+    pub endings: LineEndings,
+    pub encoding: PositionEncoding,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub(crate) enum LineEndings {
+pub enum LineEndings {
     Unix,
     Dos,
 }
