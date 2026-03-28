@@ -1,9 +1,10 @@
 use std::sync::Arc;
 
+use camino::Utf8Path;
 use convert_case::ccase;
 use line_index::TextSize;
 use smol_str::SmolStr;
-use type_sitter::{HasChild, HasChildren, Node};
+use type_sitter::{HasChild, Node};
 
 use crate::{
     config::Config,
@@ -169,7 +170,7 @@ impl ComponentAttr {
                                                 match param.ok()? {
                                                     PropertyPromotionParameter(prop_parameter) => {
                                                         let name = document.text_for_node(db, prop_parameter.name().ok()?)?;
-                                                        let name = name.strip_suffix('$')?;
+                                                        let name = name.strip_prefix('$').unwrap();
                                                         let default_value = prop_parameter.default_value().and_then(|val| {
                                                             let text = document.text_for_node(db, val)?;
                                                             Some(SmolStr::new(text))
@@ -178,7 +179,7 @@ impl ComponentAttr {
                                                     },
                                                     SimpleParameter(simple_parameter) => {
                                                         let name = document.text_for_node(db, simple_parameter.name().ok()?)?;
-                                                        let name = name.strip_suffix('$')?;
+                                                        let name = name.strip_prefix('$').unwrap();
                                                         let default_value = simple_parameter.default_value().and_then(|val| {
                                                             let text = document.text_for_node(db, val)?;
                                                             Some(SmolStr::new(text))
@@ -244,6 +245,9 @@ impl std::fmt::Debug for ComponentId {
 }
 
 impl ComponentId {
+    pub fn path<'db>(&self, db: &'db dyn DocumentDatabase) -> &'db Utf8Path {
+        self.file(db).path(db)
+    }
     pub fn document(&self, db: &dyn DocumentDatabase) -> ParsedDocument {
         let file = self.file(db);
         db.parsed_document(file.path(db)).unwrap()
@@ -276,11 +280,17 @@ fn get_tag_name<'tree, Tag: Node<'tree>>(tag: Tag) -> ast::blade::TagName<'tree>
 }
 
 impl Component {
-    pub fn name(&self, db: &dyn DefDatabase) -> Name {
-        db.component_signature(self.id).name.clone()
+    #[inline]
+    pub fn signature(&self, db: &dyn DefDatabase) -> Arc<ComponentSignature> {
+        db.component_signature(self.id)
     }
+
+    pub fn name(&self, db: &dyn DefDatabase) -> Name {
+        self.signature(db).name.clone()
+    }
+
     pub fn attrs(&self, db: &dyn DefDatabase) -> Option<Box<[ComponentAttr]>> {
-        db.component_signature(self.id).attrs.clone()
+        self.signature(db).attrs.clone()
     }
 
     pub fn for_attr(
