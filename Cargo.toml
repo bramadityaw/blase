@@ -5,6 +5,7 @@ members = [ "crates/*" ]
 [workspace.dependencies]
 # local crates
 ast = { path = "./crates/ast" }
+macros = { path = "./crates/macros" }
 tree-sitter-blade = { path = "./crates/tree-sitter-blade" }
 
 # non-local crates

@@ -90,6 +90,7 @@ dependencies = [
  "dashmap",
  "futures",
  "line-index",
+ "macros",
  "memchr",
  "salsa",
  "smol_str",
@@ -717,6 +718,10 @@ dependencies = [
  "serde_repr",
  "url",
 ]
+
+[[package]]
+name = "macros"
+version = "0.1.0"
 
 [[package]]
 name = "memchr"
