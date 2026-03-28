@@ -8,7 +8,7 @@ use crate::{
     config::Config,
     db::{
         ParsedDocument,
-        def::{Component, DefDatabase},
+        def::{Component, DefDatabase, Layout},
     },
 };
 
@@ -52,6 +52,7 @@ pub struct HoverResult {
 #[non_exhaustive]
 enum Hoverable {
     Component(Component),
+    Layout(Layout),
 }
 
 impl Hoverable {
@@ -65,8 +66,7 @@ impl Hoverable {
             ast::blade::TagName(tag) => {
                 Component::for_tagname(db, tag, doc, config)
                     .map(Hoverable::Component)
-                    // TODO: Cover the rest of the cases
-                    //.or_else(f)
+                    .or_else(|| Layout::for_tagname(db, tag, doc, config).map(Hoverable::Layout))
             },
             _ => None,
         })
@@ -101,6 +101,22 @@ pub fn hover(
                 }
             }
             label.push('>');
+            let range = TextRange::new(
+                TextSize::new(node.byte_range().start as u32),
+                TextSize::new(node.byte_range().end as u32),
+            );
+            let markup = markup(rel_path.to_string(), label, None);
+            Some(HoverResult { markup, range })
+        }
+        Hoverable::Layout(layout) => {
+            let rel_path = layout
+                .id
+                .path(db)
+                .strip_prefix(config.workspace_folder())
+                .expect("Layout is not in the workspace folder. This is a bug");
+            let mut label = format!("<x-{}>\n", layout.name(db));
+            label.push_str("  {{ $slot }}\n");
+            format_to!(label, "</x-{}>", layout.name(db));
             let range = TextRange::new(
                 TextSize::new(node.byte_range().start as u32),
                 TextSize::new(node.byte_range().end as u32),

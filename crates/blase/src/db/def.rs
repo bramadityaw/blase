@@ -233,6 +233,62 @@ impl ComponentSignature {
     }
 }
 
+pub struct Layout {
+    pub id: LayoutId,
+}
+
+#[derive(Clone, Copy, Hash, PartialEq, Eq)]
+pub enum LayoutKind {
+    Class,
+    Anon,
+}
+
+#[salsa::interned(no_lifetime)]
+pub struct LayoutId {
+    pub file: SourceFile,
+    pub kind: LayoutKind,
+}
+
+impl LayoutId {
+    pub fn path<'db>(&self, db: &'db dyn DocumentDatabase) -> &'db Utf8Path {
+        self.file(db).path(db)
+    }
+}
+
+impl Layout {
+    pub fn name(&self, db: &dyn DocumentDatabase) -> Name {
+        let file = self.id.file(db);
+        let kind = self.id.kind(db);
+        let filename = file.path(db).file_name().unwrap();
+        match kind {
+            LayoutKind::Class => Name::new(&ccase!(kebab, filename.strip_suffix(".php").unwrap())),
+            LayoutKind::Anon => Name::new(filename.strip_suffix(".blade.php").unwrap()),
+        }
+    }
+
+    pub fn for_tagname(
+        db: &dyn DocumentDatabase,
+        tag: ast::blade::TagName<'_>,
+        doc: &ParsedDocument,
+        config: &Config,
+    ) -> Option<Self> {
+        let name = doc.text_for_node(db, tag)?.strip_prefix("x-")?;
+        if !name.ends_with("layout") {
+            return None;
+        }
+        let (class_path, resources_path) = resolve_path::component_paths(name, config);
+        if let Some(class_doc) = db.parsed_document(&class_path) {
+            let id = LayoutId::new(db, class_doc.source, LayoutKind::Class);
+            Some(Self { id })
+        } else if let Some(res_doc) = db.parsed_document(&resources_path) {
+            let id = LayoutId::new(db, res_doc.source, LayoutKind::Anon);
+            Some(Self { id })
+        } else {
+            None
+        }
+    }
+}
+
 #[salsa::interned(no_lifetime)]
 pub struct ComponentId {
     file: SourceFile,
