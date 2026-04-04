@@ -1,11 +1,9 @@
 use std::sync::Arc;
 
-use ast::blade::Attribute;
 use camino::Utf8Path;
 use convert_case::ccase;
-use line_index::TextSize;
 use smol_str::SmolStr;
-use type_sitter::{HasChild, HasChildren, Node};
+use type_sitter::{HasChild,  Node};
 
 use crate::{
     config::Config,
