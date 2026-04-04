@@ -1,12 +1,11 @@
-use camino::Utf8Path;
-use line_index::{LineCol, TextRange, TextSize};
+use line_index::{TextRange, TextSize};
 use macros::format_to;
 use type_sitter::Node;
 
 use crate::{
     config::Config,
     db::{
-        ParsedDocument,
+        FilePosition, ParsedDocument,
         def::{Component, DefDatabase},
     },
 };
@@ -40,12 +39,9 @@ impl SignatureHelp {
 pub fn signature_help(
     db: &dyn DefDatabase,
     config: &Config,
-    doc_path: &Utf8Path,
-    line_col: LineCol,
+    FilePosition { path, offset }: FilePosition,
 ) -> Option<SignatureHelp> {
-    let document = &db.parsed_document(doc_path)?;
-    let line_index = db.line_index(doc_path)?;
-    let offset = line_index.offset(line_col)?;
+    let document = &db.parsed_document(&path)?;
     let node = document.get_node_at(offset)?;
 
     let ancestors = std::iter::successors(Some(node), Node::parent);

@@ -14,6 +14,11 @@ use crate::{line_index::LineEndings, lsp, util::FileType};
 
 pub mod def;
 
+pub struct FilePosition {
+    pub path: Utf8PathBuf,
+    pub offset: line_index::TextSize,
+}
+
 #[salsa::db]
 #[derive(Clone, Default)]
 pub struct RootDatabase {

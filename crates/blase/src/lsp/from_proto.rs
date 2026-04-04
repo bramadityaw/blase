@@ -1,8 +1,21 @@
 //! Converts **from** lsp_types
-use async_lsp::lsp_types::{Position, Range, Url};
+use async_lsp::lsp_types::{Position, Range, TextDocumentPositionParams, Url};
 use camino::Utf8PathBuf;
 use line_index::LineCol;
 use tree_sitter::Point;
+
+use crate::{analysis::Cancellable, db::FilePosition, server::ServerSnapshot};
+
+pub fn file_position(
+    snap: &ServerSnapshot,
+    position: TextDocumentPositionParams,
+) -> Cancellable<Option<FilePosition>> {
+    let path = utf8_path(&position.text_document.uri);
+    let line_index = snap.file_line_index(&path)?;
+    let offset = line_index.and_then(|line| line.index.offset(line_col(position.position)));
+    let position = offset.map(|offset| FilePosition { path, offset });
+    Ok(position)
+}
 
 pub fn line_col(position: Position) -> LineCol {
     LineCol {

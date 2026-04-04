@@ -1,21 +1,21 @@
 use async_lsp::lsp_types;
-use camino::Utf8Path;
-use line_index::LineCol;
 use type_sitter::{HasChild, Node, UntypedNode};
 
-use crate::{config::Config, db::DocumentDatabase, lsp, resolve_path};
+use crate::{
+    config::Config,
+    db::{DocumentDatabase, FilePosition},
+    lsp, resolve_path,
+};
 
 pub fn goto_definition(
     db: &dyn DocumentDatabase,
-    doc_path: &Utf8Path,
     config: &Config,
-    line_col: LineCol,
+    FilePosition { path, offset }: FilePosition,
 ) -> Option<Vec<lsp_types::Location>> {
-    let document = db.parsed_document(doc_path)?;
-    let contents = &db.contents(doc_path)?;
-    let line_index = db.line_index(doc_path)?;
-    let node = document.get_node_at(line_index.offset(line_col)?)?;
-    tracing::debug!(node = node.kind(), path = doc_path.as_str());
+    let document = db.parsed_document(&path)?;
+    let contents = &db.contents(&path)?;
+    let node = document.get_node_at(offset)?;
+    tracing::debug!(node = node.kind(), path = path.as_str());
     goto_def(db, contents, config, node)
 }
 

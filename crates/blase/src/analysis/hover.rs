@@ -1,13 +1,11 @@
-use ast::blade::TagName;
-use camino::Utf8Path;
-use line_index::{LineCol, TextRange, TextSize};
+use line_index::{TextRange, TextSize};
 use macros::format_to;
 use type_sitter::{Node, UntypedNode};
 
 use crate::{
     config::Config,
     db::{
-        ParsedDocument,
+        FilePosition, ParsedDocument,
         def::{Component, DefDatabase, Layout},
     },
 };
@@ -76,12 +74,9 @@ impl Hoverable {
 pub fn hover(
     db: &dyn DefDatabase,
     config: &Config,
-    doc_path: &Utf8Path,
-    line_col: LineCol,
+    FilePosition { path, offset }: FilePosition,
 ) -> Option<HoverResult> {
-    let doc = &db.parsed_document(doc_path)?;
-    let line_index = db.line_index(doc_path)?;
-    let offset = line_index.offset(line_col)?;
+    let doc = &db.parsed_document(&path)?;
     let node = doc.get_node_at(offset)?;
     let hoverable = Hoverable::from_node(db, node, doc, config)?;
 
