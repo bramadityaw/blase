@@ -6,111 +6,91 @@ use async_lsp::{
     lsp_types::{
         GotoDefinitionParams, GotoDefinitionResponse, Hover, HoverContents, HoverParams,
         InitializeParams, InitializeResult, MarkupContent, MarkupKind, ServerInfo, SignatureHelp,
-        SignatureHelpParams, TextDocumentPositionParams,
+        SignatureHelpParams,
     },
 };
 use camino::Utf8PathBuf;
-use futures::future::BoxFuture;
 
 use crate::{
     lsp,
     server::{ServerSnapshot, ServerState},
 };
 
-macro_rules! box_future {
-    ($val:expr) => {
-        Box::pin(async move { $val })
-    };
-}
-
 pub fn handle_signature_help(
     snap: ServerSnapshot,
     params: SignatureHelpParams,
-) -> BoxFuture<'static, Result<Option<SignatureHelp>, ResponseError>> {
-    fn inner(
-        snap: ServerSnapshot,
-        params: SignatureHelpParams,
-    ) -> Result<Option<SignatureHelp>, ResponseError> {
-        let _i = tracing::info_span!("handle_signature_help").entered();
-        let config = snap.config.read().expect("poison");
-        let TextDocumentPositionParams {
-            text_document,
-            position,
-        } = params.text_document_position_params;
-        let path = lsp::from_proto::utf8_path(&text_document.uri);
-        let line_col = lsp::from_proto::line_col(position);
-        let help = snap.analysis.signature_help(&snap, &path, line_col);
-        let help = lsp::into_proto::cancellable(help)?.map(|help| {
-            lsp::into_proto::signature_help(help, config.signature_help_label_offsets())
-        });
-        Ok(help)
-    }
-
-    box_future!(inner(snap, params))
+) -> Result<Option<SignatureHelp>, ResponseError> {
+    let _i = tracing::info_span!("handle_signature_help").entered();
+    let config = snap.config.read().expect("poison");
+    let position = match lsp::into_proto::cancellable(lsp::from_proto::file_position(
+        &snap,
+        params.text_document_position_params,
+    ))? {
+        Some(position) => position,
+        None => return Ok(None),
+    };
+    let help = lsp::into_proto::cancellable(snap.analysis.signature_help(&snap, position))?;
+    let help = help
+        .map(|help| lsp::into_proto::signature_help(help, config.signature_help_label_offsets()));
+    Ok(help)
 }
 
 pub fn handle_goto_def(
     snap: ServerSnapshot,
     params: GotoDefinitionParams,
-) -> BoxFuture<'static, Result<Option<GotoDefinitionResponse>, ResponseError>> {
-    fn inner(
-        snap: ServerSnapshot,
-        params: GotoDefinitionParams,
-    ) -> Result<Option<GotoDefinitionResponse>, ResponseError> {
-        let _i = tracing::info_span!("handle_goto_def").entered();
-        let TextDocumentPositionParams {
-            text_document,
-            position,
-        } = params.text_document_position_params;
-        let path = lsp::from_proto::utf8_path(&text_document.uri);
-        let line_col = lsp::from_proto::line_col(position);
-        let locations =
-            lsp::into_proto::cancellable(snap.analysis.goto_def(&snap, &path, line_col))?;
-        tracing::debug!(?locations);
-        let response = match locations.len() {
-            0 => None,
-            1 => Some(GotoDefinitionResponse::Scalar(locations[0].clone())),
-            2.. => Some(GotoDefinitionResponse::Array(locations)),
-        };
-        Ok(response)
-    }
-
-    box_future!(inner(snap, params))
+) -> Result<Option<GotoDefinitionResponse>, ResponseError> {
+    let _i = tracing::info_span!("handle_goto_def").entered();
+    let position = match lsp::into_proto::cancellable(lsp::from_proto::file_position(
+        &snap,
+        params.text_document_position_params,
+    ))? {
+        Some(position) => position,
+        None => return Ok(None),
+    };
+    let locations = lsp::into_proto::cancellable(snap.analysis.goto_def(&snap, position))?;
+    tracing::debug!(?locations);
+    let response = match locations.len() {
+        0 => None,
+        1 => Some(GotoDefinitionResponse::Scalar(locations[0].clone())),
+        2.. => Some(GotoDefinitionResponse::Array(locations)),
+    };
+    Ok(response)
 }
 
 pub fn handle_hover(
     snap: ServerSnapshot,
     params: HoverParams,
-) -> BoxFuture<'static, Result<Option<Hover>, ResponseError>> {
-    fn inner(snap: ServerSnapshot, params: HoverParams) -> Result<Option<Hover>, ResponseError> {
-        let _i = tracing::info_span!("handle_hover").entered();
-        let TextDocumentPositionParams {
-            text_document,
-            position,
-        } = params.text_document_position_params;
-        let path = &lsp::from_proto::utf8_path(&text_document.uri);
-        let line_col = lsp::from_proto::line_col(position);
-        let hover = lsp::into_proto::cancellable(snap.analysis.hover(&snap, path, line_col))?;
-        let line_index = lsp::into_proto::cancellable(snap.file_line_index(path))?;
-        let hover_result = || {
-            let hover = hover?;
-            Some(Hover {
-                contents: HoverContents::Markup(MarkupContent {
-                    kind: MarkupKind::Markdown,
-                    value: hover.markup.into(),
-                }),
-                range: Some(lsp::into_proto::range(&line_index?, hover.range)),
-            })
-        };
-        Ok(hover_result())
-    }
-    box_future!(inner(snap, params))
+) -> Result<Option<Hover>, ResponseError> {
+    let _i = tracing::info_span!("handle_hover").entered();
+    let position = match lsp::into_proto::cancellable(lsp::from_proto::file_position(
+        &snap,
+        params.text_document_position_params,
+    ))? {
+        Some(position) => position,
+        None => return Ok(None),
+    };
+    let (hover, line_index) = lsp::into_proto::cancellable((|| {
+        let line_index = snap.file_line_index(&position.path)?;
+        let hover = snap.analysis.hover(&snap, position)?;
+        Ok((hover, line_index))
+    })())?;
+    let hover_result = || {
+        let hover = hover?;
+        Some(Hover {
+            contents: HoverContents::Markup(MarkupContent {
+                kind: MarkupKind::Markdown,
+                value: hover.markup.into(),
+            }),
+            range: Some(lsp::into_proto::range(&line_index?, hover.range)),
+        })
+    };
+    Ok(hover_result())
 }
 
 pub fn handle_initialize(
     server: &mut ServerState,
     params: InitializeParams,
-) -> BoxFuture<'static, Result<InitializeResult, ResponseError>> {
+) -> futures::future::BoxFuture<'static, Result<InitializeResult, ResponseError>> {
     let _p = tracing::info_span!("handle_initialize").entered();
     let server_info = ServerInfo {
         name: "blase".into(),
@@ -130,7 +110,7 @@ pub fn handle_initialize(
                     ErrorCode::REQUEST_FAILED,
                     "Multiple workspaces not yet supported",
                 );
-                return box_future!(Err(err));
+                return Box::pin(async move { Err(err) });
             }
             let mut config = server.config.write().expect("poison");
             config.capabilities = params.capabilities;

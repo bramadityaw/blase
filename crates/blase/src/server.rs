@@ -65,16 +65,27 @@ pub fn run_server(
         });
 
         // Requests
+        macro_rules! wrap_responder {
+            ($( $path:ident )::+) => {
+                |state, params| {
+                    let snap = state.snapshot();
+                    Box::pin(async move { $($path)::+(snap, params) })
+                }
+            };
+        }
+
         router
-            .request::<lsp_types::request::SignatureHelpRequest, _>(|state, params| {
-                handler::request::handle_signature_help(state.snapshot(), params)
-            })
-            .request::<lsp_types::request::Initialize, _>(handler::request::handle_initialize)
-            .request::<lsp_types::request::HoverRequest, _>(|state, params| {
-                handler::request::handle_hover(state.snapshot(), params)
-            })
-            .request::<lsp_types::request::GotoDefinition, _>(|state, params| {
-                handler::request::handle_goto_def(state.snapshot(), params)
+            .request::<lsp_types::request::SignatureHelpRequest, _>(wrap_responder!(
+                handler::request::handle_signature_help
+            ))
+            .request::<lsp_types::request::HoverRequest, _>(wrap_responder!(
+                handler::request::handle_hover
+            ))
+            .request::<lsp_types::request::GotoDefinition, _>(wrap_responder!(
+                handler::request::handle_goto_def
+            ))
+            .request::<lsp_types::request::Initialize, _>(|state, params| {
+                handler::request::handle_initialize(state, params)
             });
 
         // Notifications
