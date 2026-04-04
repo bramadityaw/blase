@@ -13,11 +13,11 @@ use camino::Utf8PathBuf;
 
 use crate::{
     lsp,
-    server::{ServerSnapshot, ServerState},
+    server::{ServerState, ServerStateSnapshot},
 };
 
 pub fn handle_signature_help(
-    snap: ServerSnapshot,
+    snap: ServerStateSnapshot,
     params: SignatureHelpParams,
 ) -> Result<Option<SignatureHelp>, ResponseError> {
     let _i = tracing::info_span!("handle_signature_help").entered();
@@ -36,7 +36,7 @@ pub fn handle_signature_help(
 }
 
 pub fn handle_goto_def(
-    snap: ServerSnapshot,
+    snap: ServerStateSnapshot,
     params: GotoDefinitionParams,
 ) -> Result<Option<GotoDefinitionResponse>, ResponseError> {
     let _i = tracing::info_span!("handle_goto_def").entered();
@@ -58,7 +58,7 @@ pub fn handle_goto_def(
 }
 
 pub fn handle_hover(
-    snap: ServerSnapshot,
+    snap: ServerStateSnapshot,
     params: HoverParams,
 ) -> Result<Option<Hover>, ResponseError> {
     let _i = tracing::info_span!("handle_hover").entered();

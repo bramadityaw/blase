@@ -215,11 +215,11 @@ impl ServerState {
         tx
     }
 
-    pub fn snapshot(&self) -> ServerSnapshot {
+    pub fn snapshot(&self) -> ServerStateSnapshot {
         let config = Arc::clone(&self.config);
         let documents = Arc::clone(&self.documents);
         let analysis = self.analysis_host.analysis();
-        ServerSnapshot {
+        ServerStateSnapshot {
             documents,
             analysis,
             config,
@@ -232,13 +232,13 @@ impl ServerState {
     }
 }
 
-pub struct ServerSnapshot {
+pub struct ServerStateSnapshot {
     pub config: Arc<RwLock<Config>>,
     pub documents: Arc<DashMap<Utf8PathBuf, DocumentData>>,
     pub analysis: Analysis,
 }
 
-impl ServerSnapshot {
+impl ServerStateSnapshot {
     pub fn get_document(
         &self,
         uri: &Utf8Path,

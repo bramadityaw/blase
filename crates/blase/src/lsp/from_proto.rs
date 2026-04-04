@@ -4,10 +4,10 @@ use camino::Utf8PathBuf;
 use line_index::LineCol;
 use tree_sitter::Point;
 
-use crate::{analysis::Cancellable, db::FilePosition, server::ServerSnapshot};
+use crate::{analysis::Cancellable, db::FilePosition, server::ServerStateSnapshot};
 
 pub fn file_position(
-    snap: &ServerSnapshot,
+    snap: &ServerStateSnapshot,
     position: TextDocumentPositionParams,
 ) -> Cancellable<Option<FilePosition>> {
     let path = utf8_path(&position.text_document.uri);

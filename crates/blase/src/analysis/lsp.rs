@@ -3,14 +3,14 @@ use async_lsp::lsp_types::Location;
 use crate::{
     analysis::{Analysis, Cancellable, goto_definition, hover, signature_help},
     db::FilePosition,
-    server::ServerSnapshot,
+    server::ServerStateSnapshot,
 };
 
 impl Analysis {
     #[tracing::instrument(skip(self, snap, position), level = "debug")]
     pub fn hover(
         &self,
-        snap: &ServerSnapshot,
+        snap: &ServerStateSnapshot,
         position: FilePosition,
     ) -> Cancellable<Option<hover::HoverResult>> {
         let config = &snap.config.read().expect("poison");
@@ -20,7 +20,7 @@ impl Analysis {
     #[tracing::instrument(skip(self, snap, position), level = "debug")]
     pub fn signature_help(
         &self,
-        snap: &ServerSnapshot,
+        snap: &ServerStateSnapshot,
         position: FilePosition,
     ) -> Cancellable<Option<signature_help::SignatureHelp>> {
         let config = &snap.config.read().expect("poison");
@@ -30,7 +30,7 @@ impl Analysis {
     #[tracing::instrument(skip(self, snap, position), level = "debug")]
     pub fn goto_def(
         &self,
-        snap: &ServerSnapshot,
+        snap: &ServerStateSnapshot,
         position: FilePosition,
     ) -> Cancellable<Vec<Location>> {
         let config = &snap.config.read().expect("poison");
