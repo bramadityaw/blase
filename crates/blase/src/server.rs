@@ -123,7 +123,7 @@ pub fn server_capabilities(config: &Config) -> ServerCapabilities {
         definition_provider: Some(lsp_types::OneOf::Left(true)),
         signature_help_provider: Some(SignatureHelpOptions {
             trigger_characters: {
-                let trigger_chars = ['(', '"', '\''];
+                let trigger_chars = ['(', '"', '\'', '='];
                 Some(trigger_chars.into_iter().map(String::from).collect())
             },
             retrigger_characters: None,
