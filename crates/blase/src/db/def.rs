@@ -1,10 +1,11 @@
 use std::sync::Arc;
 
+use ast::blade::Attribute;
 use camino::Utf8Path;
 use convert_case::ccase;
 use line_index::TextSize;
 use smol_str::SmolStr;
-use type_sitter::{HasChild, Node};
+use type_sitter::{HasChild, HasChildren, Node};
 
 use crate::{
     config::Config,
@@ -85,11 +86,12 @@ impl ComponentAttr {
     pub fn from_anon(db: &dyn DefDatabase, document: ParsedDocument) -> Vec<ComponentAttr> {
         assert_eq!(document.filetype, FileType::Blade);
         let root = document.root_node();
+        tracing::debug!(kind=root.kind());
         root.downcast::<ast::blade::Document>()
             .ok()
             .and_then(|doc| {
                 walk_children!(doc, |e| {
-                    use ast::blade::anon_unions::Anon228412328637052745595247458993952546707::*;
+                    use ast::blade::anon_unions::Anon143152657468876928542477395987662671135::Props;
                     let element = e.ok()?;
                     match element {
                         Props(props) => {
@@ -112,11 +114,12 @@ impl ComponentAttr {
                                             Some(ComponentAttr { name, default_value })
                                         },
                                         ArrayElementValueInitializer(array_element) => {
-                                            use ast::blade::anon_unions::Anon249583382270925116125355034815407047852::*;
+                                            use ast::blade::anon_unions::Anon249583382270925116125355034815407047852::PrimaryExpression;
                                             let value = array_element.expression().and_then(|val| val.child()).ok()?;
                                             match value {
-                                                PrimaryExpression(e) => match e.child().ok()? {
-                                                    ast::blade::anon_unions::Anon307706018955403244961867585570518755608::Literal(literal) => {
+                                                PrimaryExpression(e) => { 
+                                                    let e = e.child().ok()?; match e {
+                                                    ast::blade::anon_unions::Anon151222388467552761464979467934927278149::Literal(literal) => {
                                                         let name = match literal.child().ok()? {
                                                             ast::blade::anon_unions::Boolean_EncapsedString_Float_Integer_Null_String::EncapsedString(encapsed_string) => document.text_for_node(db, encapsed_string),
                                                             ast::blade::anon_unions::Boolean_EncapsedString_Float_Integer_Null_String::String(string) => document.text_for_node(db, string),
@@ -126,7 +129,7 @@ impl ComponentAttr {
                                                         Some(ComponentAttr { name: Name::new(name), default_value: None })
                                                     }
                                                     _ => None,
-                                                },
+                                                }},
                                                 _ => None,
                                             }
                                         },
@@ -353,36 +356,12 @@ impl Component {
         db: &dyn DefDatabase,
         attr: ast::blade::Attribute,
         doc: &ParsedDocument,
-        offset: TextSize,
         config: &Config,
-    ) -> Option<(Self, Option<usize>)> {
+    ) -> Option<Self> {
         let tag = attr.parent()?;
         let tag_name = get_tag_name(tag);
         let component = Self::for_tagname(db, tag_name, doc, config)?;
-        // FIX: Active param should be named, not positional
-        let active_param = ast::match_node!(tag, {
-            ast::blade::StartTag(tag) => {
-                let mut cursor = tag.walk();
-                let active_param = tag.attributes(&mut cursor)
-                    .filter_map(Result::ok)
-                    .take_while(|attr| {
-                        tracing::debug!(attr=doc.text_for_node(db, *attr));
-                        attr.start_byte() <= offset.into()
-                    })
-                    .count();
-                (active_param > 0).then_some(active_param - 1)
-            },
-            ast::blade::SelfClosingTag(tag) => {
-                let mut cursor = tag.walk();
-                let active_param = tag.attributes(&mut cursor)
-                    .filter_map(Result::ok)
-                    .take_while(|attr| attr.start_byte() <= offset.into())
-                    .count();
-                (active_param > 0).then_some(active_param - 1)
-            },
-            _ => return None,
-        });
-        Some((component, active_param))
+        Some(component)
     }
 
     pub fn for_tagname(
