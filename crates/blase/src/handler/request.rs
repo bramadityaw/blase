@@ -29,7 +29,7 @@ pub fn handle_signature_help(
         Some(position) => position,
         None => return Ok(None),
     };
-    let help = lsp::into_proto::cancellable(snap.analysis.signature_help(&snap, position))?;
+    let help = lsp::into_proto::cancellable(snap.analysis.signature_help(&config, position))?;
     let help = help
         .map(|help| lsp::into_proto::signature_help(help, config.signature_help_label_offsets()));
     Ok(help)
@@ -47,7 +47,8 @@ pub fn handle_goto_def(
         Some(position) => position,
         None => return Ok(None),
     };
-    let locations = lsp::into_proto::cancellable(snap.analysis.goto_def(&snap, position))?;
+    let config = snap.config.read().expect("poison");
+    let locations = lsp::into_proto::cancellable(snap.analysis.goto_def(&config, position))?;
     tracing::debug!(?locations);
     let response = match locations.len() {
         0 => None,
@@ -69,9 +70,10 @@ pub fn handle_hover(
         Some(position) => position,
         None => return Ok(None),
     };
+    let config = snap.config.read().expect("poison");
     let (hover, line_index) = lsp::into_proto::cancellable((|| {
         let line_index = snap.file_line_index(&position.path)?;
-        let hover = snap.analysis.hover(&snap, position)?;
+        let hover = snap.analysis.hover(&config, position)?;
         Ok((hover, line_index))
     })())?;
     let hover_result = || {
