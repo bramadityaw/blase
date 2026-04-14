@@ -31,3 +31,4 @@ tree-sitter-php.workspace = true
 convert_case.workspace = true
 camino.workspace = true
 type-sitter.workspace = true
+expect-test.workspace = true

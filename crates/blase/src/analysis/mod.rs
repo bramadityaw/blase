@@ -16,6 +16,8 @@ pub struct AnalysisHost {
 }
 
 mod goto_definition;
+#[cfg(test)]
+mod fixture;
 pub mod hover;
 mod lsp;
 pub mod signature_help;

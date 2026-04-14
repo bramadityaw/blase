@@ -10,6 +10,9 @@ use crate::{
     },
 };
 
+#[cfg(test)]
+mod tests;
+
 #[derive(Clone, Debug, Default, Hash, PartialEq, Eq)]
 pub struct Markup(String);
 
@@ -20,6 +23,12 @@ impl Markup {
 impl From<Markup> for String {
     fn from(value: Markup) -> Self {
         value.0
+    }
+}
+
+impl std::fmt::Display for Markup {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(f)
     }
 }
 

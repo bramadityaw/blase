@@ -31,3 +31,4 @@ convert_case = "0.11.0"
 camino = "1.2.2"
 type-sitter = { version = "0.8.1", default-features = false }
 type-sitter-gen = "0.8.1"
+expect-test = "1.5.1"
