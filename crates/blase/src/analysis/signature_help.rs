@@ -64,7 +64,7 @@ impl Component {
     ) -> Option<usize> {
         use type_sitter::HasChildren;
         let attr_name = attr.children(&mut attr.walk()).filter_map(|child| {
-            use ast::blade::anon_unions::Anon240808076208140814358720572997350938194::AttributeName;
+            use ast::blade::anon_unions::AttributeName_AttributeValue_Directive_Expression_PhpStatement_QuotedAttributeValue_VariableName::AttributeName;
             let child = child.ok()?;
             match child {
                 AttributeName(attribute_name) => Some(attribute_name),

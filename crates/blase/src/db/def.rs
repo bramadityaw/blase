@@ -3,7 +3,7 @@ use std::sync::Arc;
 use camino::Utf8Path;
 use convert_case::ccase;
 use smol_str::SmolStr;
-use type_sitter::{HasChild,  Node};
+use type_sitter::{HasChild, Node};
 
 use crate::{
     config::Config,
@@ -84,57 +84,62 @@ impl ComponentAttr {
     pub fn from_anon(db: &dyn DefDatabase, document: ParsedDocument) -> Vec<ComponentAttr> {
         assert_eq!(document.filetype, FileType::Blade);
         let root = document.root_node();
-        tracing::debug!(kind=root.kind());
+        tracing::debug!(kind = root.kind());
         root.downcast::<ast::blade::Document>()
             .ok()
             .and_then(|doc| {
                 walk_children!(doc, |e| {
-                    use ast::blade::anon_unions::Anon143152657468876928542477395987662671135::Props;
+                    use ast::blade::anon_unions::Anon295599134007725482184443989257243172141::Props;
                     let element = e.ok()?;
                     match element {
                         Props(props) => {
                             let mut cursor = props.walk();
-                            let array = props.array_creation_expression().ok()?;
-                            return Some(array
-                                .array_element_initializers(&mut cursor)
-                                .filter_map(|element| {
-                                    use ast::blade::anon_unions::ArrayElementKeyValueInitializer_ArrayElementSpreadingInitializer_ArrayElementValueInitializer::*;
+                            match props.child().ok()? {
+                                ast::blade::anon_unions::ArrayCreationExpression_EncapsedString_String::ArrayCreationExpression(array_creation_expression) =>{
+                                    let attrs = array_creation_expression
+                                        .array_element_initializers(&mut cursor)
+                                        .filter_map(|element| {
+                                            use ast::blade::anon_unions::ArrayElementKeyValueInitializer_ArrayElementSpreadingInitializer_ArrayElementValueInitializer::*;
 
-                                    match element.and_then(|e| e.child()).ok()? {
-                                        ArrayElementKeyValueInitializer(array_element) => {
-                                            let name = document
-                                                .text_for_node(db, array_element.key().ok()?)
-                                                .map(|name| {
-                                                    let name = name.trim_matches(Self::QUOTES);
-                                                    Name::new(name)
-                                                })?;
-                                            let default_value = document.text_for_node(db, array_element.value().ok()?).map(SmolStr::new);
-                                            Some(ComponentAttr { name, default_value })
-                                        },
-                                        ArrayElementValueInitializer(array_element) => {
-                                            use ast::blade::anon_unions::Anon249583382270925116125355034815407047852::PrimaryExpression;
-                                            let value = array_element.expression().and_then(|val| val.child()).ok()?;
-                                            match value {
-                                                PrimaryExpression(e) => { 
-                                                    let e = e.child().ok()?; match e {
-                                                    ast::blade::anon_unions::Anon151222388467552761464979467934927278149::Literal(literal) => {
-                                                        let name = match literal.child().ok()? {
-                                                            ast::blade::anon_unions::Boolean_EncapsedString_Float_Integer_Null_String::EncapsedString(encapsed_string) => document.text_for_node(db, encapsed_string),
-                                                            ast::blade::anon_unions::Boolean_EncapsedString_Float_Integer_Null_String::String(string) => document.text_for_node(db, string),
+                                            match element.and_then(|e| e.child()).ok()? {
+                                                ArrayElementKeyValueInitializer(array_element) => {
+                                                    let name = document
+                                                        .text_for_node(db, array_element.key().ok()?)
+                                                        .map(|name| {
+                                                            let name = name.trim_matches(Self::QUOTES);
+                                                            Name::new(name)
+                                                        })?;
+                                                    let default_value = document.text_for_node(db, array_element.value().ok()?).map(SmolStr::new);
+                                                    Some(ComponentAttr { name, default_value })
+                                                },
+                                                ArrayElementValueInitializer(array_element) => {
+                                                    use ast::blade::{Expression::PrimaryExpression, PrimaryExpression::Literal};
+                                                    let value = array_element.expression().ok()?;
+                                                    match value {
+                                                        PrimaryExpression(e) => { 
+                                                            match e {
+                                                            Literal(literal) => {
+                                                                let name = match literal {
+                                                                    ast::blade::Literal::EncapsedString(encapsed_string) => document.text_for_node(db, encapsed_string),
+                                                                    ast::blade::Literal::String(string) => document.text_for_node(db, string),
+                                                                    _ => None,
+                                                                }?
+                                                                .trim_matches(Self::QUOTES);
+                                                                Some(ComponentAttr { name: Name::new(name), default_value: None })
+                                                            }
                                                             _ => None,
-                                                        }?
-                                                        .trim_matches(Self::QUOTES);
-                                                        Some(ComponentAttr { name: Name::new(name), default_value: None })
+                                                        }},
+                                                        _ => None,
                                                     }
-                                                    _ => None,
-                                                }},
+                                                },
                                                 _ => None,
                                             }
-                                        },
-                                        _ => None,
-                                    }
-                                })
-                                .collect())
+                                        })
+                                        .collect();
+                                    return Some(attrs);
+                                },
+                                _ => (),
+                            }
                         }
                         _ => (),
                     }
