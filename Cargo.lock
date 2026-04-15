@@ -95,6 +95,7 @@ dependencies = [
  "memchr",
  "salsa",
  "smol_str",
+ "text-procs",
  "tokio",
  "tokio-util",
  "tower",
@@ -1273,6 +1274,10 @@ dependencies = [
  "quote",
  "syn",
 ]
+
+[[package]]
+name = "text-procs"
+version = "0.1.0"
 
 [[package]]
 name = "text-size"

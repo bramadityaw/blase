@@ -25,32 +25,6 @@ impl AnalysisHost {
 const CURSOR_MARKER: &str = "$0";
 const ESCAPED_CURSOR_MARKER: &str = "\\$0";
 
-#[must_use]
-fn indent_of(text: &str) -> usize {
-    text.lines()
-        .filter(|it| !it.trim().is_empty())
-        .map(|it| it.len() - it.trim_start().len())
-        .min()
-        .unwrap_or(0)
-}
-
-#[must_use]
-fn trim_indent(mut text: &str) -> String {
-    if text.starts_with('\n') {
-        text = &text[1..];
-    }
-    let indent = indent_of(text);
-    text.split_inclusive('\n')
-        .map(|line| {
-            if line.len() <= indent {
-                line.trim_start_matches(' ')
-            } else {
-                &line[indent..]
-            }
-        })
-        .collect()
-}
-
 impl Fixture {
     fn parse_meta_line(meta: &str) -> Fixture {
         let meta = meta.trim();
@@ -73,7 +47,7 @@ impl Fixture {
     }
 
     pub fn parse(blase_fixture: &str) -> Vec<Fixture> {
-        let fixture = trim_indent(blase_fixture);
+        let fixture = text_procs::trim_indent(blase_fixture);
         let mut res = Vec::new();
         for (ix, line) in fixture.split_inclusive('\n').enumerate() {
             if line.contains("//-") {
