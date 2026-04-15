@@ -239,8 +239,15 @@ impl ComponentSignature {
     }
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Layout {
     pub id: LayoutId,
+}
+
+impl DocumentId for LayoutId {
+    fn file_(&self, db: &dyn DocumentDatabase) -> SourceFile {
+        self.file(db)
+    }
 }
 
 #[derive(Clone, Copy, Hash, PartialEq, Eq)]
@@ -306,16 +313,45 @@ impl std::fmt::Debug for ComponentId {
     }
 }
 
-impl ComponentId {
-    pub fn path<'db>(&self, db: &'db dyn DocumentDatabase) -> &'db Utf8Path {
-        self.file(db).path(db)
+pub trait Document {
+    type Id: DocumentId;
+    fn id(&self) -> Self::Id;
+}
+
+impl Document for Component {
+    type Id = ComponentId;
+    fn id(&self) -> Self::Id {
+        self.id
     }
-    pub fn document(&self, db: &dyn DocumentDatabase) -> ParsedDocument {
-        let file = self.file(db);
+}
+
+impl Document for Layout {
+    type Id = LayoutId;
+    fn id(&self) -> Self::Id {
+        self.id
+    }
+}
+
+pub trait DocumentId {
+    fn file_(&self, db: &dyn DocumentDatabase) -> SourceFile;
+
+    fn path<'db>(&self, db: &'db dyn DocumentDatabase) -> &'db Utf8Path {
+        self.file_(db).path(db)
+    }
+
+    fn document(&self, db: &dyn DocumentDatabase) -> ParsedDocument {
+        let file = self.file_(db);
         db.parsed_document(file.path(db)).unwrap()
     }
 }
 
+impl DocumentId for ComponentId {
+    fn file_(&self, db: &dyn DocumentDatabase) -> SourceFile {
+        self.file(db)
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Component {
     pub(crate) id: ComponentId,
 }

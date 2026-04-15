@@ -47,7 +47,59 @@ Hello {{ $world }}
             ```
             ---
             *Project Path*: app\View\Components\Foo.php
+        "#]],
+    );
+}
 
+#[test]
+fn test_hover_on_anon_component_with_no_documentation() {
+    check(
+        r#"
+//- /resources/views/components/foo.blade.php
+@props(['x', 'y' => []])
+{{--
+--  This is a comment
+--}}
+$x
+
+//- /resources/views/index.blade.php
+<x-f$0oo>
+"#,
+        expect![[r#"
+            *x-foo*
+            ```blade
+            <x-foo x="" y="[]">
+            ```
+            ---
+            *Project Path*: resources\views\components\foo.blade.php
+        "#]],
+    );
+}
+
+#[test]
+fn test_hover_on_anon_component_with_documentation() {
+    check(
+        r#"
+//- /resources/views/components/foo.blade.php
+{{--
+--  This is a comment
+--}}
+@props(['x', 'y' => []])
+$x
+
+//- /resources/views/index.blade.php
+<x-f$0oo>
+"#,
+        expect![[r#"
+            *x-foo*
+            ```blade
+            <x-foo x="" y="[]">
+            ```
+            ---
+            *Project Path*: resources\views\components\foo.blade.php
+            ---
+
+            This is a comment
         "#]],
     );
 }
@@ -70,7 +122,6 @@ $x
             ```
             ---
             *Project Path*: resources\views\components\foo.blade.php
-
         "#]],
     );
 }
@@ -92,7 +143,6 @@ test
             ```
             ---
             *Project Path*: resources\views\components\foo.blade.php
-
         "#]],
     );
 }

@@ -13,6 +13,7 @@ use type_sitter::UntypedNode;
 use crate::{line_index::LineEndings, lsp, util::FileType};
 
 pub mod def;
+pub mod documentation;
 
 pub struct FilePosition {
     pub path: Utf8PathBuf,

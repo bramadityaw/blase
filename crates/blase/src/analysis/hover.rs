@@ -1,3 +1,7 @@
+use crate::db::{
+    def::DocumentId,
+    documentation::{Documentation, HasDocs},
+};
 use line_index::{TextRange, TextSize};
 use macros::format_to;
 use type_sitter::{Node, UntypedNode};
@@ -32,7 +36,7 @@ impl std::fmt::Display for Markup {
     }
 }
 
-fn markup(rel_path: String, source_code: String, doc: Option<String>) -> Markup {
+fn markup(rel_path: String, source_code: String, doc: Option<Documentation>) -> Markup {
     let mut buf = String::new();
 
     #[cfg(not(windows))]
@@ -42,10 +46,11 @@ fn markup(rel_path: String, source_code: String, doc: Option<String>) -> Markup 
 
     format_to!(buf, "```blade\n{}\n```", source_code);
     buf.push_str(Markup::HORIZONTAL_RULE);
-    format_to!(buf, "*Project Path*: {}\n", path);
+    format_to!(buf, "*Project Path*: {}", path);
     if let Some(doc) = doc {
+        let doc = String::from(doc);
         buf.push_str(Markup::HORIZONTAL_RULE);
-        format_to!(buf, "{}", doc);
+        format_to!(buf, "\n{}", doc.trim());
     }
     Markup(buf)
 }
@@ -109,7 +114,8 @@ pub fn hover(
                 TextSize::new(node.byte_range().start as u32),
                 TextSize::new(node.byte_range().end as u32),
             );
-            let markup = markup(rel_path.to_string(), label, None);
+            let docs = component.docs(db);
+            let markup = markup(rel_path.to_string(), label, docs);
             Some(HoverResult { markup, range })
         }
         Hoverable::Layout(layout) => {

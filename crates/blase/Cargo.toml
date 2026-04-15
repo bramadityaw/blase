@@ -7,6 +7,7 @@ edition = "2024"
 # local crates
 ast.workspace = true
 macros.workspace = true
+text-procs.workspace = true
 
 # non-local crates
 tracing.workspace = true
