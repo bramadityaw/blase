@@ -1,3 +1,6 @@
+//! This module defines data models of semantic objects
+//! in a Blade template
+
 use std::sync::Arc;
 
 use camino::Utf8Path;
@@ -89,7 +92,7 @@ impl ComponentAttr {
             .ok()
             .and_then(|doc| {
                 walk_children!(doc, |e| {
-                    use ast::blade::anon_unions::Anon295599134007725482184443989257243172141::Props;
+                    use ast::blade::anon_unions::Anon140824923414542577368270263907203765088::Props;
                     let element = e.ok()?;
                     match element {
                         Props(props) => {

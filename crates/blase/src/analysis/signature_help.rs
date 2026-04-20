@@ -62,13 +62,11 @@ impl Component {
         attr: &ast::blade::Attribute,
         doc: &ParsedDocument,
     ) -> Option<usize> {
-        use type_sitter::HasChildren;
-        let attr_name = attr.children(&mut attr.walk()).filter_map(|child| {
-            use ast::blade::anon_unions::AttributeName_AttributeValue_Directive_Expression_PhpStatement_QuotedAttributeValue_VariableName::AttributeName;
+        let attr_name = attr.others(&mut attr.walk()).filter_map(|child| {
             let child = child.ok()?;
             match child {
-                AttributeName(attribute_name) => Some(attribute_name),
-                _ => None
+                ast::blade::anon_unions::AttributeName_AttributeValue_Directive_PhpStatement_QuotedAttributeValue_VariableName::AttributeName(attribute_name) => Some(attribute_name),
+                _ => None,
             }
         }).last()?;
         let attr_name = doc.text_for_node(db, attr_name)?;
