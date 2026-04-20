@@ -3,6 +3,10 @@ name = "blase"
 version = "0.1.0"
 edition = "2024"
 
+[lints.clippy]
+todo = "warn"
+unimplemented = "warn"
+
 [dependencies]
 # local crates
 ast.workspace = true
@@ -33,3 +37,5 @@ convert_case.workspace = true
 camino.workspace = true
 type-sitter.workspace = true
 expect-test.workspace = true
+itertools.workspace = true
+cov-mark.workspace = true

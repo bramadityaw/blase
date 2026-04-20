@@ -4,17 +4,58 @@
 use async_lsp::{
     ErrorCode, ResponseError,
     lsp_types::{
-        GotoDefinitionParams, GotoDefinitionResponse, Hover, HoverContents, HoverParams,
-        InitializeParams, InitializeResult, MarkupContent, MarkupKind, ServerInfo, SignatureHelp,
-        SignatureHelpParams,
+        CompletionParams, CompletionResponse, GotoDefinitionParams, GotoDefinitionResponse, Hover,
+        HoverContents, HoverParams, InitializeParams, InitializeResult, MarkupContent, MarkupKind,
+        ServerInfo, SignatureHelp, SignatureHelpParams,
     },
 };
 use camino::Utf8PathBuf;
 
 use crate::{
-    lsp,
+    config, lsp,
     server::{ServerState, ServerStateSnapshot},
 };
+
+pub fn handle_completion(
+    snap: ServerStateSnapshot,
+    params: CompletionParams,
+) -> Result<Option<CompletionResponse>, ResponseError> {
+    let _i = tracing::info_span!("handle_completion").entered();
+    let config = &snap.config.read().expect("poison");
+    let trigger_char = params
+        .context
+        .as_ref()
+        .and_then(|s| s.trigger_character.as_ref())
+        .and_then(|s| s.chars().next());
+    let tdpp = &params.text_document_position;
+
+    let position = match lsp::into_proto::cancellable(lsp::from_proto::file_position(&snap, tdpp))?
+    {
+        Some(position) => position,
+        None => return Ok(None),
+    };
+
+    let line_index = match lsp::into_proto::cancellable(snap.file_line_index(&position.path))? {
+        Some(index) => index,
+        None => return Ok(None),
+    };
+
+    let items = match lsp::into_proto::cancellable(snap.analysis.completion(
+        config,
+        position,
+        trigger_char,
+    ))? {
+        Some(items) => items,
+        None => return Ok(None),
+    };
+
+    Ok(Some(lsp::into_proto::completion_response(
+        config,
+        &line_index,
+        tdpp,
+        items,
+    )))
+}
 
 pub fn handle_signature_help(
     snap: ServerStateSnapshot,
@@ -24,7 +65,7 @@ pub fn handle_signature_help(
     let config = snap.config.read().expect("poison");
     let position = match lsp::into_proto::cancellable(lsp::from_proto::file_position(
         &snap,
-        params.text_document_position_params,
+        &params.text_document_position_params,
     ))? {
         Some(position) => position,
         None => return Ok(None),
@@ -42,7 +83,7 @@ pub fn handle_goto_def(
     let _i = tracing::info_span!("handle_goto_def").entered();
     let position = match lsp::into_proto::cancellable(lsp::from_proto::file_position(
         &snap,
-        params.text_document_position_params,
+        &params.text_document_position_params,
     ))? {
         Some(position) => position,
         None => return Ok(None),
@@ -65,7 +106,7 @@ pub fn handle_hover(
     let _i = tracing::info_span!("handle_hover").entered();
     let position = match lsp::into_proto::cancellable(lsp::from_proto::file_position(
         &snap,
-        params.text_document_position_params,
+        &params.text_document_position_params,
     ))? {
         Some(position) => position,
         None => return Ok(None),
@@ -115,6 +156,12 @@ pub fn handle_initialize(
                 return Box::pin(async move { Err(err) });
             }
             let mut config = server.config.write().expect("poison");
+            config.client_info =
+                params
+                    .client_info
+                    .map(|async_lsp::lsp_types::ClientInfo { name, version: _ }| {
+                        config::ClientInfo { name }
+                    });
             config.capabilities = params.capabilities;
             let workspace_folder = folders[0].clone();
             tracing::debug!(url = workspace_folder.uri.path());
@@ -129,7 +176,7 @@ pub fn handle_initialize(
     let config = server.config.read().expect("poison");
 
     let result = InitializeResult {
-        capabilities: crate::server::server_capabilities(&config),
+        capabilities: crate::capabilities::server_capabilities(&config),
         server_info: Some(server_info),
     };
 

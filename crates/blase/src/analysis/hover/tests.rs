@@ -7,11 +7,12 @@ use crate::{analysis::fixture, config::Config};
 const TEST_CONFIG: LazyLock<Config> = LazyLock::new(|| Config {
     capabilities: async_lsp::lsp_types::ClientCapabilities::default(),
     workspace_folder: camino::Utf8PathBuf::from_path_buf(std::path::PathBuf::from("/")).unwrap(),
+    client_info: None,
 });
 
 fn check(blade_fixture: &str, expect: Expect) {
     let (analysis, position) = fixture::position(blade_fixture);
-    let contents = analysis.contents(&position.path).unwrap().unwrap();
+    let contents = analysis.contents(&position.path).unwrap();
     let hover = analysis
         .hover(&TEST_CONFIG, position)
         .expect("Query cancelled")

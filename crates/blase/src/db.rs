@@ -14,6 +14,7 @@ use crate::{line_index::LineEndings, lsp, util::FileType};
 
 pub mod def;
 pub mod documentation;
+pub mod text_edit;
 
 pub struct FilePosition {
     pub path: Utf8PathBuf,
@@ -172,9 +173,9 @@ impl ParsedDocument {
 
     pub fn get_node_at<'doc>(
         &'doc self,
-        text_size: line_index::TextSize,
+        offset: line_index::TextSize,
     ) -> Option<UntypedNode<'doc>> {
-        let offset: usize = text_size.into();
+        let offset = offset.into();
         self.tree
             .root_node()
             .descendant_for_byte_range(offset, offset)

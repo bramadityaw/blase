@@ -7,11 +7,7 @@ use async_lsp::{
     ClientSocket, LanguageClient,
     client_monitor::ClientProcessMonitorLayer,
     concurrency::ConcurrencyLayer,
-    lsp_types::{
-        self, ClientCapabilities, HoverProviderCapability, NumberOrString, PositionEncodingKind,
-        ProgressParams, ProgressParamsValue, ServerCapabilities, SignatureHelpOptions,
-        TextDocumentSyncCapability, TextDocumentSyncKind, WorkDoneProgressOptions,
-    },
+    lsp_types::{self, ClientCapabilities, ProgressParamsValue},
     panic::CatchUnwindBuilder,
     router::Router,
     server::LifecycleLayer,
@@ -21,7 +17,6 @@ use camino::{Utf8Path, Utf8PathBuf};
 use crossbeam_channel::{Sender, unbounded};
 use dashmap::DashMap;
 use futures::{AsyncRead, AsyncWrite};
-use line_index::WideEncoding;
 use tower::ServiceBuilder;
 
 use crate::{
@@ -75,6 +70,9 @@ pub fn run_server(
         }
 
         router
+            .request::<lsp_types::request::Completion, _>(wrap_responder!(
+                handler::request::handle_completion
+            ))
             .request::<lsp_types::request::SignatureHelpRequest, _>(wrap_responder!(
                 handler::request::handle_signature_help
             ))
@@ -117,64 +115,6 @@ pub fn run_server(
     server.run_buffered(input, output)
 }
 
-pub fn server_capabilities(config: &Config) -> ServerCapabilities {
-    ServerCapabilities {
-        position_encoding: match config.negotiated_encoding() {
-            PositionEncoding::Utf8 => Some(PositionEncodingKind::UTF8),
-            PositionEncoding::Wide(wide) => match wide {
-                WideEncoding::Utf16 => Some(PositionEncodingKind::UTF16),
-                WideEncoding::Utf32 => Some(PositionEncodingKind::UTF32),
-                _ => None,
-            },
-        },
-        text_document_sync: Some(TextDocumentSyncCapability::Kind(
-            TextDocumentSyncKind::INCREMENTAL,
-        )),
-        hover_provider: Some(HoverProviderCapability::Simple(true)),
-        definition_provider: Some(lsp_types::OneOf::Left(true)),
-        signature_help_provider: Some(SignatureHelpOptions {
-            trigger_characters: {
-                let trigger_chars = ['(', '"', '\'', '='];
-                Some(trigger_chars.into_iter().map(String::from).collect())
-            },
-            retrigger_characters: None,
-            work_done_progress_options: WorkDoneProgressOptions {
-                work_done_progress: None,
-            },
-        }),
-        diagnostic_provider: None,
-        completion_provider: None,
-        document_formatting_provider: None,
-        rename_provider: None,
-        semantic_tokens_provider: None,
-
-        // Methods below this line are unsupported
-        selection_range_provider: None,
-        type_definition_provider: None,
-        implementation_provider: None,
-        references_provider: None,
-        document_highlight_provider: None,
-        document_symbol_provider: None,
-        workspace_symbol_provider: None,
-        code_action_provider: None,
-        code_lens_provider: None,
-        document_range_formatting_provider: None,
-        document_on_type_formatting_provider: None,
-        document_link_provider: None,
-        color_provider: None,
-        folding_range_provider: None,
-        declaration_provider: None,
-        execute_command_provider: None,
-        workspace: None,
-        call_hierarchy_provider: None,
-        moniker_provider: None,
-        linked_editing_range_provider: None,
-        inline_value_provider: None,
-        inlay_hint_provider: None,
-        experimental: None,
-    }
-}
-
 pub struct ServerState {
     pub config: Arc<RwLock<Config>>,
     pub client: ClientSocket,
@@ -188,6 +128,7 @@ impl ServerState {
         let config = Config {
             capabilities: ClientCapabilities::default(),
             workspace_folder: Utf8PathBuf::from_path_buf(current_dir).unwrap(),
+            client_info: None,
         };
         Self {
             client,
@@ -203,8 +144,8 @@ impl ServerState {
 
         thread::spawn(move || {
             while let Ok(value) = rx.recv() {
-                if let Err(e) = socket.progress(ProgressParams {
-                    token: NumberOrString::String(token.clone()),
+                if let Err(e) = socket.progress(lsp_types::ProgressParams {
+                    token: lsp_types::NumberOrString::String(token.clone()),
                     value,
                 }) {
                     tracing::error!(error=%e, "failed to report progress");

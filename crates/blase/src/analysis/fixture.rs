@@ -8,7 +8,7 @@ use crate::{
     db::FilePosition,
 };
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Fixture {
     pub path: Utf8PathBuf,
     pub text: String,
@@ -48,8 +48,19 @@ impl Fixture {
 
     pub fn parse(blase_fixture: &str) -> Vec<Fixture> {
         let fixture = text_procs::trim_indent(blase_fixture);
+
+        let default = if fixture.contains("//- /") {
+            None
+        } else {
+            Some("//- /index.blade.php")
+        };
+
         let mut res = Vec::new();
-        for (ix, line) in fixture.split_inclusive('\n').enumerate() {
+        for (ix, line) in default
+            .into_iter()
+            .chain(fixture.split_inclusive('\n'))
+            .enumerate()
+        {
             if line.contains("//-") {
                 assert!(
                     line.starts_with("//-"),

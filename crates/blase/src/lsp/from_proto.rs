@@ -8,7 +8,7 @@ use crate::{analysis::Cancellable, db::FilePosition, server::ServerStateSnapshot
 
 pub fn file_position(
     snap: &ServerStateSnapshot,
-    position: TextDocumentPositionParams,
+    position: &TextDocumentPositionParams,
 ) -> Cancellable<Option<FilePosition>> {
     let path = utf8_path(&position.text_document.uri);
     let line_index = snap.file_line_index(&path)?;

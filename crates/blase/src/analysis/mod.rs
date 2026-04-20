@@ -15,9 +15,11 @@ pub struct AnalysisHost {
     db: RootDatabase,
 }
 
-mod goto_definition;
 #[cfg(test)]
 mod fixture;
+
+pub mod completions;
+mod goto_definition;
 pub mod hover;
 mod lsp;
 pub mod signature_help;
@@ -49,6 +51,11 @@ pub struct Analysis {
 pub type Cancellable<R> = Result<R, salsa::Cancelled>;
 
 impl Analysis {
+    pub fn contents(&self, path: &Utf8Path) -> Option<&str> {
+        let file = self.db.source_file(path)?;
+        Some(&file.contents(&self.db))
+    }
+
     pub fn source_file(&self, path: &Utf8Path) -> Option<SourceFile> {
         self.db.source_file(path)
     }
@@ -70,10 +77,6 @@ impl Analysis {
             Some(source) => self.with_db(|db| Some(parse_document(db, source))),
             None => Ok(None),
         }
-    }
-
-    pub fn contents(&self, path: &Utf8Path) -> Cancellable<Option<Arc<str>>> {
-        self.with_db(|db| db.contents(path))
     }
 
     pub fn line_index(&self, path: &Utf8Path) -> Cancellable<Option<Arc<LineIndex>>> {

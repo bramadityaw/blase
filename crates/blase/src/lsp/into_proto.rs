@@ -1,12 +1,120 @@
 //! Converts **into** lsp_types
+use std::ops::Not;
+
 use crate::{
-    analysis::{Cancellable, signature_help},
-    line_index::{LineIndex, PositionEncoding},
+    analysis::{
+        Cancellable,
+        completions::{self, CompletionItemKind},
+        signature_help,
+    },
+    config::Config,
+    db::text_edit::InsertDelete,
+    line_index::{LineEndings, LineIndex, PositionEncoding},
 };
-use async_lsp::lsp_types::{self, Position, Range, Url};
+use async_lsp::lsp_types::{self, CompletionResponse, Position, Range, Url};
 use camino::Utf8Path;
 use line_index::{TextRange, TextSize};
 use tree_sitter::Point;
+
+pub fn completion_response(
+    config: &Config,
+    line_index: &LineIndex,
+    tdpp: &lsp_types::TextDocumentPositionParams,
+    cmps: Vec<completions::CompletionItem>,
+) -> CompletionResponse {
+    CompletionResponse::Array(
+        cmps.into_iter()
+            .map(|item| completion_item(config, item, line_index, tdpp))
+            .collect(),
+    )
+}
+
+fn text_edit(line_index: &LineIndex, indel: InsertDelete) -> lsp_types::TextEdit {
+    let range = range(line_index, indel.delete);
+    let new_text = match line_index.endings {
+        LineEndings::Unix => indel.insert,
+        LineEndings::Dos => indel.insert.replace('\n', "\r\n"),
+    };
+    lsp_types::TextEdit { range, new_text }
+}
+
+fn completion_text_edit(
+    line_index: &LineIndex,
+    insert_replace_support: Option<lsp_types::Position>,
+    indel: InsertDelete,
+) -> lsp_types::CompletionTextEdit {
+    let text_edit = text_edit(line_index, indel);
+    match insert_replace_support {
+        Some(cursor_pos) => lsp_types::InsertReplaceEdit {
+            new_text: text_edit.new_text,
+            insert: lsp_types::Range {
+                start: text_edit.range.start,
+                end: cursor_pos,
+            },
+            replace: text_edit.range,
+        }
+        .into(),
+        None => text_edit.into(),
+    }
+}
+
+fn completion_item(
+    config: &Config,
+    item: completions::CompletionItem,
+    line_index: &LineIndex,
+    tdpp: &lsp_types::TextDocumentPositionParams,
+) -> lsp_types::CompletionItem {
+    let insert_replace_support = config.insert_replace_support().then_some(tdpp.position);
+
+    let mut additional_text_edits = Vec::new();
+    // LSP does not allow arbitrary edits in completion, so we have to do a
+    // non-trivial mapping here.
+    let mut text_edit = None;
+    let source_range = item.source_range;
+    for indel in &item.edit {
+        if indel.delete.contains_range(source_range) {
+            // Extract this indel as the main edit
+            text_edit = Some(if indel.delete == source_range {
+                self::completion_text_edit(line_index, insert_replace_support, indel.clone())
+            } else {
+                assert!(source_range.end() == indel.delete.end());
+                let range1 = TextRange::new(indel.delete.start(), source_range.start());
+                let range2 = source_range;
+                let indel1 = InsertDelete::delete(range1);
+                let indel2 = InsertDelete::replace(range2, indel.insert.clone());
+                additional_text_edits.push(self::text_edit(line_index, indel1));
+                self::completion_text_edit(line_index, insert_replace_support, indel2)
+            })
+        } else {
+            assert!(source_range.intersect(indel.delete).is_none());
+            let text_edit = self::text_edit(line_index, indel.clone());
+            additional_text_edits.push(text_edit);
+        }
+    }
+
+    let insert_text_format = matches!(item.kind, CompletionItemKind::Snippet)
+        .then_some(lsp_types::InsertTextFormat::SNIPPET);
+    let additional_text_edits = additional_text_edits
+        .is_empty()
+        .not()
+        .then_some(additional_text_edits);
+
+    lsp_types::CompletionItem {
+        label: item.label.clone(),
+        text_edit,
+        additional_text_edits,
+        filter_text: Some(item.label),
+        kind: Some(completion_item_kind(item.kind)),
+        insert_text_format,
+        ..Default::default()
+    }
+}
+
+fn completion_item_kind(kind: CompletionItemKind) -> lsp_types::CompletionItemKind {
+    match kind {
+        CompletionItemKind::Snippet => lsp_types::CompletionItemKind::SNIPPET,
+    }
+}
 
 pub fn cancellable<R>(result: Cancellable<R>) -> Result<R, async_lsp::ResponseError> {
     result.map_err(|err| {

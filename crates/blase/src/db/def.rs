@@ -305,6 +305,136 @@ impl Layout {
     }
 }
 
+#[rustfmt::skip]
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum Directive {
+    // conditionals
+    If, ElseIf, Else, EndIf,
+    Unless, EndUnless,
+    Isset, EndIsset,
+    Empty, EndEmpty,
+    Auth, EndAuth,
+    Guest, EndGuest,
+    Production, EndProduction,
+    Env, EndEnv,
+    Session, EndSession,
+    Context, EndContext,
+
+    HasSection, SectionMissing,
+
+    // Switch statement
+    Switch, Case, EndSwitch,
+
+    Break,
+
+    Continue,
+
+    // Loops
+    For, EndFor,
+    Foreach, EndForeach,
+    Forelse, EndForelse,
+    While, EndWhile,
+
+    // Attribute directive
+    Class, Style, Disabled,
+    Checked, Selected, ReadOnly, Required,
+
+    // Include
+    Include, IncludeIf, IncludeWhen, IncludeUnless, IncludeFirst, IncludeIsolated,
+
+    Each,
+
+    Once,
+
+    Php, EndPhp,
+
+    Use,
+}
+
+impl Directive {
+    pub fn is_inline(&self) -> bool {
+        self.ender().is_none()
+    }
+
+    pub fn ender(&self) -> Option<Self> {
+        let me = match self {
+            Self::If | Self::HasSection
+                | Self::SectionMissing => Self::EndIf,
+            Self::Unless => Self::EndUnless,
+            Self::Isset => Self::EndIsset,
+            Self::Empty => Self::EndEmpty,
+            Self::Auth => Self::EndAuth,
+            Self::Guest => Self::EndGuest,
+            Self::Production => Self::EndProduction,
+            Self::Env => Self::EndEnv,
+            Self::For => Self::EndFor,
+            Self::Foreach => Self::EndForeach,
+            Self::Forelse => Self::EndForelse,
+            Self::While => Self::EndWhile,
+            Self::Php => Self::EndPhp,
+            _ => return None,
+        };
+        Some(me)
+    }
+
+    pub fn globally_available() -> Vec<Self> {
+        use Directive::*;
+        vec![
+            If, EndIf,
+            Unless, EndUnless,
+            Isset, EndIsset,
+            Empty, EndEmpty,
+            Auth, EndAuth,
+            Guest, EndGuest,
+            Production, EndProduction,
+            Env, EndEnv,
+            Session, EndSession,
+            Context, EndContext,
+            HasSection, SectionMissing,
+            Switch, EndSwitch,
+            For, EndFor,
+            Foreach, EndForeach,
+            Forelse, EndForelse,
+            While, EndWhile,
+            Php, EndPhp,
+        ]
+    }
+
+    pub fn in_conditional() -> Vec<Self> {
+        let mut directives = Self::globally_available();
+        directives.extend([Self::Break, Self::Case]);
+        directives
+    }
+
+    pub fn in_switch() -> Vec<Self> {
+        let mut directives = Self::globally_available();
+        directives.extend([Self::Else, Self::ElseIf]);
+        directives
+    }
+
+    pub fn in_loop() -> Vec<Self> {
+        let mut directives = Self::globally_available();
+        directives.extend([Self::Break, Self::Continue]);
+        directives
+    }
+
+    pub fn in_start_tag(db: &dyn DocumentDatabase, tag: ast::blade::StartTag, doc: &ParsedDocument) -> Vec<Self> {
+        (|| {
+            let mut directives = Self::globally_available();
+
+            directives.extend([Self::Class, Self::Style, Self::Disabled]);
+
+            let tag_name = tag.tag_name().ok()?;
+            match doc.text_for_node(db, tag_name)? {
+                "input" => directives.extend([Self::ReadOnly, Self::Required]),
+                "option" => directives.extend([Self::Selected]),
+                _ => (),
+            }
+            Some(directives) 
+        })().unwrap_or_default()
+    }
+}
+
 #[salsa::interned(no_lifetime)]
 pub struct ComponentId {
     file: SourceFile,
