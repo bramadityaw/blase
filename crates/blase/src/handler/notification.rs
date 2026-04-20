@@ -86,7 +86,16 @@ pub fn handle_did_open(
         &path,
         document.contents.len()
     );
-    server.documents.insert(path, document);
+    server.documents.insert(path.clone(), document);
+
+    let analysis = server.snapshot().analysis;
+    if let Ok(diagnostics) = analysis.parse_errors(&path) {
+        server.publish_diagnostics(
+            text_document.uri,
+            diagnostics.into_iter().map(Into::into).collect(),
+            None,
+        );
+    }
     ControlFlow::Continue(())
 }
 
