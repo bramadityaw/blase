@@ -107,7 +107,6 @@ pub fn apply_document_changes(
     // have to keep our line index updated.
     // Some clients (e.g. Code) sort the ranges in reverse. As an optimization, we
     // remember the last valid line in the index and only rebuild it if needed.
-    // The VFS will normalize the end of lines to `\n`.
     let mut index_valid = !0u32;
     for change in content_changes {
         // The None case can't happen as we have handled it above already
