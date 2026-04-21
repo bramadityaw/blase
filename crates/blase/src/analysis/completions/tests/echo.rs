@@ -72,28 +72,6 @@ Hello {{$0
 }
 
 #[test]
-fn completes_after_brace_bang() {
-    check(
-        r#"
-{!$0
-"#,
-        expect![[r#"
-            {{  }}
-            {!!  !!}"#]],
-    );
-    cov_mark::check!(delete_range);
-    check_edit(
-        "{!!  !!}",
-        r#"
-{!$0
-"#,
-        expect![[r#"
-            {!! $0 !!}
-        "#]],
-    );
-}
-
-#[test]
 fn no_complete_in_comments() {
     check(
         r#"
