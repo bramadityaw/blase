@@ -32,7 +32,7 @@ pub trait HasDocs: Document + Copy {
             .downcast::<ast::blade::Document>()
             .ok()?;
         let child = doc.children(&mut doc.walk()).next()?.ok()?;
-        use ast::blade::anon_unions::Anon140824923414542577368270263907203765088::Comment;
+        use ast::blade::anon_unions::Anon84799576569979127075025455267281272019::Comment;
         let comment = match child {
             Comment(comment) => document.text_for_node(db, comment)?,
             _ => return None,

@@ -6,7 +6,7 @@ use std::sync::Arc;
 use camino::Utf8Path;
 use convert_case::ccase;
 use smol_str::SmolStr;
-use type_sitter::{HasChild, Node};
+use type_sitter::{HasChild, HasChildren, Node};
 
 use crate::{
     config::Config,
@@ -92,7 +92,7 @@ impl ComponentAttr {
             .ok()
             .and_then(|doc| {
                 walk_children!(doc, |e| {
-                    use ast::blade::anon_unions::Anon140824923414542577368270263907203765088::Props;
+                    use ast::blade::anon_unions::Anon84799576569979127075025455267281272019::Props;
                     let element = e.ok()?;
                     match element {
                         Props(props) => {
@@ -406,12 +406,14 @@ impl Directive {
         directives
     }
 
+    #[inline]
     pub fn in_switch() -> Vec<Self> {
         let mut directives = Self::globally_available();
         directives.extend([Self::Else, Self::ElseIf]);
         directives
     }
 
+    #[inline]
     pub fn in_loop() -> Vec<Self> {
         let mut directives = Self::globally_available();
         directives.extend([Self::Break, Self::Continue]);
