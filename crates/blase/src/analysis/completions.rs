@@ -1,14 +1,16 @@
 use std::collections::HashSet;
 
 use ast::NodeExt;
+use itertools::Itertools;
 use line_index::TextRange;
+use smol_str::SmolStr;
 use type_sitter::{Node, UntypedNode};
 
 use crate::{
     config::Config,
     db::{
         DocumentDatabase, FilePosition, ParsedDocument, RootDatabase, SourceDatabase,
-        text_edit::TextEdit,
+        def::Directive, text_edit::TextEdit,
     },
 };
 
@@ -22,29 +24,321 @@ pub fn completions(
     trigger_char: Option<char>,
 ) -> Option<Vec<CompletionItem>> {
     let document = db.parsed_document(&position.path)?;
-    let ctx = CompletionContext::new(db, position, &document, trigger_char)?;
+    let ctx = &CompletionContext::new(db, position, &document, trigger_char)?;
     if let Some(trigger) = trigger_char {
         tracing::debug!(?trigger);
         match trigger {
             // Echo statement
-            '{' | '!' => complete_echo(ctx),
+            '{' => return complete_echo(ctx),
             // Directive
-            '@' => todo!(),
-            // Component/Layout custom element
-            '-' => todo!(),
+            '@' => return complete_directive(ctx),
+            _ => (),
+        };
+    }
+    None
+}
+
+fn complete_directive(ctx: &CompletionContext) -> Option<Vec<CompletionItem>> {
+    // Do not complete if its after two @s
+    if let Some(contents) = ctx.db.contents(&ctx.position.path)
+        && let Some(range) = ctx
+            .position
+            .offset
+            .checked_sub(2.into())
+            .map(|offset| TextRange::at(offset, 2.into()))
+        && let Some(ch) = contents[range].chars().next()
+        && ch == '@'
+    {
+        cov_mark::hit!(after_at_at);
+        return None;
+    }
+
+    let mut directives = Directive::globally_available();
+    let mut switched = false;
+    if let ContextKind::Directive(Directive::Switch) = ctx.kind {
+        directives.extend([Directive::Break, Directive::Case, Directive::Default]);
+        switched = true;
+    }
+
+    let ancestors = ctx.node.ancestors();
+    for ancestor in ancestors {
+        if ast::node_is!(ancestor, ast::blade::Conditional) {
+            directives.extend([Directive::ElseIf, Directive::Else]);
+        }
+        if ast::node_is!(ancestor, ast::blade::Loops) {
+            directives.extend([Directive::Break, Directive::Continue]);
+        }
+        if !switched && ast::node_is!(ancestor, ast::blade::Switch) {
+            directives.extend([Directive::Break, Directive::Case, Directive::Default]);
+            switched = true;
+        }
+    }
+
+    let items = directives
+        .into_iter()
+        .map(|directive| {
+            let offset = ctx
+                .position
+                .offset
+                .checked_sub(1.into())
+                .unwrap_or(ctx.position.offset);
+
+            let mut builder = TextEdit::builder();
+            builder.delete(TextRange::at(offset, 1.into()));
+            let mut insert = directive.label().to_string();
+            if directive.has_param(switched) {
+                insert += match directive {
+                    Directive::Foreach | Directive::Forelse => "($1 as $2)",
+                    Directive::For => "($1; $2; $3)",
+                    _ => "($1)",
+                };
+            }
+            if matches!(directive, Directive::Case) {
+                insert += "\n    $0\n   @break";
+            };
+            if let Some(ender) = directive.ender() {
+                insert += "\n    $0\n";
+                insert += ender.label();
+            }
+            builder.insert(offset, insert);
+            let edit = builder.finish();
+
+            let relevance = CompletionRelevance {
+                is_directive_end: directive.is_end(),
+                is_after_switch: switched
+                    && matches!(
+                        directive,
+                        Directive::Break | Directive::Case | Directive::Default
+                    ),
+            };
+
+            CompletionItem {
+                label: directive.label().to_string(),
+                kind: CompletionItemKind::Snippet,
+                lookup: SmolStr::new_inline(&directive.lookup()),
+                edit,
+                source_range: ctx.source_range(&ctx.kind),
+                relevance,
+            }
+        })
+        .collect();
+    Some(items)
+}
+
+fn complete_echo(ctx: &CompletionContext) -> Option<Vec<CompletionItem>> {
+    let mut node = ctx.node;
+    if ast::node_is!(node, ast::blade::PhpStatement) {
+        if let Ok(esc) = node.downcast::<ast::blade::Escaped>() {
+            let esc = esc.upcast();
+            let mut cursor = esc.walk();
+            let mut children = esc.untyped_children(&mut cursor);
+            let br = children.next();
+            if children.count() != 0
+                && let Some(br) = br
+                && !ast::node_is!(br, ast::blade::symbols::LBraceLBrace)
+            {
+                return None;
+            }
+            let offset = ctx.position.offset;
+            let cmp = "{{ $0 }}";
+            let range = TextRange::at(offset.checked_sub(2.into()).unwrap_or(offset), 2.into());
+            let item = {
+                let mut builder = TextEdit::builder();
+                builder.delete(range);
+                builder.insert(ctx.position.offset, cmp.to_owned());
+                let label = cmp.replace("$0", "");
+                let edit = builder.finish();
+                CompletionItem {
+                    lookup: SmolStr::new(&label),
+                    label,
+                    kind: CompletionItemKind::Snippet,
+                    edit,
+                    source_range: ctx.source_range(&ctx.kind),
+                    relevance: CompletionRelevance::default(),
+                }
+            };
+            return vec![item].into();
+        }
+        return None;
+    };
+    if node.is_error() {
+        let mut cursor = ctx.node.walk();
+        let mut child_tokens = ctx.node.untyped_children(&mut cursor);
+        node = child_tokens.next()?;
+        // Don't complete if inside {{  }}
+        if ast::node_is!(
+            node,
+            ast::blade::symbols::LBraceLBrace | ast::blade::symbols::LBraceNotNot
+        ) {
+            let stray_tokens = child_tokens.collect::<Vec<_>>();
+            if let &[.., snd_last, last] = stray_tokens.as_slice() {
+                if ast::node_is!(
+                    last,
+                    ast::blade::symbols::RBraceRBrace | ast::blade::symbols::NotNotRBrace
+                ) || (ast::node_is!(last, ast::blade::symbols::RBrace)
+                    && ast::node_is!(
+                        snd_last,
+                        ast::blade::symbols::RBrace | ast::blade::symbols::Not
+                    ))
+                {
+                    cov_mark::hit!(inside_echo_error);
+                    return None;
+                }
+            }
+        }
+    };
+
+    let delete_range = if ast::node_is!(node, ast::blade::Text | ast::blade::Document)
+        && let Some(trigger) = ctx.trigger_char
+    {
+        match trigger {
+            '{' => {
+                let offset = ctx.position.offset;
+                let range = TextRange::at(offset.checked_sub(2.into()).unwrap_or(offset), 2.into());
+                let contents = ctx.db.contents(&ctx.position.path).unwrap();
+                let no_braces = contents[range].replace('{', "");
+                match no_braces.len() {
+                    1 => {
+                        if no_braces == "!" {
+                            Some(range)
+                        } else {
+                            Some(TextRange::at(
+                                offset.checked_sub(1.into()).unwrap_or(offset),
+                                1.into(),
+                            ))
+                        }
+                    }
+                    0 => Some(range),
+                    _ => unreachable!(),
+                }
+            }
             _ => None,
         }
     } else {
-        None
-    }
+        Some(TextRange::at(
+            ctx.position.offset.checked_sub(1.into())?,
+            1.into(),
+        ))
+    };
+
+    let cmps = ["{{ $0 }}", "{!! $0 !!}"]
+        .into_iter()
+        .map(|cmp| {
+            let mut builder = TextEdit::builder();
+            if let Some(range) = delete_range {
+                cov_mark::hit!(delete_range);
+                builder.delete(range);
+            }
+            builder.insert(ctx.position.offset, cmp.to_owned());
+            let label = cmp.replace("$0", "");
+            let edit = builder.finish();
+            CompletionItem {
+                lookup: SmolStr::new(&label),
+                label,
+                kind: CompletionItemKind::Snippet,
+                edit,
+                source_range: ctx.source_range(&ctx.kind),
+                relevance: CompletionRelevance::default(),
+            }
+        })
+        .collect();
+    Some(cmps)
 }
 
 pub struct CompletionContext<'a> {
     db: &'a RootDatabase,
     position: FilePosition,
     trigger_char: Option<char>,
-    /// The token before the cursor, in the original file.
     node: type_sitter::UntypedNode<'a>,
+    kind: ContextKind,
+}
+
+/// Get the nearest child of this node from the offset. Returns the node itself if it is a leaf node.
+fn get_nearest_child<'a>(node: UntypedNode<'a>, offset: usize) -> UntypedNode<'a> {
+    let mut cursor = node.walk();
+    let children = node
+        .untyped_children(&mut cursor)
+        .map(|child| {
+            let start = child.start_byte();
+            let end = child.end_byte();
+            let distance = if offset > end {
+                offset.checked_sub(end)
+            } else {
+                start.checked_sub(offset)
+            };
+            (distance.unwrap_or_default(), child)
+        })
+        .sorted_by_key(|k| k.0)
+        .collect::<Vec<_>>();
+    children.into_iter().map(|(_, n)| n).next().unwrap_or(node)
+}
+
+pub enum ContextKind {
+    // The cursor is inside or after a directive
+    Directive(Directive),
+    // The cursor is in a Text or Document node.
+    // If ident is Some, then the cursor is after an identifier and records the beginning offset of
+    // that identifier and the identifier itself
+    Document { ident: Option<(u32, SmolStr)> },
+}
+
+fn is_directive_start(node: UntypedNode<'_>) -> bool {
+    ast::node_is!(
+        node,
+        ast::blade::symbols::Atif
+            | ast::blade::symbols::Atunless
+            | ast::blade::symbols::Atisset
+            | ast::blade::symbols::Atisset
+            | ast::blade::symbols::Atempty
+            | ast::blade::symbols::Atauth
+            | ast::blade::symbols::Atguest
+            | ast::blade::symbols::Atproduction
+            | ast::blade::symbols::Atenv
+            | ast::blade::symbols::Atsession
+            | ast::blade::symbols::Atcontext
+            | ast::blade::symbols::Athassection
+            | ast::blade::symbols::Atsectionmissing
+            | ast::blade::symbols::Atswitch
+            | ast::blade::symbols::Atfor
+            | ast::blade::symbols::Atforeach
+            | ast::blade::symbols::Atforelse
+            | ast::blade::symbols::Atwhile
+    )
+}
+
+fn analyze_context_kind<'db>(
+    db: &'db RootDatabase,
+    node: UntypedNode<'db>,
+    FilePosition { path, offset }: &FilePosition,
+) -> ContextKind {
+    'bail: {
+        if node.is_error() {
+            let mut cursor = node.walk();
+            let mut children = node.untyped_children(&mut cursor);
+            if let Some(start) = children.next() {
+                if is_directive_start(start) {
+                    let Some(directive) = Directive::from_node(start) else {
+                        break 'bail;
+                    };
+                    return ContextKind::Directive(directive);
+                }
+            }
+        }
+    }
+    if ast::node_is!(node, ast::blade::Document) {
+        let offset = (*offset).into();
+        let contents = &db.contents(path).unwrap();
+        return ContextKind::Document {
+            ident: extract_ident(contents, offset)
+                .map(|(start, ident)| (start, SmolStr::new(ident))),
+        };
+    }
+    ContextKind::Document { ident: None }
+}
+
+fn get_first_child(node: UntypedNode<'_>) -> Option<UntypedNode<'_>> {
+    let mut cursor = node.walk();
+    node.untyped_children(&mut cursor).next()
 }
 
 impl<'db> CompletionContext<'db> {
@@ -53,13 +347,23 @@ impl<'db> CompletionContext<'db> {
         position @ FilePosition { path: _, offset }: FilePosition,
         doc: &'db ParsedDocument,
         trigger_char: Option<char>,
-    ) -> Option<CompletionContext<'db>> {
-        let node = doc.get_node_at(offset)?;
+    ) -> Option<Self> {
+        let mut node = doc.get_node_at(offset)?;
         if ast::node_is!(node, ast::blade::Comment) {
             return None;
         }
+        if ast::node_is!(node, ast::blade::Document) {
+            let src = &doc.contents(db);
+            let range = offset.into()..=offset.into();
+            if let Some(c) = src.get(range).and_then(|s| s.chars().next())
+                && c.is_ascii_whitespace()
+            {
+                node = get_nearest_child(node, offset.into());
+            }
+        }
 
         let ctx = CompletionContext {
+            kind: analyze_context_kind(db, node, &position),
             position,
             db,
             trigger_char,
@@ -68,20 +372,48 @@ impl<'db> CompletionContext<'db> {
         Some(ctx)
     }
 
-    pub fn source_range(&self) -> TextRange {
-        if is_any_identifier(&self.node) {
-            let start = self.node.start_byte() as u32;
-            let end = self.node.end_byte() as u32;
-
-            TextRange::new(start.into(), end.into())
-        } else {
-            TextRange::empty(self.position.offset)
+    pub fn source_range(&self, scope: &ContextKind) -> TextRange {
+        let node = self.node;
+        if ast::node_is!(node, ast::blade::TagName) {
+            let start = node.start_byte() as u32;
+            let end = node.end_byte() as u32;
+            return TextRange::new(start.into(), end.into());
         }
+
+        if let ContextKind::Document { ident: Some(ident) } = scope {
+            let (start, ident) = ident;
+            return TextRange::at((*start).into(), (ident.len() as u32).into());
+        }
+        cov_mark::hit!(source_range_ctx_empty);
+        TextRange::empty(self.position.offset)
     }
 }
 
-fn is_any_identifier(node: &UntypedNode<'_>) -> bool {
-    ast::node_is!(node, ast::blade::TagName | ast::blade::Directive)
+fn is_ident(b: u8) -> bool {
+    matches!(b, b'a'..=b'z' | b'A'..=b'Z' | b'0'..=b'9' | b'_' | b'-' | b':' | b'.' | b'@')
+}
+
+fn extract_ident(contents: &str, offset: usize) -> Option<(u32, &str)> {
+    let (start, ident) = text_procs::match_in_offset(contents, offset, is_ident)?;
+
+    // Return None if the first character is a digit or the entire string parses as an integer/float
+    let ch = ident.chars().next()?;
+    if ch.is_ascii_digit() || ident.parse::<usize>().is_ok() || ident.parse::<f32>().is_ok() {
+        return None;
+    }
+    Some((start, ident))
+}
+
+#[test]
+fn test_extract_ident() {
+    let text = "foo bar_baz p123 ";
+    assert_eq!(extract_ident(text, 2,), Some((0, "foo"))); // inside "foo"
+    assert_eq!(extract_ident(text, 3,), Some((0, "foo"))); // at space, left "foo"
+    assert_eq!(extract_ident(text, 4,), Some((4, "bar_baz"))); // space before 'b'
+    assert_eq!(extract_ident(text, 8,), Some((4, "bar_baz"))); // inside "bar_baz"
+    assert_eq!(extract_ident(text, 11,), Some((4, "bar_baz"))); // space before "123"
+    assert_eq!(extract_ident(text, 14,), Some((12, "p123"))); // inside digits
+    assert_eq!(extract_ident(text, 16,), Some((12, "p123"))); // after end, left "123"
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -133,6 +465,15 @@ pub struct CompletionItem {
     /// start with what `source_range` points to, or VSCode will filter out the
     /// completion silently.
     pub source_range: TextRange,
+
+    pub lookup: SmolStr,
+    pub relevance: CompletionRelevance,
+}
+
+impl CompletionItem {
+    pub fn lookup(&self) -> &str {
+        self.lookup.as_str()
+    }
 }
 
 // We use custom debug for CompletionItem to make snapshot tests more readable.
@@ -152,88 +493,38 @@ impl std::fmt::Debug for CompletionItem {
     }
 }
 
-#[derive(Debug)]
-pub enum CompletionItemKind {
-    Snippet,
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Default)]
+pub struct CompletionRelevance {
+    is_directive_end: bool,
+    is_after_switch: bool,
 }
 
-fn complete_echo(ctx: CompletionContext) -> Option<Vec<CompletionItem>> {
-    let mut node = ctx.node;
-    if ast::node_is!(node, ast::blade::PhpStatement) {
-        return None;
-    };
-    if node.is_error() {
-        let mut cursor = ctx.node.walk();
-        let mut child_tokens = ctx.node.untyped_children(&mut cursor);
-        node = child_tokens.next()?;
-        // Don't complete if inside {{  }}
-        if ast::node_is!(
-            node,
-            ast::blade::symbols::LBraceLBrace | ast::blade::symbols::LBraceNotNot
-        ) {
-            let stray_tokens = child_tokens.collect::<Vec<_>>();
-            if let &[.., snd_last, last] = stray_tokens.as_slice() {
-                if ast::node_is!(
-                    last,
-                    ast::blade::symbols::RBraceRBrace | ast::blade::symbols::NotNotRBrace
-                ) || (ast::node_is!(last, ast::blade::symbols::RBrace)
-                    && ast::node_is!(
-                        snd_last,
-                        ast::blade::symbols::RBrace | ast::blade::symbols::Not
-                    ))
-                {
-                    cov_mark::hit!(inside_echo_error);
-                    return None;
-                }
-            }
+impl CompletionRelevance {
+    const BASE_SCORE: u32 = u32::MAX / 2;
+    pub fn score(self) -> u32 {
+        let mut score = Self::BASE_SCORE;
+        let CompletionRelevance {
+            is_directive_end,
+            is_after_switch,
+        } = self;
+        if is_directive_end {
+            score -= 1;
         }
-    };
-
-    dbg!(ast::node_is!(node, ast::blade::symbols::DoubleQuote));
-    let delete_range = if ast::node_is!(node, ast::blade::Text | ast::blade::Document)
-        && let Some(trigger) = ctx.trigger_char
-    {
-        match trigger {
-            '{' => {
-                let offset = ctx.position.offset;
-                let range = TextRange::at(offset.checked_sub(2.into()).unwrap_or(offset), 2.into());
-                let contents = ctx.db.contents(&ctx.position.path).unwrap();
-                match contents[range].replace('{', "").len() {
-                    1 => Some(TextRange::at(
-                        offset.checked_sub(1.into()).unwrap_or(offset),
-                        1.into(),
-                    )),
-                    0 => Some(range),
-                    _ => unreachable!(),
-                }
-            }
-            _ => None,
+        if is_after_switch {
+            score += 1;
         }
-    } else {
-        Some(TextRange::at(
-            ctx.position.offset.checked_sub(1.into())?,
-            1.into(),
-        ))
-    };
+        score
+    }
 
-    let cmps = ["{{ $0 }}", "{!! $0 !!}"]
-        .into_iter()
-        .map(|cmp| {
-            let mut builder = TextEdit::builder();
-            if let Some(range) = delete_range {
-                cov_mark::hit!(delete_range);
-                builder.delete(range);
-            }
-            builder.insert(ctx.position.offset, cmp.to_owned());
-            let cmp = cmp.replace("$0", "");
-            let edit = builder.finish();
-            CompletionItem {
-                label: cmp,
-                kind: CompletionItemKind::Snippet,
-                edit,
-                source_range: ctx.source_range(),
-            }
-        })
-        .collect();
-    Some(cmps)
+    /// Returns true when the score for this threshold is above
+    /// some threshold such that we think it is especially likely
+    /// to be relevant.
+    pub fn is_relevant(&self) -> bool {
+        self.score() > Self::BASE_SCORE
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum CompletionItemKind {
+    Snippet,
 }

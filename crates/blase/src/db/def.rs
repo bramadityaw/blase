@@ -6,7 +6,7 @@ use std::sync::Arc;
 use camino::Utf8Path;
 use convert_case::ccase;
 use smol_str::SmolStr;
-use type_sitter::{HasChild, HasChildren, Node};
+use type_sitter::{HasChild, Node};
 
 use crate::{
     config::Config,
@@ -119,7 +119,7 @@ impl ComponentAttr {
                                                     use ast::blade::{Expression::PrimaryExpression, PrimaryExpression::Literal};
                                                     let value = array_element.expression().ok()?;
                                                     match value {
-                                                        PrimaryExpression(e) => { 
+                                                        PrimaryExpression(e) => {
                                                             match e {
                                                             Literal(literal) => {
                                                                 let name = match literal {
@@ -306,7 +306,7 @@ impl Layout {
 }
 
 #[rustfmt::skip]
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Directive {
     // conditionals
     If, ElseIf, Else, EndIf,
@@ -323,7 +323,7 @@ pub enum Directive {
     HasSection, SectionMissing,
 
     // Switch statement
-    Switch, Case, EndSwitch,
+    Switch, Case, Default, EndSwitch,
 
     Break,
 
@@ -356,22 +356,91 @@ impl Directive {
         self.ender().is_none()
     }
 
+    pub fn from_node(node: type_sitter::UntypedNode<'_>) -> Option<Self> {
+        let directive = ast::match_node!(node, {
+            ast::blade::symbols::Atif(_) => Directive::If,
+            ast::blade::symbols::Atunless(_) => Directive::Unless,
+            ast::blade::symbols::Atisset(_) => Directive::Isset,
+            ast::blade::symbols::Atempty(_) => Directive::Empty,
+            ast::blade::symbols::Atauth(_) => Directive::Auth,
+            ast::blade::symbols::Atguest(_) => Directive::Guest,
+            ast::blade::symbols::Atproduction(_) => Directive::Production,
+            ast::blade::symbols::Atenv(_) => Directive::Env,
+            ast::blade::symbols::Atsession(_) => Directive::Session,
+            ast::blade::symbols::Atcontext(_) => Directive::Context,
+            ast::blade::symbols::Athassection(_) => Directive::HasSection,
+            ast::blade::symbols::Atsectionmissing(_) => Directive::SectionMissing,
+            ast::blade::symbols::Atswitch(_) => Directive::Switch,
+            ast::blade::symbols::Atfor(_) => Directive::For,
+            ast::blade::symbols::Atforeach(_) => Directive::Foreach,
+            ast::blade::symbols::Atforelse(_) => Directive::Forelse,
+            ast::blade::symbols::Atwhile(_) => Directive::While,
+            ast::blade::symbols::Atclass(_) => Directive::Class,
+            ast::blade::symbols::Atstyle(_) => Directive::Style,
+            ast::blade::symbols::Atdisabled(_) => Directive::Disabled,
+            ast::blade::symbols::Atchecked(_) => Directive::Checked,
+            ast::blade::symbols::Atselected(_) => Directive::Selected,
+            ast::blade::symbols::Atreadonly(_) => Directive::ReadOnly,
+            ast::blade::symbols::Atrequired(_) => Directive::Required,
+            ast::blade::symbols::Atinclude(_) => Directive::Include,
+            ast::blade::symbols::Atincludeif(_) => Directive::IncludeIf,
+            ast::blade::symbols::Atincludewhen(_) => Directive::IncludeWhen,
+            ast::blade::symbols::Atincludeunless(_) => Directive::IncludeUnless,
+            ast::blade::symbols::Atincludefirst(_) => Directive::IncludeFirst,
+            ast::blade::symbols::Atincludeisolated(_) => Directive::IncludeIsolated,
+            ast::blade::symbols::Atcase(_) => Directive::Case,
+            ast::blade::symbols::Atdefault(_) => Directive::Default,
+            ast::blade::symbols::Atbreak(_) => Directive::Break,
+            ast::blade::symbols::Atcontinue(_) => Directive::Continue,
+            ast::blade::symbols::Ateach(_) => Directive::Each,
+            ast::blade::symbols::Atonce(_) => Directive::Once,
+            ast::blade::symbols::Atphp(_) => Directive::Php,
+            ast::blade::symbols::Atuse(_) => Directive::Use,
+            ast::blade::symbols::Atelseif(_) => Directive::ElseIf,
+            ast::blade::symbols::Atelse(_) => Directive::Else,
+            ast::blade::symbols::Atendif(_) => Directive::EndIf,
+            ast::blade::symbols::Atendisset(_) => Directive::EndIsset,
+            ast::blade::symbols::Atendunless(_) => Directive::EndUnless,
+            ast::blade::symbols::Atendempty(_) => Directive::EndEmpty,
+            ast::blade::symbols::Atendauth(_) => Directive::EndAuth,
+            ast::blade::symbols::Atendguest(_) => Directive::EndGuest,
+            ast::blade::symbols::Atendproduction(_) => Directive::EndProduction,
+            ast::blade::symbols::Atendenv(_) => Directive::EndEnv,
+            ast::blade::symbols::Atendsession(_) => Directive::EndSession,
+            ast::blade::symbols::Atendcontext(_) => Directive::EndContext,
+            ast::blade::symbols::Atendswitch(_) => Directive::EndSwitch,
+            ast::blade::symbols::Atendfor(_) => Directive::EndFor,
+            ast::blade::symbols::Atendwhile(_) => Directive::EndWhile,
+            ast::blade::symbols::Atendforeach(_) => Directive::EndForeach,
+            ast::blade::symbols::Atendforelse(_) => Directive::EndForelse,
+            ast::blade::symbols::Atendphp(_) => Directive::EndPhp,
+            _ => return None,
+        });
+        Some(directive)
+    }
+
+    pub fn is_end(&self) -> bool {
+        self.lookup().starts_with("end")
+    }
+
     pub fn ender(&self) -> Option<Self> {
         let me = match self {
-            Self::If | Self::HasSection
-                | Self::SectionMissing => Self::EndIf,
-            Self::Unless => Self::EndUnless,
-            Self::Isset => Self::EndIsset,
-            Self::Empty => Self::EndEmpty,
-            Self::Auth => Self::EndAuth,
-            Self::Guest => Self::EndGuest,
-            Self::Production => Self::EndProduction,
-            Self::Env => Self::EndEnv,
-            Self::For => Self::EndFor,
-            Self::Foreach => Self::EndForeach,
-            Self::Forelse => Self::EndForelse,
-            Self::While => Self::EndWhile,
-            Self::Php => Self::EndPhp,
+            Directive::If | Directive::HasSection | Directive::SectionMissing => Directive::EndIf,
+            Directive::Isset => Directive::EndIsset,
+            Directive::Unless => Directive::EndUnless,
+            Directive::Empty => Directive::EndEmpty,
+            Directive::Auth => Directive::EndAuth,
+            Directive::Guest => Directive::EndGuest,
+            Directive::Production => Directive::EndProduction,
+            Directive::Env => Directive::EndEnv,
+            Directive::Session => Directive::EndSession,
+            Directive::Context => Directive::EndContext,
+            Directive::Switch => Directive::EndSwitch,
+            Directive::For => Directive::EndFor,
+            Directive::While => Directive::EndWhile,
+            Directive::Foreach => Directive::EndForeach,
+            Directive::Forelse => Directive::EndForelse,
+            Directive::Php => Directive::EndPhp,
             _ => return None,
         };
         Some(me)
@@ -380,47 +449,131 @@ impl Directive {
     pub fn globally_available() -> Vec<Self> {
         use Directive::*;
         vec![
-            If, EndIf,
-            Unless, EndUnless,
-            Isset, EndIsset,
-            Empty, EndEmpty,
-            Auth, EndAuth,
-            Guest, EndGuest,
-            Production, EndProduction,
-            Env, EndEnv,
-            Session, EndSession,
-            Context, EndContext,
-            HasSection, SectionMissing,
-            Switch, EndSwitch,
-            For, EndFor,
-            Foreach, EndForeach,
-            Forelse, EndForelse,
-            While, EndWhile,
-            Php, EndPhp,
+            If,
+            EndIf,
+            Unless,
+            EndUnless,
+            Isset,
+            EndIsset,
+            Empty,
+            EndEmpty,
+            Auth,
+            EndAuth,
+            Guest,
+            EndGuest,
+            Production,
+            EndProduction,
+            Env,
+            EndEnv,
+            Session,
+            EndSession,
+            Context,
+            EndContext,
+            HasSection,
+            SectionMissing,
+            Switch,
+            EndSwitch,
+            For,
+            EndFor,
+            Foreach,
+            EndForeach,
+            Forelse,
+            EndForelse,
+            While,
+            EndWhile,
+            Php,
+            EndPhp,
         ]
     }
 
-    pub fn in_conditional() -> Vec<Self> {
-        let mut directives = Self::globally_available();
-        directives.extend([Self::Break, Self::Case]);
-        directives
+    // TODO: What to make of directives with optional paramaters?
+    pub fn has_param(&self, switched: bool) -> bool {
+        if matches!(self, Directive::Break) && switched {
+            return false;
+        }
+        !self.is_end()
+            && !matches!(
+                self,
+                Directive::Php
+                    | Directive::Production
+                    | Directive::Default
+                    | Directive::Empty
+                    | Directive::Else
+                    | Directive::Once
+            )
     }
 
-    #[inline]
-    pub fn in_switch() -> Vec<Self> {
-        let mut directives = Self::globally_available();
-        directives.extend([Self::Else, Self::ElseIf]);
-        directives
+    pub fn lookup(&self) -> String {
+        let label = self.label();
+        label.replace('@', "")
     }
 
-    #[inline]
-    pub fn in_loop() -> Vec<Self> {
-        let mut directives = Self::globally_available();
-        directives.extend([Self::Break, Self::Continue]);
-        directives
+    pub fn label(&self) -> &'static str {
+        match self {
+            Directive::Default => "@default",
+            Directive::If => "@if",
+            Directive::ElseIf => "@elseif",
+            Directive::Else => "@else",
+            Directive::EndIf => "@endif",
+            Directive::Unless => "@unless",
+            Directive::EndUnless => "@endunless",
+            Directive::Isset => "@isset",
+            Directive::EndIsset => "@endisset",
+            Directive::Empty => "@empty",
+            Directive::EndEmpty => "@endempty",
+            Directive::Auth => "@auth",
+            Directive::EndAuth => "@endauth",
+            Directive::Guest => "@guest",
+            Directive::EndGuest => "@endguest",
+            Directive::Production => "@production",
+            Directive::EndProduction => "@endproduction",
+            Directive::Env => "@env",
+            Directive::EndEnv => "@endenv",
+            Directive::Session => "@session",
+            Directive::EndSession => "@endsession",
+            Directive::Context => "@context",
+            Directive::EndContext => "@endcontext",
+            Directive::HasSection => "@hassection",
+            Directive::SectionMissing => "@sectionmissing",
+            Directive::Switch => "@switch",
+            Directive::Case => "@case",
+            Directive::EndSwitch => "@endswitch",
+            Directive::Break => "@break",
+            Directive::Continue => "@continue",
+            Directive::For => "@for",
+            Directive::EndFor => "@endfor",
+            Directive::Foreach => "@foreach",
+            Directive::EndForeach => "@endforeach",
+            Directive::Forelse => "@forelse",
+            Directive::EndForelse => "@endforelse",
+            Directive::While => "@while",
+            Directive::EndWhile => "@endwhile",
+            Directive::Class => "@class",
+            Directive::Style => "@style",
+            Directive::Disabled => "@disabled",
+            Directive::Checked => "@checked",
+            Directive::Selected => "@selected",
+            Directive::ReadOnly => "@readonly",
+            Directive::Required => "@required",
+            Directive::Include => "@include",
+            Directive::IncludeIf => "@includeif",
+            Directive::IncludeWhen => "@includewhen",
+            Directive::IncludeUnless => "@includeunless",
+            Directive::IncludeFirst => "@includefirst",
+            Directive::IncludeIsolated => "@includeisolated",
+            Directive::Each => "@each",
+            Directive::Once => "@once",
+            Directive::Php => "@php",
+            Directive::EndPhp => "@endphp",
+            Directive::Use => "@use",
+        }
     }
 
-    pub fn in_start_tag(db: &dyn DocumentDatabase, tag: ast::blade::StartTag, doc: &ParsedDocument) -> Vec<Self> {
+    pub fn in_start_tag(
+        db: &dyn DocumentDatabase,
+        tag: ast::blade::StartTag,
+        doc: &ParsedDocument,
+    ) -> Vec<Self> {
         (|| {
             let mut directives = Self::globally_available();
 
@@ -432,8 +585,9 @@ impl Directive {
                 "option" => directives.extend([Self::Selected]),
                 _ => (),
             }
-            Some(directives) 
-        })().unwrap_or_default()
+            Some(directives)
+        })()
+        .unwrap_or_default()
     }
 }
 

@@ -1,5 +1,341 @@
-#[test]
-fn completes_after_at() {}
+use expect_test::expect;
+
+use super::*;
 
 #[test]
-fn conditionals() {}
+fn completes_after_at() {
+    check(
+        r#"
+@$0
+        "#,
+        expect![[r#"
+            @endif
+            @endunless
+            @endisset
+            @endempty
+            @endauth
+            @endguest
+            @endproduction
+            @endenv
+            @endsession
+            @endcontext
+            @endswitch
+            @endfor
+            @endforeach
+            @endforelse
+            @endwhile
+            @endphp
+            @if
+            @unless
+            @isset
+            @empty
+            @auth
+            @guest
+            @production
+            @env
+            @session
+            @context
+            @hassection
+            @sectionmissing
+            @switch
+            @for
+            @foreach
+            @forelse
+            @while
+            @php"#]],
+    );
+}
+
+#[test]
+fn no_complete_after_at_at() {
+    cov_mark::check!(after_at_at);
+    check(
+        r#"
+@@$0
+"#,
+        expect![""],
+    );
+}
+
+#[test]
+fn after_if() {
+    check(
+        r#"
+@if(true)
+@$0
+        "#,
+        expect![[r#"
+            @endif
+            @endunless
+            @endisset
+            @endempty
+            @endauth
+            @endguest
+            @endproduction
+            @endenv
+            @endsession
+            @endcontext
+            @endswitch
+            @endfor
+            @endforeach
+            @endforelse
+            @endwhile
+            @endphp
+            @if
+            @unless
+            @isset
+            @empty
+            @auth
+            @guest
+            @production
+            @env
+            @session
+            @context
+            @hassection
+            @sectionmissing
+            @switch
+            @for
+            @foreach
+            @forelse
+            @while
+            @php
+            @elseif
+            @else"#]],
+    );
+}
+
+#[test]
+fn after_forelse() {
+    check(
+        r#"
+@forelse($vals as $val)
+@$0
+"#,
+        expect![[r#"
+            @endif
+            @endunless
+            @endisset
+            @endempty
+            @endauth
+            @endguest
+            @endproduction
+            @endenv
+            @endsession
+            @endcontext
+            @endswitch
+            @endfor
+            @endforeach
+            @endforelse
+            @endwhile
+            @endphp
+            @if
+            @unless
+            @isset
+            @empty
+            @auth
+            @guest
+            @production
+            @env
+            @session
+            @context
+            @hassection
+            @sectionmissing
+            @switch
+            @for
+            @foreach
+            @forelse
+            @while
+            @php
+            @break
+            @continue"#]],
+    );
+}
+
+#[test]
+fn after_foreach() {
+    check(
+        r#"
+@foreach($vals as $val)
+@$0
+"#,
+        expect![[r#"
+            @endif
+            @endunless
+            @endisset
+            @endempty
+            @endauth
+            @endguest
+            @endproduction
+            @endenv
+            @endsession
+            @endcontext
+            @endswitch
+            @endfor
+            @endforeach
+            @endforelse
+            @endwhile
+            @endphp
+            @if
+            @unless
+            @isset
+            @empty
+            @auth
+            @guest
+            @production
+            @env
+            @session
+            @context
+            @hassection
+            @sectionmissing
+            @switch
+            @for
+            @foreach
+            @forelse
+            @while
+            @php
+            @break
+            @continue"#]],
+    );
+}
+
+#[test]
+fn after_for() {
+    check(
+        r#"
+@for($i = 0; $i < $val; $i++)
+@$0
+"#,
+        expect![[r#"
+            @endif
+            @endunless
+            @endisset
+            @endempty
+            @endauth
+            @endguest
+            @endproduction
+            @endenv
+            @endsession
+            @endcontext
+            @endswitch
+            @endfor
+            @endforeach
+            @endforelse
+            @endwhile
+            @endphp
+            @if
+            @unless
+            @isset
+            @empty
+            @auth
+            @guest
+            @production
+            @env
+            @session
+            @context
+            @hassection
+            @sectionmissing
+            @switch
+            @for
+            @foreach
+            @forelse
+            @while
+            @php
+            @break
+            @continue"#]],
+    );
+}
+
+#[test]
+fn after_while() {
+    check(
+        r#"
+@while($val)
+@$0
+"#,
+        expect![[r#"
+            @endif
+            @endunless
+            @endisset
+            @endempty
+            @endauth
+            @endguest
+            @endproduction
+            @endenv
+            @endsession
+            @endcontext
+            @endswitch
+            @endfor
+            @endforeach
+            @endforelse
+            @endwhile
+            @endphp
+            @if
+            @unless
+            @isset
+            @empty
+            @auth
+            @guest
+            @production
+            @env
+            @session
+            @context
+            @hassection
+            @sectionmissing
+            @switch
+            @for
+            @foreach
+            @forelse
+            @while
+            @php
+            @break
+            @continue"#]],
+    );
+}
+
+#[test]
+fn after_switch() {
+    check(
+        r#"
+@switch($val)
+@$0
+"#,
+        expect![[r#"
+            @endif
+            @endunless
+            @endisset
+            @endempty
+            @endauth
+            @endguest
+            @endproduction
+            @endenv
+            @endsession
+            @endcontext
+            @endswitch
+            @endfor
+            @endforeach
+            @endforelse
+            @endwhile
+            @endphp
+            @if
+            @unless
+            @isset
+            @empty
+            @auth
+            @guest
+            @production
+            @env
+            @session
+            @context
+            @hassection
+            @sectionmissing
+            @switch
+            @for
+            @foreach
+            @forelse
+            @while
+            @php
+            @break
+            @case
+            @default"#]],
+    );
+}

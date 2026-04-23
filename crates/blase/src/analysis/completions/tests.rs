@@ -1,6 +1,7 @@
 use std::{ops::Not, sync::LazyLock};
 
 use expect_test::Expect;
+use line_index::TextSize;
 
 use crate::{
     analysis::{
@@ -27,10 +28,22 @@ fn get_completion_items(blade_fixture: &str) -> Vec<CompletionItem> {
     let trigger = contents
         .get(offset - 1..offset)
         .and_then(|s| s.chars().next());
-    analysis
+    let result = analysis
         .completion(&TEST_CONFIG, position, trigger)
         .unwrap()
-        .unwrap_or_default()
+        .unwrap_or_default();
+    result.iter().for_each(|item| {
+        let sr = item.source_range;
+        let offset = TextSize::from(offset as u32);
+        assert!(
+            sr.contains_inclusive(offset),
+            "source range {sr:?} does not contain the offset {:?} of the completion request: {item:?}",
+            offset
+        );
+    });
+    let mut result = result;
+    result.sort_by(|a, b| a.relevance.score().cmp(&b.relevance.score()));
+    result
 }
 
 pub fn completion_list(blade_fixture: &str) -> String {

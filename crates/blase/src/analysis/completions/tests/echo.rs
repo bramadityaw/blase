@@ -34,6 +34,7 @@ Hello {$0
             {!!  !!}"#]],
     );
     {
+        cov_mark::check!(source_range_ctx_empty);
         check_edit(
             "{{  }}",
             r#"
@@ -53,12 +54,11 @@ fn completes_after_double_lbrace() {
             r#"
 Hello {{$0
 "#,
-            expect![[r#"
-            {{  }}
-            {!!  !!}"#]],
+            expect!["{{  }}"],
         );
     }
     {
+        cov_mark::check!(source_range_ctx_empty);
         check_edit(
             "{{  }}",
             r#"

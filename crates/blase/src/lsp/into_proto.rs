@@ -4,7 +4,7 @@ use std::ops::Not;
 use crate::{
     analysis::{
         Cancellable,
-        completions::{self, CompletionItemKind},
+        completions::{self, CompletionItemKind, CompletionRelevance},
         signature_help,
     },
     config::Config,
@@ -22,9 +22,15 @@ pub fn completion_response(
     tdpp: &lsp_types::TextDocumentPositionParams,
     cmps: Vec<completions::CompletionItem>,
 ) -> CompletionResponse {
+    let max_relevance = cmps
+        .iter()
+        .map(|it| it.relevance.score())
+        .max()
+        .unwrap_or_default();
+
     CompletionResponse::Array(
         cmps.into_iter()
-            .map(|item| completion_item(config, item, line_index, tdpp))
+            .map(|item| completion_item(config, item, max_relevance, line_index, tdpp))
             .collect(),
     )
 }
@@ -61,6 +67,7 @@ fn completion_text_edit(
 fn completion_item(
     config: &Config,
     item: completions::CompletionItem,
+    max_relevance: u32,
     line_index: &LineIndex,
     tdpp: &lsp_types::TextDocumentPositionParams,
 ) -> lsp_types::CompletionItem {
@@ -99,15 +106,37 @@ fn completion_item(
         .not()
         .then_some(additional_text_edits);
 
-    lsp_types::CompletionItem {
+    let mut res = lsp_types::CompletionItem {
         label: item.label.clone(),
         text_edit,
         additional_text_edits,
-        filter_text: Some(item.label),
+        filter_text: Some(item.lookup().to_owned()),
         kind: Some(completion_item_kind(item.kind)),
         insert_text_format,
         ..Default::default()
+    };
+
+    set_score(&mut res, max_relevance, item.relevance);
+
+    fn set_score(
+        res: &mut lsp_types::CompletionItem,
+        max_relevance: u32,
+        relevance: CompletionRelevance,
+    ) {
+        if relevance.is_relevant() && relevance.score() == max_relevance {
+            res.preselect = Some(true);
+        }
+        // The relevance needs to be inverted to come up with a sort score
+        // because the client will sort ascending.
+        let sort_score = relevance.score() ^ 0xFF_FF_FF_FF;
+        // Zero pad the string to ensure values can be properly sorted
+        // by the client. Hex format is used because it is easier to
+        // visually compare very large values, which the sort text
+        // tends to be since it is the opposite of the score.
+        res.sort_text = Some(format!("{sort_score:08x}"));
     }
+
+    res
 }
 
 fn completion_item_kind(kind: CompletionItemKind) -> lsp_types::CompletionItemKind {
