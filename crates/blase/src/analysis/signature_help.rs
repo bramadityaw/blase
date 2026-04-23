@@ -1,6 +1,6 @@
 use line_index::{TextRange, TextSize};
 use macros::format_to;
-use type_sitter::Node;
+use type_sitter::{HasChildren, Node};
 
 use crate::{
     config::Config,
@@ -62,13 +62,26 @@ impl Component {
         attr: &ast::blade::Attribute,
         doc: &ParsedDocument,
     ) -> Option<usize> {
-        let attr_name = attr.others(&mut attr.walk()).filter_map(|child| {
-            let child = child.ok()?;
-            match child {
-                ast::blade::anon_unions::AttributeName_AttributeValue_Directive_PhpStatement_QuotedAttributeValue_VariableName::AttributeName(attribute_name) => Some(attribute_name),
-                _ => None,
-            }
-        }).last()?;
+        let attr_name = match attr {
+            ast::blade::Attribute::BladeAttribute(_) |
+            ast::blade::Attribute::PhpStatement(_) => None,
+            ast::blade::Attribute::ExpressionAttribute(expression_attribute) => expression_attribute.children(&mut expression_attribute.walk()).filter_map(|ch| {
+                let ch = ch.ok()?;
+                match ch {
+                    ast::blade::anon_unions::AttributeName_QuotedAttributeValue::AttributeName(attribute_name) => Some(attribute_name.upcast()),
+                    ast::blade::anon_unions::AttributeName_QuotedAttributeValue::QuotedAttributeValue(_) => None,
+                }
+            }).last(),
+            ast::blade::Attribute::HtmlAttribute(html_attribute) => html_attribute.children(&mut html_attribute.walk()).filter_map(|ch| {
+                let ch = ch.ok()?;
+                match ch {
+                    ast::blade::anon_unions::AttributeName_AttributeValue_QuotedAttributeValue::AttributeName(attribute_name) => Some(attribute_name.upcast()),
+                    ast::blade::anon_unions::AttributeName_AttributeValue_QuotedAttributeValue::AttributeValue(_) |
+                    ast::blade::anon_unions::AttributeName_AttributeValue_QuotedAttributeValue::QuotedAttributeValue(_) => None,
+                }
+            }).last(),
+            ast::blade::Attribute::ShortAttribute(short_attribute) => short_attribute.variable_name().ok().map(Node::upcast),
+        }?;
         let attr_name = doc.text_for_node(db, attr_name)?;
         self.attrs(db)?
             .iter()
