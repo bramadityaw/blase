@@ -919,95 +919,125 @@ impl<'tree> ::type_sitter::Node<'tree> for AssignmentExpression<'tree> {
 }
 /**Typed node `attribute`
 
-This node has these fields:
+This node type has subtypes:
 
-- `parameter`: `{( | ) | , | expression}*` ([`symbols::LParen`] | [`symbols::RParen`] | [`symbols::Comma`] | [`Expression`])
-
-And additional named children of type `{attribute_name | attribute_value | directive | php_statement | quoted_attribute_value | variable_name}+`:
-
-- [`AttributeName`]
-- [`AttributeValue`]
-- [`Directive`]
-- [`PhpStatement`]
-- [`QuotedAttributeValue`]
-- [`VariableName`]
-
+- `blade_attribute` ([`BladeAttribute`])
+- `expression_attribute` ([`ExpressionAttribute`])
+- `html_attribute` ([`HtmlAttribute`])
+- `php_statement` ([`PhpStatement`])
+- `short_attribute` ([`ShortAttribute`])
 */
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[repr(transparent)]
 #[allow(non_camel_case_types)]
-pub struct Attribute<'tree>(::type_sitter::raw::Node<'tree>);
+pub enum Attribute<'tree> {
+    BladeAttribute(BladeAttribute<'tree>),
+    ExpressionAttribute(ExpressionAttribute<'tree>),
+    HtmlAttribute(HtmlAttribute<'tree>),
+    PhpStatement(PhpStatement<'tree>),
+    ShortAttribute(ShortAttribute<'tree>),
+}
 #[automatically_derived]
 #[allow(unused)]
 impl<'tree> Attribute<'tree> {
-    /**Get the children of field `parameter`.
-
-These children have type `{( | ) | , | expression}*`:
-
-- [`symbols::LParen`]
-- [`symbols::RParen`]
-- [`symbols::Comma`]
-- [`Expression`]
-*/
+    ///Returns the node if it is of type `blade_attribute` ([`BladeAttribute`]), otherwise returns `None`
     #[inline]
-    pub fn parameters<'a>(
-        &self,
-        c: &'a mut ::type_sitter::TreeCursor<'tree>,
-    ) -> impl ::std::iter::Iterator<
-        Item = ::type_sitter::NodeResult<
-            'tree,
-            anon_unions::LParen_RParen_Comma_Expression<'tree>,
-        >,
-    > + 'a {
-        ::type_sitter::Node::raw(self)
-            .children_by_field_name("parameter", &mut c.0)
-            .map(
-                <anon_unions::LParen_RParen_Comma_Expression<
-                    'tree,
-                > as ::type_sitter::Node<'tree>>::try_from_raw,
-            )
-    }
-    /**Get the node's non-field not-extra named children.
-
-These children have type `{attribute_name | attribute_value | directive | php_statement | quoted_attribute_value | variable_name}+`:
-
-- [`AttributeName`]
-- [`AttributeValue`]
-- [`Directive`]
-- [`PhpStatement`]
-- [`QuotedAttributeValue`]
-- [`VariableName`]
-*/
-    /**
-
-This is guaranteed to return at least one child.*/
-    #[inline]
-    pub fn others<'a>(
-        &self,
-        c: &'a mut ::type_sitter::TreeCursor<'tree>,
-    ) -> impl ::std::iter::Iterator<
-        Item = ::type_sitter::NodeResult<
-            'tree,
-            anon_unions::AttributeName_AttributeValue_Directive_PhpStatement_QuotedAttributeValue_VariableName<
-                'tree,
-            >,
-        >,
-    > + 'a {
-        {
-            let me = *::type_sitter::Node::raw(self);
-            ::type_sitter::Node::raw(self)
-                .named_children(&mut c.0)
-                .enumerate()
-                .filter(move |(i, n)| {
-                    !n.is_extra() && me.field_name_for_named_child(*i as _).is_none()
-                })
-                .map(|(_, n)| n)
+    pub fn as_blade_attribute(self) -> ::std::option::Option<BladeAttribute<'tree>> {
+        #[allow(irrefutable_let_patterns)]
+        if let Self::BladeAttribute(x) = self {
+            ::std::option::Option::Some(x)
+        } else {
+            ::std::option::Option::None
         }
-            .map(
-                <anon_unions::AttributeName_AttributeValue_Directive_PhpStatement_QuotedAttributeValue_VariableName<
-                    'tree,
-                > as ::type_sitter::Node<'tree>>::try_from_raw,
-            )
+    }
+    ///Returns the node if it is of type `expression_attribute` ([`ExpressionAttribute`]), otherwise returns `None`
+    #[inline]
+    pub fn as_expression_attribute(
+        self,
+    ) -> ::std::option::Option<ExpressionAttribute<'tree>> {
+        #[allow(irrefutable_let_patterns)]
+        if let Self::ExpressionAttribute(x) = self {
+            ::std::option::Option::Some(x)
+        } else {
+            ::std::option::Option::None
+        }
+    }
+    ///Returns the node if it is of type `html_attribute` ([`HtmlAttribute`]), otherwise returns `None`
+    #[inline]
+    pub fn as_html_attribute(self) -> ::std::option::Option<HtmlAttribute<'tree>> {
+        #[allow(irrefutable_let_patterns)]
+        if let Self::HtmlAttribute(x) = self {
+            ::std::option::Option::Some(x)
+        } else {
+            ::std::option::Option::None
+        }
+    }
+    ///Returns the node if it is of type `php_statement` ([`PhpStatement`]), otherwise returns `None`
+    #[inline]
+    pub fn as_php_statement(self) -> ::std::option::Option<PhpStatement<'tree>> {
+        #[allow(irrefutable_let_patterns)]
+        if let Self::PhpStatement(x) = self {
+            ::std::option::Option::Some(x)
+        } else {
+            ::std::option::Option::None
+        }
+    }
+    ///Returns the node if it is of type `short_attribute` ([`ShortAttribute`]), otherwise returns `None`
+    #[inline]
+    pub fn as_short_attribute(self) -> ::std::option::Option<ShortAttribute<'tree>> {
+        #[allow(irrefutable_let_patterns)]
+        if let Self::ShortAttribute(x) = self {
+            ::std::option::Option::Some(x)
+        } else {
+            ::std::option::Option::None
+        }
+    }
+    /**Returns the node if it is of type `escaped` ([`Escaped`]), otherwise returns `None`.
+
+Follows the following chain:
+- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
+    #[inline]
+    pub fn as_escaped(self) -> ::std::option::Option<Escaped<'tree>> {
+        self.as_php_statement()?.as_escaped()
+    }
+    /**Returns the node if it is of type `inline_raw` ([`InlineRaw`]), otherwise returns `None`.
+
+Follows the following chain:
+- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
+    #[inline]
+    pub fn as_inline_raw(self) -> ::std::option::Option<InlineRaw<'tree>> {
+        self.as_php_statement()?.as_inline_raw()
+    }
+    /**Returns the node if it is of type `multi_line_raw` ([`MultiLineRaw`]), otherwise returns `None`.
+
+Follows the following chain:
+- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
+    #[inline]
+    pub fn as_multi_line_raw(self) -> ::std::option::Option<MultiLineRaw<'tree>> {
+        self.as_php_statement()?.as_multi_line_raw()
+    }
+    /**Returns the node if it is of type `php` ([`Php`]), otherwise returns `None`.
+
+Follows the following chain:
+- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
+    #[inline]
+    pub fn as_php(self) -> ::std::option::Option<Php<'tree>> {
+        self.as_php_statement()?.as_php()
+    }
+    /**Returns the node if it is of type `setup` ([`Setup`]), otherwise returns `None`.
+
+Follows the following chain:
+- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
+    #[inline]
+    pub fn as_setup(self) -> ::std::option::Option<Setup<'tree>> {
+        self.as_php_statement()?.as_setup()
+    }
+    /**Returns the node if it is of type `unescaped` ([`Unescaped`]), otherwise returns `None`.
+
+Follows the following chain:
+- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
+    #[inline]
+    pub fn as_unescaped(self) -> ::std::option::Option<Unescaped<'tree>> {
+        self.as_php_statement()?.as_unescaped()
     }
 }
 #[automatically_derived]
@@ -1018,28 +1048,62 @@ impl<'tree> ::type_sitter::Node<'tree> for Attribute<'tree> {
     fn try_from_raw(
         node: ::type_sitter::raw::Node<'tree>,
     ) -> ::type_sitter::NodeResult<'tree, Self> {
-        if node.kind() == "attribute" {
-            Ok(Self(node))
-        } else {
-            Err(::type_sitter::IncorrectKind::new::<Self>(node))
+        if let Ok(this) = <BladeAttribute<
+            'tree,
+        > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+            return Ok(Self::BladeAttribute(this));
         }
-    }
-    #[inline]
-    unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
-        debug_assert_eq!(node.kind(), "attribute");
-        Self(node)
+        if let Ok(this) = <ExpressionAttribute<
+            'tree,
+        > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+            return Ok(Self::ExpressionAttribute(this));
+        }
+        if let Ok(this) = <HtmlAttribute<
+            'tree,
+        > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+            return Ok(Self::HtmlAttribute(this));
+        }
+        if let Ok(this) = <PhpStatement<
+            'tree,
+        > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+            return Ok(Self::PhpStatement(this));
+        }
+        if let Ok(this) = <ShortAttribute<
+            'tree,
+        > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+            return Ok(Self::ShortAttribute(this));
+        }
+        Err(::type_sitter::IncorrectKind::new::<Self>(node))
     }
     #[inline]
     fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
-        &self.0
+        match self {
+            Self::BladeAttribute(x) => ::type_sitter::Node::raw(x),
+            Self::ExpressionAttribute(x) => ::type_sitter::Node::raw(x),
+            Self::HtmlAttribute(x) => ::type_sitter::Node::raw(x),
+            Self::PhpStatement(x) => ::type_sitter::Node::raw(x),
+            Self::ShortAttribute(x) => ::type_sitter::Node::raw(x),
+        }
     }
     #[inline]
     fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
-        &mut self.0
+        match self {
+            Self::BladeAttribute(x) => ::type_sitter::Node::raw_mut(x),
+            Self::ExpressionAttribute(x) => ::type_sitter::Node::raw_mut(x),
+            Self::HtmlAttribute(x) => ::type_sitter::Node::raw_mut(x),
+            Self::PhpStatement(x) => ::type_sitter::Node::raw_mut(x),
+            Self::ShortAttribute(x) => ::type_sitter::Node::raw_mut(x),
+        }
     }
     #[inline]
     fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
-        self.0
+        match self {
+            Self::BladeAttribute(x) => x.into_raw(),
+            Self::ExpressionAttribute(x) => x.into_raw(),
+            Self::HtmlAttribute(x) => x.into_raw(),
+            Self::PhpStatement(x) => x.into_raw(),
+            Self::ShortAttribute(x) => x.into_raw(),
+        }
     }
 }
 /**Typed node `attribute_group`
@@ -1698,6 +1762,82 @@ impl<'tree> ::type_sitter::Node<'tree> for BinaryExpression<'tree> {
         self.0
     }
 }
+/**Typed node `blade_attribute`
+
+This node has these fields:
+
+- `parameter`: `{( | ) | , | expression}+` ([`symbols::LParen`] | [`symbols::RParen`] | [`symbols::Comma`] | [`Expression`])
+*/
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(transparent)]
+#[allow(non_camel_case_types)]
+pub struct BladeAttribute<'tree>(::type_sitter::raw::Node<'tree>);
+#[automatically_derived]
+#[allow(unused)]
+impl<'tree> BladeAttribute<'tree> {
+    /**Get the children of field `parameter`.
+
+These children have type `{( | ) | , | expression}+`:
+
+- [`symbols::LParen`]
+- [`symbols::RParen`]
+- [`symbols::Comma`]
+- [`Expression`]
+*/
+    /**
+
+This is guaranteed to return at least one child.*/
+    #[inline]
+    pub fn parameters<'a>(
+        &self,
+        c: &'a mut ::type_sitter::TreeCursor<'tree>,
+    ) -> impl ::std::iter::Iterator<
+        Item = ::type_sitter::NodeResult<
+            'tree,
+            anon_unions::LParen_RParen_Comma_Expression<'tree>,
+        >,
+    > + 'a {
+        ::type_sitter::Node::raw(self)
+            .children_by_field_name("parameter", &mut c.0)
+            .map(
+                <anon_unions::LParen_RParen_Comma_Expression<
+                    'tree,
+                > as ::type_sitter::Node<'tree>>::try_from_raw,
+            )
+    }
+}
+#[automatically_derived]
+impl<'tree> ::type_sitter::Node<'tree> for BladeAttribute<'tree> {
+    type WithLifetime<'a> = BladeAttribute<'a>;
+    const KIND: &'static str = "blade_attribute";
+    #[inline]
+    fn try_from_raw(
+        node: ::type_sitter::raw::Node<'tree>,
+    ) -> ::type_sitter::NodeResult<'tree, Self> {
+        if node.kind() == "blade_attribute" {
+            Ok(Self(node))
+        } else {
+            Err(::type_sitter::IncorrectKind::new::<Self>(node))
+        }
+    }
+    #[inline]
+    unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+        debug_assert_eq!(node.kind(), "blade_attribute");
+        Self(node)
+    }
+    #[inline]
+    fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+        &self.0
+    }
+    #[inline]
+    fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+        &mut self.0
+    }
+    #[inline]
+    fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+        self.0
+    }
+}
 /**Typed node `boolean`
 
 This node has no named children
@@ -1769,6 +1909,79 @@ impl<'tree> ::type_sitter::Node<'tree> for BottomType<'tree> {
     #[inline]
     unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
         debug_assert_eq!(node.kind(), "bottom_type");
+        Self(node)
+    }
+    #[inline]
+    fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+        &self.0
+    }
+    #[inline]
+    fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+        &mut self.0
+    }
+    #[inline]
+    fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+        self.0
+    }
+}
+/**Typed node `break`
+
+This node has these fields:
+
+- `parameter`: `{( | ) | , | expression}*` ([`symbols::LParen`] | [`symbols::RParen`] | [`symbols::Comma`] | [`Expression`])
+*/
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(transparent)]
+#[allow(non_camel_case_types)]
+pub struct Break<'tree>(::type_sitter::raw::Node<'tree>);
+#[automatically_derived]
+#[allow(unused)]
+impl<'tree> Break<'tree> {
+    /**Get the children of field `parameter`.
+
+These children have type `{( | ) | , | expression}*`:
+
+- [`symbols::LParen`]
+- [`symbols::RParen`]
+- [`symbols::Comma`]
+- [`Expression`]
+*/
+    #[inline]
+    pub fn parameters<'a>(
+        &self,
+        c: &'a mut ::type_sitter::TreeCursor<'tree>,
+    ) -> impl ::std::iter::Iterator<
+        Item = ::type_sitter::NodeResult<
+            'tree,
+            anon_unions::LParen_RParen_Comma_Expression<'tree>,
+        >,
+    > + 'a {
+        ::type_sitter::Node::raw(self)
+            .children_by_field_name("parameter", &mut c.0)
+            .map(
+                <anon_unions::LParen_RParen_Comma_Expression<
+                    'tree,
+                > as ::type_sitter::Node<'tree>>::try_from_raw,
+            )
+    }
+}
+#[automatically_derived]
+impl<'tree> ::type_sitter::Node<'tree> for Break<'tree> {
+    type WithLifetime<'a> = Break<'a>;
+    const KIND: &'static str = "break";
+    #[inline]
+    fn try_from_raw(
+        node: ::type_sitter::raw::Node<'tree>,
+    ) -> ::type_sitter::NodeResult<'tree, Self> {
+        if node.kind() == "break" {
+            Ok(Self(node))
+        } else {
+            Err(::type_sitter::IncorrectKind::new::<Self>(node))
+        }
+    }
+    #[inline]
+    unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+        debug_assert_eq!(node.kind(), "break");
         Self(node)
     }
     #[inline]
@@ -2199,6 +2412,145 @@ impl<'tree> ::type_sitter::Node<'tree> for Cannot<'tree> {
         self.0
     }
 }
+/**Typed node `case`
+
+This node has these fields:
+
+- `parameter`: `{( | ) | , | expression}+` ([`symbols::LParen`] | [`symbols::RParen`] | [`symbols::Comma`] | [`Expression`])
+
+And additional named children of type `{comment | conditional | element | entity | erroneous_end_tag | inline_directive | keyword | livewire | loops | php_statement | props | script_element | style_element | text}*`:
+
+- [`Comment`]
+- [`Conditional`]
+- [`Element`]
+- [`Entity`]
+- [`ErroneousEndTag`]
+- [`InlineDirective`]
+- [`Keyword`]
+- [`Livewire`]
+- [`Loops`]
+- [`PhpStatement`]
+- [`Props`]
+- [`ScriptElement`]
+- [`StyleElement`]
+- [`Text`]
+
+*/
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(transparent)]
+#[allow(non_camel_case_types)]
+pub struct Case<'tree>(::type_sitter::raw::Node<'tree>);
+#[automatically_derived]
+#[allow(unused)]
+impl<'tree> Case<'tree> {
+    /**Get the children of field `parameter`.
+
+These children have type `{( | ) | , | expression}+`:
+
+- [`symbols::LParen`]
+- [`symbols::RParen`]
+- [`symbols::Comma`]
+- [`Expression`]
+*/
+    /**
+
+This is guaranteed to return at least one child.*/
+    #[inline]
+    pub fn parameters<'a>(
+        &self,
+        c: &'a mut ::type_sitter::TreeCursor<'tree>,
+    ) -> impl ::std::iter::Iterator<
+        Item = ::type_sitter::NodeResult<
+            'tree,
+            anon_unions::LParen_RParen_Comma_Expression<'tree>,
+        >,
+    > + 'a {
+        ::type_sitter::Node::raw(self)
+            .children_by_field_name("parameter", &mut c.0)
+            .map(
+                <anon_unions::LParen_RParen_Comma_Expression<
+                    'tree,
+                > as ::type_sitter::Node<'tree>>::try_from_raw,
+            )
+    }
+    /**Get the node's non-field not-extra named children.
+
+These children have type `{comment | conditional | element | entity | erroneous_end_tag | inline_directive | keyword | livewire | loops | php_statement | props | script_element | style_element | text}*`:
+
+- [`Comment`]
+- [`Conditional`]
+- [`Element`]
+- [`Entity`]
+- [`ErroneousEndTag`]
+- [`InlineDirective`]
+- [`Keyword`]
+- [`Livewire`]
+- [`Loops`]
+- [`PhpStatement`]
+- [`Props`]
+- [`ScriptElement`]
+- [`StyleElement`]
+- [`Text`]
+*/
+    #[inline]
+    pub fn others<'a>(
+        &self,
+        c: &'a mut ::type_sitter::TreeCursor<'tree>,
+    ) -> impl ::std::iter::Iterator<
+        Item = ::type_sitter::NodeResult<
+            'tree,
+            anon_unions::Anon167075698660054349028849392320454892501<'tree>,
+        >,
+    > + 'a {
+        {
+            let me = *::type_sitter::Node::raw(self);
+            ::type_sitter::Node::raw(self)
+                .named_children(&mut c.0)
+                .enumerate()
+                .filter(move |(i, n)| {
+                    !n.is_extra() && me.field_name_for_named_child(*i as _).is_none()
+                })
+                .map(|(_, n)| n)
+        }
+            .map(
+                <anon_unions::Anon167075698660054349028849392320454892501<
+                    'tree,
+                > as ::type_sitter::Node<'tree>>::try_from_raw,
+            )
+    }
+}
+#[automatically_derived]
+impl<'tree> ::type_sitter::Node<'tree> for Case<'tree> {
+    type WithLifetime<'a> = Case<'a>;
+    const KIND: &'static str = "case";
+    #[inline]
+    fn try_from_raw(
+        node: ::type_sitter::raw::Node<'tree>,
+    ) -> ::type_sitter::NodeResult<'tree, Self> {
+        if node.kind() == "case" {
+            Ok(Self(node))
+        } else {
+            Err(::type_sitter::IncorrectKind::new::<Self>(node))
+        }
+    }
+    #[inline]
+    unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+        debug_assert_eq!(node.kind(), "case");
+        Self(node)
+    }
+    #[inline]
+    fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+        &self.0
+    }
+    #[inline]
+    fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+        &mut self.0
+    }
+    #[inline]
+    fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+        self.0
+    }
+}
 /**Typed node `cast_expression`
 
 This node has these fields:
@@ -2466,6 +2818,7 @@ This node type has subtypes:
 
 - `auth` ([`Auth`])
 - `authorization` ([`Authorization`])
+- `context` ([`Context`])
 - `custom` ([`Custom`])
 - `empty` ([`Empty`])
 - `env` ([`Env`])
@@ -2477,6 +2830,7 @@ This node type has subtypes:
 - `isset` ([`Isset`])
 - `production` ([`Production`])
 - `sectionMissing` ([`Sectionmissing`])
+- `session` ([`Session`])
 - `unless` ([`Unless`])
 */
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -2484,6 +2838,7 @@ This node type has subtypes:
 pub enum Conditional<'tree> {
     Auth(Auth<'tree>),
     Authorization(Authorization<'tree>),
+    Context(Context<'tree>),
     Custom(Custom<'tree>),
     Empty(Empty<'tree>),
     Env(Env<'tree>),
@@ -2495,6 +2850,7 @@ pub enum Conditional<'tree> {
     Isset(Isset<'tree>),
     Production(Production<'tree>),
     Sectionmissing(Sectionmissing<'tree>),
+    Session(Session<'tree>),
     Unless(Unless<'tree>),
 }
 #[automatically_derived]
@@ -2515,6 +2871,16 @@ impl<'tree> Conditional<'tree> {
     pub fn as_authorization(self) -> ::std::option::Option<Authorization<'tree>> {
         #[allow(irrefutable_let_patterns)]
         if let Self::Authorization(x) = self {
+            ::std::option::Option::Some(x)
+        } else {
+            ::std::option::Option::None
+        }
+    }
+    ///Returns the node if it is of type `context` ([`Context`]), otherwise returns `None`
+    #[inline]
+    pub fn as_context(self) -> ::std::option::Option<Context<'tree>> {
+        #[allow(irrefutable_let_patterns)]
+        if let Self::Context(x) = self {
             ::std::option::Option::Some(x)
         } else {
             ::std::option::Option::None
@@ -2630,6 +2996,16 @@ impl<'tree> Conditional<'tree> {
             ::std::option::Option::None
         }
     }
+    ///Returns the node if it is of type `session` ([`Session`]), otherwise returns `None`
+    #[inline]
+    pub fn as_session(self) -> ::std::option::Option<Session<'tree>> {
+        #[allow(irrefutable_let_patterns)]
+        if let Self::Session(x) = self {
+            ::std::option::Option::Some(x)
+        } else {
+            ::std::option::Option::None
+        }
+    }
     ///Returns the node if it is of type `unless` ([`Unless`]), otherwise returns `None`
     #[inline]
     pub fn as_unless(self) -> ::std::option::Option<Unless<'tree>> {
@@ -2663,6 +3039,15 @@ impl<'tree> ::type_sitter::Node<'tree> for Conditional<'tree> {
                 Ok(unsafe {
                     Self::Authorization(
                         <Authorization<
+                            'tree,
+                        > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                    )
+                })
+            }
+            "context" => {
+                Ok(unsafe {
+                    Self::Context(
+                        <Context<
                             'tree,
                         > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
                     )
@@ -2767,6 +3152,15 @@ impl<'tree> ::type_sitter::Node<'tree> for Conditional<'tree> {
                     )
                 })
             }
+            "session" => {
+                Ok(unsafe {
+                    Self::Session(
+                        <Session<
+                            'tree,
+                        > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                    )
+                })
+            }
             "unless" => {
                 Ok(unsafe {
                     Self::Unless(
@@ -2784,6 +3178,7 @@ impl<'tree> ::type_sitter::Node<'tree> for Conditional<'tree> {
         match self {
             Self::Auth(x) => ::type_sitter::Node::raw(x),
             Self::Authorization(x) => ::type_sitter::Node::raw(x),
+            Self::Context(x) => ::type_sitter::Node::raw(x),
             Self::Custom(x) => ::type_sitter::Node::raw(x),
             Self::Empty(x) => ::type_sitter::Node::raw(x),
             Self::Env(x) => ::type_sitter::Node::raw(x),
@@ -2795,6 +3190,7 @@ impl<'tree> ::type_sitter::Node<'tree> for Conditional<'tree> {
             Self::Isset(x) => ::type_sitter::Node::raw(x),
             Self::Production(x) => ::type_sitter::Node::raw(x),
             Self::Sectionmissing(x) => ::type_sitter::Node::raw(x),
+            Self::Session(x) => ::type_sitter::Node::raw(x),
             Self::Unless(x) => ::type_sitter::Node::raw(x),
         }
     }
@@ -2803,6 +3199,7 @@ impl<'tree> ::type_sitter::Node<'tree> for Conditional<'tree> {
         match self {
             Self::Auth(x) => ::type_sitter::Node::raw_mut(x),
             Self::Authorization(x) => ::type_sitter::Node::raw_mut(x),
+            Self::Context(x) => ::type_sitter::Node::raw_mut(x),
             Self::Custom(x) => ::type_sitter::Node::raw_mut(x),
             Self::Empty(x) => ::type_sitter::Node::raw_mut(x),
             Self::Env(x) => ::type_sitter::Node::raw_mut(x),
@@ -2814,6 +3211,7 @@ impl<'tree> ::type_sitter::Node<'tree> for Conditional<'tree> {
             Self::Isset(x) => ::type_sitter::Node::raw_mut(x),
             Self::Production(x) => ::type_sitter::Node::raw_mut(x),
             Self::Sectionmissing(x) => ::type_sitter::Node::raw_mut(x),
+            Self::Session(x) => ::type_sitter::Node::raw_mut(x),
             Self::Unless(x) => ::type_sitter::Node::raw_mut(x),
         }
     }
@@ -2822,6 +3220,7 @@ impl<'tree> ::type_sitter::Node<'tree> for Conditional<'tree> {
         match self {
             Self::Auth(x) => x.into_raw(),
             Self::Authorization(x) => x.into_raw(),
+            Self::Context(x) => x.into_raw(),
             Self::Custom(x) => x.into_raw(),
             Self::Empty(x) => x.into_raw(),
             Self::Env(x) => x.into_raw(),
@@ -2833,6 +3232,7 @@ impl<'tree> ::type_sitter::Node<'tree> for Conditional<'tree> {
             Self::Isset(x) => x.into_raw(),
             Self::Production(x) => x.into_raw(),
             Self::Sectionmissing(x) => x.into_raw(),
+            Self::Session(x) => x.into_raw(),
             Self::Unless(x) => x.into_raw(),
         }
     }
@@ -2994,11 +3394,7 @@ impl<'tree> ::type_sitter::Node<'tree> for ConditionalExpression<'tree> {
 }
 /**Typed node `conditional_keyword`
 
-This node has these fields:
-
-- `parameter`: `{( | ) | , | expression}*` ([`symbols::LParen`] | [`symbols::RParen`] | [`symbols::Comma`] | [`Expression`])
-
-And an additional named child of type `directive` ([`Directive`])
+This node has an optional named child of type `elseif?` ([`Elseif`])
 */
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(transparent)]
@@ -3007,6 +3403,192 @@ pub struct ConditionalKeyword<'tree>(::type_sitter::raw::Node<'tree>);
 #[automatically_derived]
 #[allow(unused)]
 impl<'tree> ConditionalKeyword<'tree> {
+    /**Get the node's only not-extra named child, if it has one.
+
+This child has type `elseif?` ([`Elseif`])*/
+    #[inline]
+    pub fn elseif(
+        &self,
+    ) -> ::std::option::Option<::type_sitter::NodeResult<'tree, Elseif<'tree>>> {
+        (0..::type_sitter::Node::raw(self).named_child_count())
+            .map(|i| ::type_sitter::Node::raw(self).named_child(i).unwrap())
+            .filter(|n| !n.is_extra())
+            .next()
+            .map(<Elseif<'tree> as ::type_sitter::Node<'tree>>::try_from_raw)
+    }
+}
+#[automatically_derived]
+impl<'tree> ::type_sitter::HasOptionalChild<'tree> for ConditionalKeyword<'tree> {
+    type Child = Elseif<'tree>;
+}
+#[automatically_derived]
+impl<'tree> ::type_sitter::Node<'tree> for ConditionalKeyword<'tree> {
+    type WithLifetime<'a> = ConditionalKeyword<'a>;
+    const KIND: &'static str = "conditional_keyword";
+    #[inline]
+    fn try_from_raw(
+        node: ::type_sitter::raw::Node<'tree>,
+    ) -> ::type_sitter::NodeResult<'tree, Self> {
+        if node.kind() == "conditional_keyword" {
+            Ok(Self(node))
+        } else {
+            Err(::type_sitter::IncorrectKind::new::<Self>(node))
+        }
+    }
+    #[inline]
+    unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+        debug_assert_eq!(node.kind(), "conditional_keyword");
+        Self(node)
+    }
+    #[inline]
+    fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+        &self.0
+    }
+    #[inline]
+    fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+        &mut self.0
+    }
+    #[inline]
+    fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+        self.0
+    }
+}
+/**Typed node `context`
+
+This node has these fields:
+
+- `body`: `conditional_body` ([`ConditionalBody`])
+- `directive_end`: `@endcontext` ([`symbols::Atendcontext`])
+- `directive_start`: `@context` ([`symbols::Atcontext`])
+- `parameter`: `{( | ) | , | expression}+` ([`symbols::LParen`] | [`symbols::RParen`] | [`symbols::Comma`] | [`Expression`])
+*/
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(transparent)]
+#[allow(non_camel_case_types)]
+pub struct Context<'tree>(::type_sitter::raw::Node<'tree>);
+#[automatically_derived]
+#[allow(unused)]
+impl<'tree> Context<'tree> {
+    /**Get the field `body`.
+
+This child has type `conditional_body` ([`ConditionalBody`])*/
+    #[inline]
+    pub fn body(&self) -> ::type_sitter::NodeResult<'tree, ConditionalBody<'tree>> {
+        ::type_sitter::Node::raw(self)
+            .child_by_field_name("body")
+            .map(<ConditionalBody<'tree> as ::type_sitter::Node<'tree>>::try_from_raw)
+            .expect(
+                "required child not present, there should at least be a MISSING node in its place",
+            )
+    }
+    /**Get the field `directive_end`.
+
+This child has type `@endcontext` ([`symbols::Atendcontext`])*/
+    #[inline]
+    pub fn directive_end(
+        &self,
+    ) -> ::type_sitter::NodeResult<'tree, symbols::Atendcontext<'tree>> {
+        ::type_sitter::Node::raw(self)
+            .child_by_field_name("directive_end")
+            .map(
+                <symbols::Atendcontext<
+                    'tree,
+                > as ::type_sitter::Node<'tree>>::try_from_raw,
+            )
+            .expect(
+                "required child not present, there should at least be a MISSING node in its place",
+            )
+    }
+    /**Get the field `directive_start`.
+
+This child has type `@context` ([`symbols::Atcontext`])*/
+    #[inline]
+    pub fn directive_start(
+        &self,
+    ) -> ::type_sitter::NodeResult<'tree, symbols::Atcontext<'tree>> {
+        ::type_sitter::Node::raw(self)
+            .child_by_field_name("directive_start")
+            .map(<symbols::Atcontext<'tree> as ::type_sitter::Node<'tree>>::try_from_raw)
+            .expect(
+                "required child not present, there should at least be a MISSING node in its place",
+            )
+    }
+    /**Get the children of field `parameter`.
+
+These children have type `{( | ) | , | expression}+`:
+
+- [`symbols::LParen`]
+- [`symbols::RParen`]
+- [`symbols::Comma`]
+- [`Expression`]
+*/
+    /**
+
+This is guaranteed to return at least one child.*/
+    #[inline]
+    pub fn parameters<'a>(
+        &self,
+        c: &'a mut ::type_sitter::TreeCursor<'tree>,
+    ) -> impl ::std::iter::Iterator<
+        Item = ::type_sitter::NodeResult<
+            'tree,
+            anon_unions::LParen_RParen_Comma_Expression<'tree>,
+        >,
+    > + 'a {
+        ::type_sitter::Node::raw(self)
+            .children_by_field_name("parameter", &mut c.0)
+            .map(
+                <anon_unions::LParen_RParen_Comma_Expression<
+                    'tree,
+                > as ::type_sitter::Node<'tree>>::try_from_raw,
+            )
+    }
+}
+#[automatically_derived]
+impl<'tree> ::type_sitter::Node<'tree> for Context<'tree> {
+    type WithLifetime<'a> = Context<'a>;
+    const KIND: &'static str = "context";
+    #[inline]
+    fn try_from_raw(
+        node: ::type_sitter::raw::Node<'tree>,
+    ) -> ::type_sitter::NodeResult<'tree, Self> {
+        if node.kind() == "context" {
+            Ok(Self(node))
+        } else {
+            Err(::type_sitter::IncorrectKind::new::<Self>(node))
+        }
+    }
+    #[inline]
+    unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+        debug_assert_eq!(node.kind(), "context");
+        Self(node)
+    }
+    #[inline]
+    fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+        &self.0
+    }
+    #[inline]
+    fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+        &mut self.0
+    }
+    #[inline]
+    fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+        self.0
+    }
+}
+/**Typed node `continue`
+
+This node has these fields:
+
+- `parameter`: `{( | ) | , | expression}*` ([`symbols::LParen`] | [`symbols::RParen`] | [`symbols::Comma`] | [`Expression`])
+*/
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(transparent)]
+#[allow(non_camel_case_types)]
+pub struct Continue<'tree>(::type_sitter::raw::Node<'tree>);
+#[automatically_derived]
+#[allow(unused)]
+impl<'tree> Continue<'tree> {
     /**Get the children of field `parameter`.
 
 These children have type `{( | ) | , | expression}*`:
@@ -3034,35 +3616,16 @@ These children have type `{( | ) | , | expression}*`:
                 > as ::type_sitter::Node<'tree>>::try_from_raw,
             )
     }
-    /**Get the node's only non-field not-extra named child.
-
-This child has type `directive` ([`Directive`])*/
-    #[inline]
-    pub fn directive(&self) -> ::type_sitter::NodeResult<'tree, Directive<'tree>> {
-        (0..::type_sitter::Node::raw(self).named_child_count())
-            .filter(|i| {
-                ::type_sitter::Node::raw(self)
-                    .field_name_for_named_child(*i as _)
-                    .is_none()
-            })
-            .map(|i| ::type_sitter::Node::raw(self).named_child(i).unwrap())
-            .filter(|n| !n.is_extra())
-            .next()
-            .map(<Directive<'tree> as ::type_sitter::Node<'tree>>::try_from_raw)
-            .expect(
-                "required child not present, there should at least be a MISSING node in its place",
-            )
-    }
 }
 #[automatically_derived]
-impl<'tree> ::type_sitter::Node<'tree> for ConditionalKeyword<'tree> {
-    type WithLifetime<'a> = ConditionalKeyword<'a>;
-    const KIND: &'static str = "conditional_keyword";
+impl<'tree> ::type_sitter::Node<'tree> for Continue<'tree> {
+    type WithLifetime<'a> = Continue<'a>;
+    const KIND: &'static str = "continue";
     #[inline]
     fn try_from_raw(
         node: ::type_sitter::raw::Node<'tree>,
     ) -> ::type_sitter::NodeResult<'tree, Self> {
-        if node.kind() == "conditional_keyword" {
+        if node.kind() == "continue" {
             Ok(Self(node))
         } else {
             Err(::type_sitter::IncorrectKind::new::<Self>(node))
@@ -3070,7 +3633,7 @@ impl<'tree> ::type_sitter::Node<'tree> for ConditionalKeyword<'tree> {
     }
     #[inline]
     unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
-        debug_assert_eq!(node.kind(), "conditional_keyword");
+        debug_assert_eq!(node.kind(), "continue");
         Self(node)
     }
     #[inline]
@@ -3636,6 +4199,97 @@ impl<'tree> ::type_sitter::Node<'tree> for ElseFeature<'tree> {
     #[inline]
     unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
         debug_assert_eq!(node.kind(), "else_feature");
+        Self(node)
+    }
+    #[inline]
+    fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+        &self.0
+    }
+    #[inline]
+    fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+        &mut self.0
+    }
+    #[inline]
+    fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+        self.0
+    }
+}
+/**Typed node `elseif`
+
+This node has these fields:
+
+- `directive`: `@elseif` ([`symbols::Atelseif`])
+- `parameter`: `{( | ) | , | expression}+` ([`symbols::LParen`] | [`symbols::RParen`] | [`symbols::Comma`] | [`Expression`])
+*/
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(transparent)]
+#[allow(non_camel_case_types)]
+pub struct Elseif<'tree>(::type_sitter::raw::Node<'tree>);
+#[automatically_derived]
+#[allow(unused)]
+impl<'tree> Elseif<'tree> {
+    /**Get the field `directive`.
+
+This child has type `@elseif` ([`symbols::Atelseif`])*/
+    #[inline]
+    pub fn directive(
+        &self,
+    ) -> ::type_sitter::NodeResult<'tree, symbols::Atelseif<'tree>> {
+        ::type_sitter::Node::raw(self)
+            .child_by_field_name("directive")
+            .map(<symbols::Atelseif<'tree> as ::type_sitter::Node<'tree>>::try_from_raw)
+            .expect(
+                "required child not present, there should at least be a MISSING node in its place",
+            )
+    }
+    /**Get the children of field `parameter`.
+
+These children have type `{( | ) | , | expression}+`:
+
+- [`symbols::LParen`]
+- [`symbols::RParen`]
+- [`symbols::Comma`]
+- [`Expression`]
+*/
+    /**
+
+This is guaranteed to return at least one child.*/
+    #[inline]
+    pub fn parameters<'a>(
+        &self,
+        c: &'a mut ::type_sitter::TreeCursor<'tree>,
+    ) -> impl ::std::iter::Iterator<
+        Item = ::type_sitter::NodeResult<
+            'tree,
+            anon_unions::LParen_RParen_Comma_Expression<'tree>,
+        >,
+    > + 'a {
+        ::type_sitter::Node::raw(self)
+            .children_by_field_name("parameter", &mut c.0)
+            .map(
+                <anon_unions::LParen_RParen_Comma_Expression<
+                    'tree,
+                > as ::type_sitter::Node<'tree>>::try_from_raw,
+            )
+    }
+}
+#[automatically_derived]
+impl<'tree> ::type_sitter::Node<'tree> for Elseif<'tree> {
+    type WithLifetime<'a> = Elseif<'a>;
+    const KIND: &'static str = "elseif";
+    #[inline]
+    fn try_from_raw(
+        node: ::type_sitter::raw::Node<'tree>,
+    ) -> ::type_sitter::NodeResult<'tree, Self> {
+        if node.kind() == "elseif" {
+            Ok(Self(node))
+        } else {
+            Err(::type_sitter::IncorrectKind::new::<Self>(node))
+        }
+    }
+    #[inline]
+    unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+        debug_assert_eq!(node.kind(), "elseif");
         Self(node)
     }
     #[inline]
@@ -4996,6 +5650,57 @@ impl<'tree> ::type_sitter::Node<'tree> for Expression<'tree> {
         }
     }
 }
+/**Typed node `expression_attribute`
+
+This node has named children of type `{attribute_name | quoted_attribute_value}+`:
+
+- [`AttributeName`]
+- [`QuotedAttributeValue`]
+
+*/
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(transparent)]
+#[allow(non_camel_case_types)]
+pub struct ExpressionAttribute<'tree>(::type_sitter::raw::Node<'tree>);
+#[automatically_derived]
+#[allow(unused)]
+impl<'tree> ExpressionAttribute<'tree> {}
+#[automatically_derived]
+impl<'tree> ::type_sitter::HasChildren<'tree> for ExpressionAttribute<'tree> {
+    type Child = anon_unions::AttributeName_QuotedAttributeValue<'tree>;
+}
+#[automatically_derived]
+impl<'tree> ::type_sitter::Node<'tree> for ExpressionAttribute<'tree> {
+    type WithLifetime<'a> = ExpressionAttribute<'a>;
+    const KIND: &'static str = "expression_attribute";
+    #[inline]
+    fn try_from_raw(
+        node: ::type_sitter::raw::Node<'tree>,
+    ) -> ::type_sitter::NodeResult<'tree, Self> {
+        if node.kind() == "expression_attribute" {
+            Ok(Self(node))
+        } else {
+            Err(::type_sitter::IncorrectKind::new::<Self>(node))
+        }
+    }
+    #[inline]
+    unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+        debug_assert_eq!(node.kind(), "expression_attribute");
+        Self(node)
+    }
+    #[inline]
+    fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+        &self.0
+    }
+    #[inline]
+    fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+        &mut self.0
+    }
+    #[inline]
+    fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+        self.0
+    }
+}
 /**Typed node `feature`
 
 This node has these fields:
@@ -5236,12 +5941,11 @@ impl<'tree> ::type_sitter::Node<'tree> for Float<'tree> {
 
 This node has these fields:
 
-- `body`: `{( | ) | , | comment | conditional | directive | element | entity | erroneous_end_tag | expression | inline_directive | keyword | loops | php_statement | props | script_element | style_element | switch | text}*` ([`symbols::LParen`] | [`symbols::RParen`] | [`symbols::Comma`] | [`Comment`] | [`Conditional`] | [`Directive`] | [`Element`] | [`Entity`] | [`ErroneousEndTag`] | [`Expression`] | [`InlineDirective`] | [`Keyword`] | [`Loops`] | [`PhpStatement`] | [`Props`] | [`ScriptElement`] | [`StyleElement`] | [`Switch`] | [`Text`])
+- `body`: `{break | comment | conditional | continue | element | entity | erroneous_end_tag | inline_directive | keyword | loops | php_statement | props | script_element | style_element | switch | text}*` ([`Break`] | [`Comment`] | [`Conditional`] | [`Continue`] | [`Element`] | [`Entity`] | [`ErroneousEndTag`] | [`InlineDirective`] | [`Keyword`] | [`Loops`] | [`PhpStatement`] | [`Props`] | [`ScriptElement`] | [`StyleElement`] | [`Switch`] | [`Text`])
 - `condition`: `{expression | sequence_expression}?` ([`Expression`] | [`SequenceExpression`])
 - `directive_end`: `@endfor` ([`symbols::Atendfor`])
 - `directive_start`: `@for` ([`symbols::Atfor`])
 - `initialize`: `{expression | sequence_expression}?` ([`Expression`] | [`SequenceExpression`])
-- `parameter`: `{( | ) | , | expression}*` ([`symbols::LParen`] | [`symbols::RParen`] | [`symbols::Comma`] | [`Expression`])
 - `update`: `{expression | sequence_expression}?` ([`Expression`] | [`SequenceExpression`])
 */
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -5253,18 +5957,15 @@ pub struct ForDirective<'tree>(::type_sitter::raw::Node<'tree>);
 impl<'tree> ForDirective<'tree> {
     /**Get the children of field `body`.
 
-These children have type `{( | ) | , | comment | conditional | directive | element | entity | erroneous_end_tag | expression | inline_directive | keyword | loops | php_statement | props | script_element | style_element | switch | text}*`:
+These children have type `{break | comment | conditional | continue | element | entity | erroneous_end_tag | inline_directive | keyword | loops | php_statement | props | script_element | style_element | switch | text}*`:
 
-- [`symbols::LParen`]
-- [`symbols::RParen`]
-- [`symbols::Comma`]
+- [`Break`]
 - [`Comment`]
 - [`Conditional`]
-- [`Directive`]
+- [`Continue`]
 - [`Element`]
 - [`Entity`]
 - [`ErroneousEndTag`]
-- [`Expression`]
 - [`InlineDirective`]
 - [`Keyword`]
 - [`Loops`]
@@ -5282,13 +5983,13 @@ These children have type `{( | ) | , | comment | conditional | directive | eleme
     ) -> impl ::std::iter::Iterator<
         Item = ::type_sitter::NodeResult<
             'tree,
-            anon_unions::Anon56463528831969555037115503089298760884<'tree>,
+            anon_unions::Anon157328565830607199464138490469069561301<'tree>,
         >,
     > + 'a {
         ::type_sitter::Node::raw(self)
             .children_by_field_name("body", &mut c.0)
             .map(
-                <anon_unions::Anon56463528831969555037115503089298760884<
+                <anon_unions::Anon157328565830607199464138490469069561301<
                     'tree,
                 > as ::type_sitter::Node<'tree>>::try_from_raw,
             )
@@ -5369,33 +6070,6 @@ This child has type `{expression | sequence_expression}?`:
                 > as ::type_sitter::Node<'tree>>::try_from_raw,
             )
     }
-    /**Get the children of field `parameter`.
-
-These children have type `{( | ) | , | expression}*`:
-
-- [`symbols::LParen`]
-- [`symbols::RParen`]
-- [`symbols::Comma`]
-- [`Expression`]
-*/
-    #[inline]
-    pub fn parameters<'a>(
-        &self,
-        c: &'a mut ::type_sitter::TreeCursor<'tree>,
-    ) -> impl ::std::iter::Iterator<
-        Item = ::type_sitter::NodeResult<
-            'tree,
-            anon_unions::LParen_RParen_Comma_Expression<'tree>,
-        >,
-    > + 'a {
-        ::type_sitter::Node::raw(self)
-            .children_by_field_name("parameter", &mut c.0)
-            .map(
-                <anon_unions::LParen_RParen_Comma_Expression<
-                    'tree,
-                > as ::type_sitter::Node<'tree>>::try_from_raw,
-            )
-    }
     /**Get the optional field `update`.
 
 This child has type `{expression | sequence_expression}?`:
@@ -5457,10 +6131,9 @@ impl<'tree> ::type_sitter::Node<'tree> for ForDirective<'tree> {
 
 This node has these fields:
 
-- `body`: `{( | ) | , | comment | conditional | directive | element | entity | erroneous_end_tag | expression | inline_directive | keyword | loops | php_statement | props | script_element | style_element | switch | text}*` ([`symbols::LParen`] | [`symbols::RParen`] | [`symbols::Comma`] | [`Comment`] | [`Conditional`] | [`Directive`] | [`Element`] | [`Entity`] | [`ErroneousEndTag`] | [`Expression`] | [`InlineDirective`] | [`Keyword`] | [`Loops`] | [`PhpStatement`] | [`Props`] | [`ScriptElement`] | [`StyleElement`] | [`Switch`] | [`Text`])
+- `body`: `{break | comment | conditional | continue | element | entity | erroneous_end_tag | inline_directive | keyword | loops | php_statement | props | script_element | style_element | switch | text}*` ([`Break`] | [`Comment`] | [`Conditional`] | [`Continue`] | [`Element`] | [`Entity`] | [`ErroneousEndTag`] | [`InlineDirective`] | [`Keyword`] | [`Loops`] | [`PhpStatement`] | [`Props`] | [`ScriptElement`] | [`StyleElement`] | [`Switch`] | [`Text`])
 - `directive_end`: `@endforeach` ([`symbols::Atendforeach`])
 - `directive_start`: `@foreach` ([`symbols::Atforeach`])
-- `parameter`: `{( | ) | , | expression}*` ([`symbols::LParen`] | [`symbols::RParen`] | [`symbols::Comma`] | [`Expression`])
 
 And additional named children of type `{by_ref | expression | list_literal | pair}+`:
 
@@ -5479,18 +6152,15 @@ pub struct ForeachDirective<'tree>(::type_sitter::raw::Node<'tree>);
 impl<'tree> ForeachDirective<'tree> {
     /**Get the children of field `body`.
 
-These children have type `{( | ) | , | comment | conditional | directive | element | entity | erroneous_end_tag | expression | inline_directive | keyword | loops | php_statement | props | script_element | style_element | switch | text}*`:
+These children have type `{break | comment | conditional | continue | element | entity | erroneous_end_tag | inline_directive | keyword | loops | php_statement | props | script_element | style_element | switch | text}*`:
 
-- [`symbols::LParen`]
-- [`symbols::RParen`]
-- [`symbols::Comma`]
+- [`Break`]
 - [`Comment`]
 - [`Conditional`]
-- [`Directive`]
+- [`Continue`]
 - [`Element`]
 - [`Entity`]
 - [`ErroneousEndTag`]
-- [`Expression`]
 - [`InlineDirective`]
 - [`Keyword`]
 - [`Loops`]
@@ -5508,13 +6178,13 @@ These children have type `{( | ) | , | comment | conditional | directive | eleme
     ) -> impl ::std::iter::Iterator<
         Item = ::type_sitter::NodeResult<
             'tree,
-            anon_unions::Anon56463528831969555037115503089298760884<'tree>,
+            anon_unions::Anon157328565830607199464138490469069561301<'tree>,
         >,
     > + 'a {
         ::type_sitter::Node::raw(self)
             .children_by_field_name("body", &mut c.0)
             .map(
-                <anon_unions::Anon56463528831969555037115503089298760884<
+                <anon_unions::Anon157328565830607199464138490469069561301<
                     'tree,
                 > as ::type_sitter::Node<'tree>>::try_from_raw,
             )
@@ -5549,33 +6219,6 @@ This child has type `@foreach` ([`symbols::Atforeach`])*/
             .map(<symbols::Atforeach<'tree> as ::type_sitter::Node<'tree>>::try_from_raw)
             .expect(
                 "required child not present, there should at least be a MISSING node in its place",
-            )
-    }
-    /**Get the children of field `parameter`.
-
-These children have type `{( | ) | , | expression}*`:
-
-- [`symbols::LParen`]
-- [`symbols::RParen`]
-- [`symbols::Comma`]
-- [`Expression`]
-*/
-    #[inline]
-    pub fn parameters<'a>(
-        &self,
-        c: &'a mut ::type_sitter::TreeCursor<'tree>,
-    ) -> impl ::std::iter::Iterator<
-        Item = ::type_sitter::NodeResult<
-            'tree,
-            anon_unions::LParen_RParen_Comma_Expression<'tree>,
-        >,
-    > + 'a {
-        ::type_sitter::Node::raw(self)
-            .children_by_field_name("parameter", &mut c.0)
-            .map(
-                <anon_unions::LParen_RParen_Comma_Expression<
-                    'tree,
-                > as ::type_sitter::Node<'tree>>::try_from_raw,
             )
     }
     /**Get the node's non-field not-extra named children.
@@ -5653,10 +6296,9 @@ impl<'tree> ::type_sitter::Node<'tree> for ForeachDirective<'tree> {
 
 This node has these fields:
 
-- `body`: `{( | ) | , | comment | conditional | directive | element | entity | erroneous_end_tag | expression | inline_directive | keyword | loops | php_statement | props | script_element | style_element | switch | text}*` ([`symbols::LParen`] | [`symbols::RParen`] | [`symbols::Comma`] | [`Comment`] | [`Conditional`] | [`Directive`] | [`Element`] | [`Entity`] | [`ErroneousEndTag`] | [`Expression`] | [`InlineDirective`] | [`Keyword`] | [`Loops`] | [`PhpStatement`] | [`Props`] | [`ScriptElement`] | [`StyleElement`] | [`Switch`] | [`Text`])
+- `body`: `{@empty | break | comment | conditional | continue | element | entity | erroneous_end_tag | inline_directive | keyword | loops | php_statement | props | script_element | style_element | switch | text}*` ([`symbols::Atempty`] | [`Break`] | [`Comment`] | [`Conditional`] | [`Continue`] | [`Element`] | [`Entity`] | [`ErroneousEndTag`] | [`InlineDirective`] | [`Keyword`] | [`Loops`] | [`PhpStatement`] | [`Props`] | [`ScriptElement`] | [`StyleElement`] | [`Switch`] | [`Text`])
 - `directive_end`: `@endforelse` ([`symbols::Atendforelse`])
 - `directive_start`: `@forelse` ([`symbols::Atforelse`])
-- `parameter`: `{( | ) | , | expression}*` ([`symbols::LParen`] | [`symbols::RParen`] | [`symbols::Comma`] | [`Expression`])
 
 And additional named children of type `{by_ref | expression | list_literal | pair}+`:
 
@@ -5675,18 +6317,16 @@ pub struct ForelseDirective<'tree>(::type_sitter::raw::Node<'tree>);
 impl<'tree> ForelseDirective<'tree> {
     /**Get the children of field `body`.
 
-These children have type `{( | ) | , | comment | conditional | directive | element | entity | erroneous_end_tag | expression | inline_directive | keyword | loops | php_statement | props | script_element | style_element | switch | text}*`:
+These children have type `{@empty | break | comment | conditional | continue | element | entity | erroneous_end_tag | inline_directive | keyword | loops | php_statement | props | script_element | style_element | switch | text}*`:
 
-- [`symbols::LParen`]
-- [`symbols::RParen`]
-- [`symbols::Comma`]
+- [`symbols::Atempty`]
+- [`Break`]
 - [`Comment`]
 - [`Conditional`]
-- [`Directive`]
+- [`Continue`]
 - [`Element`]
 - [`Entity`]
 - [`ErroneousEndTag`]
-- [`Expression`]
 - [`InlineDirective`]
 - [`Keyword`]
 - [`Loops`]
@@ -5704,13 +6344,13 @@ These children have type `{( | ) | , | comment | conditional | directive | eleme
     ) -> impl ::std::iter::Iterator<
         Item = ::type_sitter::NodeResult<
             'tree,
-            anon_unions::Anon56463528831969555037115503089298760884<'tree>,
+            anon_unions::Anon309827680676981897040739421666452955669<'tree>,
         >,
     > + 'a {
         ::type_sitter::Node::raw(self)
             .children_by_field_name("body", &mut c.0)
             .map(
-                <anon_unions::Anon56463528831969555037115503089298760884<
+                <anon_unions::Anon309827680676981897040739421666452955669<
                     'tree,
                 > as ::type_sitter::Node<'tree>>::try_from_raw,
             )
@@ -5745,33 +6385,6 @@ This child has type `@forelse` ([`symbols::Atforelse`])*/
             .map(<symbols::Atforelse<'tree> as ::type_sitter::Node<'tree>>::try_from_raw)
             .expect(
                 "required child not present, there should at least be a MISSING node in its place",
-            )
-    }
-    /**Get the children of field `parameter`.
-
-These children have type `{( | ) | , | expression}*`:
-
-- [`symbols::LParen`]
-- [`symbols::RParen`]
-- [`symbols::Comma`]
-- [`Expression`]
-*/
-    #[inline]
-    pub fn parameters<'a>(
-        &self,
-        c: &'a mut ::type_sitter::TreeCursor<'tree>,
-    ) -> impl ::std::iter::Iterator<
-        Item = ::type_sitter::NodeResult<
-            'tree,
-            anon_unions::LParen_RParen_Comma_Expression<'tree>,
-        >,
-    > + 'a {
-        ::type_sitter::Node::raw(self)
-            .children_by_field_name("parameter", &mut c.0)
-            .map(
-                <anon_unions::LParen_RParen_Comma_Expression<
-                    'tree,
-                > as ::type_sitter::Node<'tree>>::try_from_raw,
             )
     }
     /**Get the node's non-field not-extra named children.
@@ -6412,6 +7025,58 @@ impl<'tree> ::type_sitter::Node<'tree> for Hassection<'tree> {
         self.0
     }
 }
+/**Typed node `html_attribute`
+
+This node has named children of type `{attribute_name | attribute_value | quoted_attribute_value}+`:
+
+- [`AttributeName`]
+- [`AttributeValue`]
+- [`QuotedAttributeValue`]
+
+*/
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(transparent)]
+#[allow(non_camel_case_types)]
+pub struct HtmlAttribute<'tree>(::type_sitter::raw::Node<'tree>);
+#[automatically_derived]
+#[allow(unused)]
+impl<'tree> HtmlAttribute<'tree> {}
+#[automatically_derived]
+impl<'tree> ::type_sitter::HasChildren<'tree> for HtmlAttribute<'tree> {
+    type Child = anon_unions::AttributeName_AttributeValue_QuotedAttributeValue<'tree>;
+}
+#[automatically_derived]
+impl<'tree> ::type_sitter::Node<'tree> for HtmlAttribute<'tree> {
+    type WithLifetime<'a> = HtmlAttribute<'a>;
+    const KIND: &'static str = "html_attribute";
+    #[inline]
+    fn try_from_raw(
+        node: ::type_sitter::raw::Node<'tree>,
+    ) -> ::type_sitter::NodeResult<'tree, Self> {
+        if node.kind() == "html_attribute" {
+            Ok(Self(node))
+        } else {
+            Err(::type_sitter::IncorrectKind::new::<Self>(node))
+        }
+    }
+    #[inline]
+    unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+        debug_assert_eq!(node.kind(), "html_attribute");
+        Self(node)
+    }
+    #[inline]
+    fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+        &self.0
+    }
+    #[inline]
+    fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+        &mut self.0
+    }
+    #[inline]
+    fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+        self.0
+    }
+}
 /**Typed node `if`
 
 This node has these fields:
@@ -6535,9 +7200,8 @@ impl<'tree> ::type_sitter::Node<'tree> for If<'tree> {
 
 This node has these fields:
 
+- `directive`: `{@asset | @aware | @each | @extends | @extract | @field | @import | @include | @includeFirst | @includeIf | @includeIsolated | @includeUnless | @includeWhen | @inject | @js | @json | @livewire | @method | @options | @script | @servers | @set | @stack | @svg | @thumbnail | @use | @vite | @wireUiScripts | @yield}` ([`symbols::Atasset`] | [`symbols::Ataware`] | [`symbols::Ateach`] | [`symbols::Atextends`] | [`symbols::Atextract`] | [`symbols::Atfield`] | [`symbols::Atimport`] | [`symbols::Atinclude`] | [`symbols::Atincludefirst`] | [`symbols::Atincludeif`] | [`symbols::Atincludeisolated`] | [`symbols::Atincludeunless`] | [`symbols::Atincludewhen`] | [`symbols::Atinject`] | [`symbols::Atjs`] | [`symbols::Atjson`] | [`symbols::Atlivewire`] | [`symbols::Atmethod`] | [`symbols::Atoptions`] | [`symbols::Atscript`] | [`symbols::Atservers`] | [`symbols::Atset`] | [`symbols::Atstack`] | [`symbols::Atsvg`] | [`symbols::Atthumbnail`] | [`symbols::Atuse`] | [`symbols::Atvite`] | [`symbols::Atwireuiscripts`] | [`symbols::Atyield`])
 - `parameter`: `{( | ) | , | expression}+` ([`symbols::LParen`] | [`symbols::RParen`] | [`symbols::Comma`] | [`Expression`])
-
-And an additional named child of type `directive` ([`Directive`])
 */
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(transparent)]
@@ -6546,6 +7210,58 @@ pub struct InlineDirective<'tree>(::type_sitter::raw::Node<'tree>);
 #[automatically_derived]
 #[allow(unused)]
 impl<'tree> InlineDirective<'tree> {
+    /**Get the field `directive`.
+
+This child has type `{@asset | @aware | @each | @extends | @extract | @field | @import | @include | @includeFirst | @includeIf | @includeIsolated | @includeUnless | @includeWhen | @inject | @js | @json | @livewire | @method | @options | @script | @servers | @set | @stack | @svg | @thumbnail | @use | @vite | @wireUiScripts | @yield}`:
+
+- [`symbols::Atasset`]
+- [`symbols::Ataware`]
+- [`symbols::Ateach`]
+- [`symbols::Atextends`]
+- [`symbols::Atextract`]
+- [`symbols::Atfield`]
+- [`symbols::Atimport`]
+- [`symbols::Atinclude`]
+- [`symbols::Atincludefirst`]
+- [`symbols::Atincludeif`]
+- [`symbols::Atincludeisolated`]
+- [`symbols::Atincludeunless`]
+- [`symbols::Atincludewhen`]
+- [`symbols::Atinject`]
+- [`symbols::Atjs`]
+- [`symbols::Atjson`]
+- [`symbols::Atlivewire`]
+- [`symbols::Atmethod`]
+- [`symbols::Atoptions`]
+- [`symbols::Atscript`]
+- [`symbols::Atservers`]
+- [`symbols::Atset`]
+- [`symbols::Atstack`]
+- [`symbols::Atsvg`]
+- [`symbols::Atthumbnail`]
+- [`symbols::Atuse`]
+- [`symbols::Atvite`]
+- [`symbols::Atwireuiscripts`]
+- [`symbols::Atyield`]
+*/
+    #[inline]
+    pub fn directive(
+        &self,
+    ) -> ::type_sitter::NodeResult<
+        'tree,
+        anon_unions::Anon65615705433508867044542883489645159018<'tree>,
+    > {
+        ::type_sitter::Node::raw(self)
+            .child_by_field_name("directive")
+            .map(
+                <anon_unions::Anon65615705433508867044542883489645159018<
+                    'tree,
+                > as ::type_sitter::Node<'tree>>::try_from_raw,
+            )
+            .expect(
+                "required child not present, there should at least be a MISSING node in its place",
+            )
+    }
     /**Get the children of field `parameter`.
 
 These children have type `{( | ) | , | expression}+`:
@@ -6574,25 +7290,6 @@ This is guaranteed to return at least one child.*/
                 <anon_unions::LParen_RParen_Comma_Expression<
                     'tree,
                 > as ::type_sitter::Node<'tree>>::try_from_raw,
-            )
-    }
-    /**Get the node's only non-field not-extra named child.
-
-This child has type `directive` ([`Directive`])*/
-    #[inline]
-    pub fn directive(&self) -> ::type_sitter::NodeResult<'tree, Directive<'tree>> {
-        (0..::type_sitter::Node::raw(self).named_child_count())
-            .filter(|i| {
-                ::type_sitter::Node::raw(self)
-                    .field_name_for_named_child(*i as _)
-                    .is_none()
-            })
-            .map(|i| ::type_sitter::Node::raw(self).named_child(i).unwrap())
-            .filter(|n| !n.is_extra())
-            .next()
-            .map(<Directive<'tree> as ::type_sitter::Node<'tree>>::try_from_raw)
-            .expect(
-                "required child not present, there should at least be a MISSING node in its place",
             )
     }
 }
@@ -6935,7 +7632,7 @@ impl<'tree> ::type_sitter::Node<'tree> for Isset<'tree> {
 }
 /**Typed node `keyword`
 
-This node has a named child of type `directive` ([`Directive`])
+This node has no named children
 */
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(transparent)]
@@ -6943,26 +7640,7 @@ This node has a named child of type `directive` ([`Directive`])
 pub struct Keyword<'tree>(::type_sitter::raw::Node<'tree>);
 #[automatically_derived]
 #[allow(unused)]
-impl<'tree> Keyword<'tree> {
-    /**Get the node's only not-extra named child.
-
-This child has type `directive` ([`Directive`])*/
-    #[inline]
-    pub fn directive(&self) -> ::type_sitter::NodeResult<'tree, Directive<'tree>> {
-        (0..::type_sitter::Node::raw(self).named_child_count())
-            .map(|i| ::type_sitter::Node::raw(self).named_child(i).unwrap())
-            .filter(|n| !n.is_extra())
-            .next()
-            .map(<Directive<'tree> as ::type_sitter::Node<'tree>>::try_from_raw)
-            .expect(
-                "required child not present, there should at least be a MISSING node in its place",
-            )
-    }
-}
-#[automatically_derived]
-impl<'tree> ::type_sitter::HasChild<'tree> for Keyword<'tree> {
-    type Child = Directive<'tree>;
-}
+impl<'tree> Keyword<'tree> {}
 #[automatically_derived]
 impl<'tree> ::type_sitter::Node<'tree> for Keyword<'tree> {
     type WithLifetime<'a> = Keyword<'a>;
@@ -7495,18 +8173,16 @@ impl<'tree> Loops<'tree> {
     }
     /**Get the children of field `body`.
 
-These children have type `{( | ) | , | comment | conditional | directive | element | entity | erroneous_end_tag | expression | inline_directive | keyword | loops | php_statement | props | script_element | style_element | switch | text}*`:
+These children have type `{@empty | break | comment | conditional | continue | element | entity | erroneous_end_tag | inline_directive | keyword | loops | php_statement | props | script_element | style_element | switch | text}*`:
 
-- [`symbols::LParen`]
-- [`symbols::RParen`]
-- [`symbols::Comma`]
+- [`symbols::Atempty`]
+- [`Break`]
 - [`Comment`]
 - [`Conditional`]
-- [`Directive`]
+- [`Continue`]
 - [`Element`]
 - [`Entity`]
 - [`ErroneousEndTag`]
-- [`Expression`]
 - [`InlineDirective`]
 - [`Keyword`]
 - [`Loops`]
@@ -7524,13 +8200,13 @@ These children have type `{( | ) | , | comment | conditional | directive | eleme
     ) -> impl ::std::iter::Iterator<
         Item = ::type_sitter::NodeResult<
             'tree,
-            anon_unions::Anon56463528831969555037115503089298760884<'tree>,
+            anon_unions::Anon309827680676981897040739421666452955669<'tree>,
         >,
     > + 'a {
         ::type_sitter::Node::raw(self)
             .children_by_field_name("body", &mut c.0)
             .map(
-                <anon_unions::Anon56463528831969555037115503089298760884<
+                <anon_unions::Anon309827680676981897040739421666452955669<
                     'tree,
                 > as ::type_sitter::Node<'tree>>::try_from_raw,
             )
@@ -7587,33 +8263,6 @@ This child has type `{@for | @foreach | @forelse | @while}`:
             )
             .expect(
                 "required child not present, there should at least be a MISSING node in its place",
-            )
-    }
-    /**Get the children of field `parameter`.
-
-These children have type `{( | ) | , | expression}*`:
-
-- [`symbols::LParen`]
-- [`symbols::RParen`]
-- [`symbols::Comma`]
-- [`Expression`]
-*/
-    #[inline]
-    pub fn parameters<'a>(
-        &self,
-        c: &'a mut ::type_sitter::TreeCursor<'tree>,
-    ) -> impl ::std::iter::Iterator<
-        Item = ::type_sitter::NodeResult<
-            'tree,
-            anon_unions::LParen_RParen_Comma_Expression<'tree>,
-        >,
-    > + 'a {
-        ::type_sitter::Node::raw(self)
-            .children_by_field_name("parameter", &mut c.0)
-            .map(
-                <anon_unions::LParen_RParen_Comma_Expression<
-                    'tree,
-                > as ::type_sitter::Node<'tree>>::try_from_raw,
             )
     }
 }
@@ -11240,6 +11889,129 @@ impl<'tree> ::type_sitter::Node<'tree> for SequenceExpression<'tree> {
         self.0
     }
 }
+/**Typed node `session`
+
+This node has these fields:
+
+- `body`: `conditional_body` ([`ConditionalBody`])
+- `directive_end`: `@endsession` ([`symbols::Atendsession`])
+- `directive_start`: `@session` ([`symbols::Atsession`])
+- `parameter`: `{( | ) | , | expression}+` ([`symbols::LParen`] | [`symbols::RParen`] | [`symbols::Comma`] | [`Expression`])
+*/
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(transparent)]
+#[allow(non_camel_case_types)]
+pub struct Session<'tree>(::type_sitter::raw::Node<'tree>);
+#[automatically_derived]
+#[allow(unused)]
+impl<'tree> Session<'tree> {
+    /**Get the field `body`.
+
+This child has type `conditional_body` ([`ConditionalBody`])*/
+    #[inline]
+    pub fn body(&self) -> ::type_sitter::NodeResult<'tree, ConditionalBody<'tree>> {
+        ::type_sitter::Node::raw(self)
+            .child_by_field_name("body")
+            .map(<ConditionalBody<'tree> as ::type_sitter::Node<'tree>>::try_from_raw)
+            .expect(
+                "required child not present, there should at least be a MISSING node in its place",
+            )
+    }
+    /**Get the field `directive_end`.
+
+This child has type `@endsession` ([`symbols::Atendsession`])*/
+    #[inline]
+    pub fn directive_end(
+        &self,
+    ) -> ::type_sitter::NodeResult<'tree, symbols::Atendsession<'tree>> {
+        ::type_sitter::Node::raw(self)
+            .child_by_field_name("directive_end")
+            .map(
+                <symbols::Atendsession<
+                    'tree,
+                > as ::type_sitter::Node<'tree>>::try_from_raw,
+            )
+            .expect(
+                "required child not present, there should at least be a MISSING node in its place",
+            )
+    }
+    /**Get the field `directive_start`.
+
+This child has type `@session` ([`symbols::Atsession`])*/
+    #[inline]
+    pub fn directive_start(
+        &self,
+    ) -> ::type_sitter::NodeResult<'tree, symbols::Atsession<'tree>> {
+        ::type_sitter::Node::raw(self)
+            .child_by_field_name("directive_start")
+            .map(<symbols::Atsession<'tree> as ::type_sitter::Node<'tree>>::try_from_raw)
+            .expect(
+                "required child not present, there should at least be a MISSING node in its place",
+            )
+    }
+    /**Get the children of field `parameter`.
+
+These children have type `{( | ) | , | expression}+`:
+
+- [`symbols::LParen`]
+- [`symbols::RParen`]
+- [`symbols::Comma`]
+- [`Expression`]
+*/
+    /**
+
+This is guaranteed to return at least one child.*/
+    #[inline]
+    pub fn parameters<'a>(
+        &self,
+        c: &'a mut ::type_sitter::TreeCursor<'tree>,
+    ) -> impl ::std::iter::Iterator<
+        Item = ::type_sitter::NodeResult<
+            'tree,
+            anon_unions::LParen_RParen_Comma_Expression<'tree>,
+        >,
+    > + 'a {
+        ::type_sitter::Node::raw(self)
+            .children_by_field_name("parameter", &mut c.0)
+            .map(
+                <anon_unions::LParen_RParen_Comma_Expression<
+                    'tree,
+                > as ::type_sitter::Node<'tree>>::try_from_raw,
+            )
+    }
+}
+#[automatically_derived]
+impl<'tree> ::type_sitter::Node<'tree> for Session<'tree> {
+    type WithLifetime<'a> = Session<'a>;
+    const KIND: &'static str = "session";
+    #[inline]
+    fn try_from_raw(
+        node: ::type_sitter::raw::Node<'tree>,
+    ) -> ::type_sitter::NodeResult<'tree, Self> {
+        if node.kind() == "session" {
+            Ok(Self(node))
+        } else {
+            Err(::type_sitter::IncorrectKind::new::<Self>(node))
+        }
+    }
+    #[inline]
+    unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+        debug_assert_eq!(node.kind(), "session");
+        Self(node)
+    }
+    #[inline]
+    fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+        &self.0
+    }
+    #[inline]
+    fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+        &mut self.0
+    }
+    #[inline]
+    fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+        self.0
+    }
+}
 /**Typed node `setup`
 
 This node has these fields:
@@ -11322,6 +12094,70 @@ impl<'tree> ::type_sitter::Node<'tree> for Setup<'tree> {
     #[inline]
     unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
         debug_assert_eq!(node.kind(), "setup");
+        Self(node)
+    }
+    #[inline]
+    fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+        &self.0
+    }
+    #[inline]
+    fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+        &mut self.0
+    }
+    #[inline]
+    fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+        self.0
+    }
+}
+/**Typed node `short_attribute`
+
+This node has a named child of type `variable_name` ([`VariableName`])
+*/
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(transparent)]
+#[allow(non_camel_case_types)]
+pub struct ShortAttribute<'tree>(::type_sitter::raw::Node<'tree>);
+#[automatically_derived]
+#[allow(unused)]
+impl<'tree> ShortAttribute<'tree> {
+    /**Get the node's only not-extra named child.
+
+This child has type `variable_name` ([`VariableName`])*/
+    #[inline]
+    pub fn variable_name(
+        &self,
+    ) -> ::type_sitter::NodeResult<'tree, VariableName<'tree>> {
+        (0..::type_sitter::Node::raw(self).named_child_count())
+            .map(|i| ::type_sitter::Node::raw(self).named_child(i).unwrap())
+            .filter(|n| !n.is_extra())
+            .next()
+            .map(<VariableName<'tree> as ::type_sitter::Node<'tree>>::try_from_raw)
+            .expect(
+                "required child not present, there should at least be a MISSING node in its place",
+            )
+    }
+}
+#[automatically_derived]
+impl<'tree> ::type_sitter::HasChild<'tree> for ShortAttribute<'tree> {
+    type Child = VariableName<'tree>;
+}
+#[automatically_derived]
+impl<'tree> ::type_sitter::Node<'tree> for ShortAttribute<'tree> {
+    type WithLifetime<'a> = ShortAttribute<'a>;
+    const KIND: &'static str = "short_attribute";
+    #[inline]
+    fn try_from_raw(
+        node: ::type_sitter::raw::Node<'tree>,
+    ) -> ::type_sitter::NodeResult<'tree, Self> {
+        if node.kind() == "short_attribute" {
+            Ok(Self(node))
+        } else {
+            Err(::type_sitter::IncorrectKind::new::<Self>(node))
+        }
+    }
+    #[inline]
+    unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+        debug_assert_eq!(node.kind(), "short_attribute");
         Self(node)
     }
     #[inline]
@@ -11995,11 +12831,11 @@ This node has these fields:
 - `directive_start`: `@switch` ([`symbols::Atswitch`])
 - `parameter`: `{( | ) | , | expression}+` ([`symbols::LParen`] | [`symbols::RParen`] | [`symbols::Comma`] | [`Expression`])
 
-And additional named children of type `{comment | conditional | directive | element | entity | erroneous_end_tag | inline_directive | keyword | livewire | loops | php_statement | props | script_element | style_element | text}*`:
+And additional named children of type `{case | comment | conditional | element | entity | erroneous_end_tag | inline_directive | keyword | livewire | loops | php_statement | props | script_element | style_element | text}*`:
 
+- [`Case`]
 - [`Comment`]
 - [`Conditional`]
-- [`Directive`]
 - [`Element`]
 - [`Entity`]
 - [`ErroneousEndTag`]
@@ -12083,11 +12919,11 @@ This is guaranteed to return at least one child.*/
     }
     /**Get the node's non-field not-extra named children.
 
-These children have type `{comment | conditional | directive | element | entity | erroneous_end_tag | inline_directive | keyword | livewire | loops | php_statement | props | script_element | style_element | text}*`:
+These children have type `{case | comment | conditional | element | entity | erroneous_end_tag | inline_directive | keyword | livewire | loops | php_statement | props | script_element | style_element | text}*`:
 
+- [`Case`]
 - [`Comment`]
 - [`Conditional`]
-- [`Directive`]
 - [`Element`]
 - [`Entity`]
 - [`ErroneousEndTag`]
@@ -12108,7 +12944,7 @@ These children have type `{comment | conditional | directive | element | entity 
     ) -> impl ::std::iter::Iterator<
         Item = ::type_sitter::NodeResult<
             'tree,
-            anon_unions::Anon37655723591181308797305058825199978824<'tree>,
+            anon_unions::Anon265773906404915117180595828464400795297<'tree>,
         >,
     > + 'a {
         {
@@ -12122,7 +12958,7 @@ These children have type `{comment | conditional | directive | element | entity 
                 .map(|(_, n)| n)
         }
             .map(
-                <anon_unions::Anon37655723591181308797305058825199978824<
+                <anon_unions::Anon265773906404915117180595828464400795297<
                     'tree,
                 > as ::type_sitter::Node<'tree>>::try_from_raw,
             )
@@ -13346,11 +14182,10 @@ impl<'tree> ::type_sitter::Node<'tree> for VisibilityModifier<'tree> {
 
 This node has these fields:
 
-- `body`: `{( | ) | , | comment | conditional | directive | element | entity | erroneous_end_tag | expression | inline_directive | keyword | loops | php_statement | props | script_element | style_element | switch | text}*` ([`symbols::LParen`] | [`symbols::RParen`] | [`symbols::Comma`] | [`Comment`] | [`Conditional`] | [`Directive`] | [`Element`] | [`Entity`] | [`ErroneousEndTag`] | [`Expression`] | [`InlineDirective`] | [`Keyword`] | [`Loops`] | [`PhpStatement`] | [`Props`] | [`ScriptElement`] | [`StyleElement`] | [`Switch`] | [`Text`])
+- `body`: `{break | comment | conditional | continue | element | entity | erroneous_end_tag | inline_directive | keyword | loops | php_statement | props | script_element | style_element | switch | text}*` ([`Break`] | [`Comment`] | [`Conditional`] | [`Continue`] | [`Element`] | [`Entity`] | [`ErroneousEndTag`] | [`InlineDirective`] | [`Keyword`] | [`Loops`] | [`PhpStatement`] | [`Props`] | [`ScriptElement`] | [`StyleElement`] | [`Switch`] | [`Text`])
 - `condition`: `expression` ([`Expression`])
 - `directive_end`: `@endwhile` ([`symbols::Atendwhile`])
 - `directive_start`: `@while` ([`symbols::Atwhile`])
-- `parameter`: `{( | ) | , | expression}*` ([`symbols::LParen`] | [`symbols::RParen`] | [`symbols::Comma`] | [`Expression`])
 */
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(transparent)]
@@ -13361,18 +14196,15 @@ pub struct WhileDirective<'tree>(::type_sitter::raw::Node<'tree>);
 impl<'tree> WhileDirective<'tree> {
     /**Get the children of field `body`.
 
-These children have type `{( | ) | , | comment | conditional | directive | element | entity | erroneous_end_tag | expression | inline_directive | keyword | loops | php_statement | props | script_element | style_element | switch | text}*`:
+These children have type `{break | comment | conditional | continue | element | entity | erroneous_end_tag | inline_directive | keyword | loops | php_statement | props | script_element | style_element | switch | text}*`:
 
-- [`symbols::LParen`]
-- [`symbols::RParen`]
-- [`symbols::Comma`]
+- [`Break`]
 - [`Comment`]
 - [`Conditional`]
-- [`Directive`]
+- [`Continue`]
 - [`Element`]
 - [`Entity`]
 - [`ErroneousEndTag`]
-- [`Expression`]
 - [`InlineDirective`]
 - [`Keyword`]
 - [`Loops`]
@@ -13390,13 +14222,13 @@ These children have type `{( | ) | , | comment | conditional | directive | eleme
     ) -> impl ::std::iter::Iterator<
         Item = ::type_sitter::NodeResult<
             'tree,
-            anon_unions::Anon56463528831969555037115503089298760884<'tree>,
+            anon_unions::Anon157328565830607199464138490469069561301<'tree>,
         >,
     > + 'a {
         ::type_sitter::Node::raw(self)
             .children_by_field_name("body", &mut c.0)
             .map(
-                <anon_unions::Anon56463528831969555037115503089298760884<
+                <anon_unions::Anon157328565830607199464138490469069561301<
                     'tree,
                 > as ::type_sitter::Node<'tree>>::try_from_raw,
             )
@@ -13441,33 +14273,6 @@ This child has type `@while` ([`symbols::Atwhile`])*/
             .map(<symbols::Atwhile<'tree> as ::type_sitter::Node<'tree>>::try_from_raw)
             .expect(
                 "required child not present, there should at least be a MISSING node in its place",
-            )
-    }
-    /**Get the children of field `parameter`.
-
-These children have type `{( | ) | , | expression}*`:
-
-- [`symbols::LParen`]
-- [`symbols::RParen`]
-- [`symbols::Comma`]
-- [`Expression`]
-*/
-    #[inline]
-    pub fn parameters<'a>(
-        &self,
-        c: &'a mut ::type_sitter::TreeCursor<'tree>,
-    ) -> impl ::std::iter::Iterator<
-        Item = ::type_sitter::NodeResult<
-            'tree,
-            anon_unions::LParen_RParen_Comma_Expression<'tree>,
-        >,
-    > + 'a {
-        ::type_sitter::Node::raw(self)
-            .children_by_field_name("parameter", &mut c.0)
-            .map(
-                <anon_unions::LParen_RParen_Comma_Expression<
-                    'tree,
-                > as ::type_sitter::Node<'tree>>::try_from_raw,
             )
     }
 }
@@ -16778,6 +17583,49 @@ This node has no named children
             self.0
         }
     }
+    /**Typed node `@asset`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atasset<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atasset<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atasset<'tree> {
+        type WithLifetime<'a> = Atasset<'a>;
+        const KIND: &'static str = "@asset";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@asset" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@asset");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
     /**Typed node `@assets`
 
 This node has no named children
@@ -16864,6 +17712,49 @@ This node has no named children
             self.0
         }
     }
+    /**Typed node `@aware`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Ataware<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Ataware<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Ataware<'tree> {
+        type WithLifetime<'a> = Ataware<'a>;
+        const KIND: &'static str = "@aware";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@aware" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@aware");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
     /**Typed node `@before`
 
 This node has no named children
@@ -16892,6 +17783,49 @@ This node has no named children
         #[inline]
         unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
             debug_assert_eq!(node.kind(), "@before");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@break`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atbreak<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atbreak<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atbreak<'tree> {
+        type WithLifetime<'a> = Atbreak<'a>;
+        const KIND: &'static str = "@break";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@break" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@break");
             Self(node)
         }
         #[inline]
@@ -17036,6 +17970,479 @@ This node has no named children
             self.0
         }
     }
+    /**Typed node `@case`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atcase<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atcase<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atcase<'tree> {
+        type WithLifetime<'a> = Atcase<'a>;
+        const KIND: &'static str = "@case";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@case" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@case");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@checked`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atchecked<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atchecked<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atchecked<'tree> {
+        type WithLifetime<'a> = Atchecked<'a>;
+        const KIND: &'static str = "@checked";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@checked" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@checked");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@class`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atclass<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atclass<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atclass<'tree> {
+        type WithLifetime<'a> = Atclass<'a>;
+        const KIND: &'static str = "@class";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@class" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@class");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@content`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atcontent<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atcontent<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atcontent<'tree> {
+        type WithLifetime<'a> = Atcontent<'a>;
+        const KIND: &'static str = "@content";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@content" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@content");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@context`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atcontext<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atcontext<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atcontext<'tree> {
+        type WithLifetime<'a> = Atcontext<'a>;
+        const KIND: &'static str = "@context";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@context" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@context");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@continue`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atcontinue<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atcontinue<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atcontinue<'tree> {
+        type WithLifetime<'a> = Atcontinue<'a>;
+        const KIND: &'static str = "@continue";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@continue" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@continue");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@csrf`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atcsrf<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atcsrf<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atcsrf<'tree> {
+        type WithLifetime<'a> = Atcsrf<'a>;
+        const KIND: &'static str = "@csrf";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@csrf" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@csrf");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@default`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atdefault<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atdefault<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atdefault<'tree> {
+        type WithLifetime<'a> = Atdefault<'a>;
+        const KIND: &'static str = "@default";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@default" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@default");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@disabled`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atdisabled<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atdisabled<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atdisabled<'tree> {
+        type WithLifetime<'a> = Atdisabled<'a>;
+        const KIND: &'static str = "@disabled";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@disabled" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@disabled");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@each`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Ateach<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Ateach<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Ateach<'tree> {
+        type WithLifetime<'a> = Ateach<'a>;
+        const KIND: &'static str = "@each";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@each" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@each");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@else`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atelse<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atelse<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atelse<'tree> {
+        type WithLifetime<'a> = Atelse<'a>;
+        const KIND: &'static str = "@else";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@else" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@else");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
     /**Typed node `@elsefeature`
 
 This node has no named children
@@ -17064,6 +18471,49 @@ This node has no named children
         #[inline]
         unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
             debug_assert_eq!(node.kind(), "@elsefeature");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@elseif`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atelseif<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atelseif<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atelseif<'tree> {
+        type WithLifetime<'a> = Atelseif<'a>;
+        const KIND: &'static str = "@elseif";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@elseif" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@elseif");
             Self(node)
         }
         #[inline]
@@ -17537,6 +18987,49 @@ This node has no named children
         #[inline]
         unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
             debug_assert_eq!(node.kind(), "@endcannot");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@endcontext`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atendcontext<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atendcontext<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atendcontext<'tree> {
+        type WithLifetime<'a> = Atendcontext<'a>;
+        const KIND: &'static str = "@endcontext";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@endcontext" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@endcontext");
             Self(node)
         }
         #[inline]
@@ -18369,6 +19862,49 @@ This node has no named children
             self.0
         }
     }
+    /**Typed node `@endsession`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atendsession<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atendsession<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atendsession<'tree> {
+        type WithLifetime<'a> = Atendsession<'a>;
+        const KIND: &'static str = "@endsession";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@endsession" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@endsession");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
     /**Typed node `@endsetup`
 
 This node has no named children
@@ -18885,6 +20421,135 @@ This node has no named children
             self.0
         }
     }
+    /**Typed node `@excerpt`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atexcerpt<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atexcerpt<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atexcerpt<'tree> {
+        type WithLifetime<'a> = Atexcerpt<'a>;
+        const KIND: &'static str = "@excerpt";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@excerpt" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@excerpt");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@extends`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atextends<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atextends<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atextends<'tree> {
+        type WithLifetime<'a> = Atextends<'a>;
+        const KIND: &'static str = "@extends";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@extends" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@extends");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@extract`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atextract<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atextract<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atextract<'tree> {
+        type WithLifetime<'a> = Atextract<'a>;
+        const KIND: &'static str = "@extract";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@extract" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@extract");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
     /**Typed node `@feature`
 
 This node has no named children
@@ -18913,6 +20578,49 @@ This node has no named children
         #[inline]
         unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
             debug_assert_eq!(node.kind(), "@feature");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@field`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atfield<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atfield<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atfield<'tree> {
+        type WithLifetime<'a> = Atfield<'a>;
+        const KIND: &'static str = "@field";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@field" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@field");
             Self(node)
         }
         #[inline]
@@ -19272,6 +20980,436 @@ This node has no named children
             self.0
         }
     }
+    /**Typed node `@import`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atimport<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atimport<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atimport<'tree> {
+        type WithLifetime<'a> = Atimport<'a>;
+        const KIND: &'static str = "@import";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@import" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@import");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@include`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atinclude<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atinclude<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atinclude<'tree> {
+        type WithLifetime<'a> = Atinclude<'a>;
+        const KIND: &'static str = "@include";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@include" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@include");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@includeFirst`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atincludefirst<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atincludefirst<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atincludefirst<'tree> {
+        type WithLifetime<'a> = Atincludefirst<'a>;
+        const KIND: &'static str = "@includeFirst";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@includeFirst" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@includeFirst");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@includeIf`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atincludeif<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atincludeif<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atincludeif<'tree> {
+        type WithLifetime<'a> = Atincludeif<'a>;
+        const KIND: &'static str = "@includeIf";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@includeIf" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@includeIf");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@includeIsolated`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atincludeisolated<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atincludeisolated<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atincludeisolated<'tree> {
+        type WithLifetime<'a> = Atincludeisolated<'a>;
+        const KIND: &'static str = "@includeIsolated";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@includeIsolated" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@includeIsolated");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@includeUnless`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atincludeunless<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atincludeunless<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atincludeunless<'tree> {
+        type WithLifetime<'a> = Atincludeunless<'a>;
+        const KIND: &'static str = "@includeUnless";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@includeUnless" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@includeUnless");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@includeWhen`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atincludewhen<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atincludewhen<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atincludewhen<'tree> {
+        type WithLifetime<'a> = Atincludewhen<'a>;
+        const KIND: &'static str = "@includeWhen";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@includeWhen" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@includeWhen");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@inertia`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atinertia<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atinertia<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atinertia<'tree> {
+        type WithLifetime<'a> = Atinertia<'a>;
+        const KIND: &'static str = "@inertia";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@inertia" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@inertia");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@inertiaHead`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atinertiahead<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atinertiahead<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atinertiahead<'tree> {
+        type WithLifetime<'a> = Atinertiahead<'a>;
+        const KIND: &'static str = "@inertiaHead";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@inertiaHead" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@inertiaHead");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@inject`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atinject<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atinject<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atinject<'tree> {
+        type WithLifetime<'a> = Atinject<'a>;
+        const KIND: &'static str = "@inject";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@inject" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@inject");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
     /**Typed node `@isset`
 
 This node has no named children
@@ -19315,6 +21453,307 @@ This node has no named children
             self.0
         }
     }
+    /**Typed node `@js`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atjs<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atjs<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atjs<'tree> {
+        type WithLifetime<'a> = Atjs<'a>;
+        const KIND: &'static str = "@js";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@js" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@js");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@json`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atjson<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atjson<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atjson<'tree> {
+        type WithLifetime<'a> = Atjson<'a>;
+        const KIND: &'static str = "@json";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@json" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@json");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@livewire`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atlivewire<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atlivewire<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atlivewire<'tree> {
+        type WithLifetime<'a> = Atlivewire<'a>;
+        const KIND: &'static str = "@livewire";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@livewire" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@livewire");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@livewireScriptConfig`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atlivewirescriptconfig<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atlivewirescriptconfig<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atlivewirescriptconfig<'tree> {
+        type WithLifetime<'a> = Atlivewirescriptconfig<'a>;
+        const KIND: &'static str = "@livewireScriptConfig";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@livewireScriptConfig" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@livewireScriptConfig");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@livewireScripts`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atlivewirescripts<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atlivewirescripts<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atlivewirescripts<'tree> {
+        type WithLifetime<'a> = Atlivewirescripts<'a>;
+        const KIND: &'static str = "@livewireScripts";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@livewireScripts" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@livewireScripts");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@livewireStyles`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atlivewirestyles<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atlivewirestyles<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atlivewirestyles<'tree> {
+        type WithLifetime<'a> = Atlivewirestyles<'a>;
+        const KIND: &'static str = "@livewireStyles";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@livewireStyles" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@livewireStyles");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@method`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atmethod<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atmethod<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atmethod<'tree> {
+        type WithLifetime<'a> = Atmethod<'a>;
+        const KIND: &'static str = "@method";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@method" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@method");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
     /**Typed node `@once`
 
 This node has no named children
@@ -19343,6 +21782,135 @@ This node has no named children
         #[inline]
         unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
             debug_assert_eq!(node.kind(), "@once");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@options`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atoptions<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atoptions<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atoptions<'tree> {
+        type WithLifetime<'a> = Atoptions<'a>;
+        const KIND: &'static str = "@options";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@options" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@options");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@parent`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atparent<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atparent<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atparent<'tree> {
+        type WithLifetime<'a> = Atparent<'a>;
+        const KIND: &'static str = "@parent";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@parent" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@parent");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@permalink`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atpermalink<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atpermalink<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atpermalink<'tree> {
+        type WithLifetime<'a> = Atpermalink<'a>;
+        const KIND: &'static str = "@permalink";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@permalink" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@permalink");
             Self(node)
         }
         #[inline]
@@ -19745,6 +22313,135 @@ This node has no named children
             self.0
         }
     }
+    /**Typed node `@readonly`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atreadonly<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atreadonly<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atreadonly<'tree> {
+        type WithLifetime<'a> = Atreadonly<'a>;
+        const KIND: &'static str = "@readonly";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@readonly" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@readonly");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@required`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atrequired<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atrequired<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atrequired<'tree> {
+        type WithLifetime<'a> = Atrequired<'a>;
+        const KIND: &'static str = "@required";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@required" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@required");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@routes`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atroutes<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atroutes<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atroutes<'tree> {
+        type WithLifetime<'a> = Atroutes<'a>;
+        const KIND: &'static str = "@routes";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@routes" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@routes");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
     /**Typed node `@script`
 
 This node has no named children
@@ -19874,6 +22571,178 @@ This node has no named children
             self.0
         }
     }
+    /**Typed node `@selected`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atselected<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atselected<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atselected<'tree> {
+        type WithLifetime<'a> = Atselected<'a>;
+        const KIND: &'static str = "@selected";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@selected" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@selected");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@servers`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atservers<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atservers<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atservers<'tree> {
+        type WithLifetime<'a> = Atservers<'a>;
+        const KIND: &'static str = "@servers";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@servers" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@servers");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@session`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atsession<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atsession<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atsession<'tree> {
+        type WithLifetime<'a> = Atsession<'a>;
+        const KIND: &'static str = "@session";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@session" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@session");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@set`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atset<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atset<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atset<'tree> {
+        type WithLifetime<'a> = Atset<'a>;
+        const KIND: &'static str = "@set";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@set" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@set");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
     /**Typed node `@setup`
 
 This node has no named children
@@ -19902,6 +22771,49 @@ This node has no named children
         #[inline]
         unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
             debug_assert_eq!(node.kind(), "@setup");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@stack`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atstack<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atstack<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atstack<'tree> {
+        type WithLifetime<'a> = Atstack<'a>;
+        const KIND: &'static str = "@stack";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@stack" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@stack");
             Self(node)
         }
         #[inline]
@@ -19960,6 +22872,49 @@ This node has no named children
             self.0
         }
     }
+    /**Typed node `@style`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atstyle<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atstyle<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atstyle<'tree> {
+        type WithLifetime<'a> = Atstyle<'a>;
+        const KIND: &'static str = "@style";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@style" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@style");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
     /**Typed node `@success`
 
 This node has no named children
@@ -19988,6 +22943,49 @@ This node has no named children
         #[inline]
         unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
             debug_assert_eq!(node.kind(), "@success");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@svg`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atsvg<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atsvg<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atsvg<'tree> {
+        type WithLifetime<'a> = Atsvg<'a>;
+        const KIND: &'static str = "@svg";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@svg" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@svg");
             Self(node)
         }
         #[inline]
@@ -20132,6 +23130,92 @@ This node has no named children
             self.0
         }
     }
+    /**Typed node `@thumbnail`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atthumbnail<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atthumbnail<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atthumbnail<'tree> {
+        type WithLifetime<'a> = Atthumbnail<'a>;
+        const KIND: &'static str = "@thumbnail";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@thumbnail" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@thumbnail");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@title`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Attitle<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Attitle<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Attitle<'tree> {
+        type WithLifetime<'a> = Attitle<'a>;
+        const KIND: &'static str = "@title";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@title" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@title");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
     /**Typed node `@unless`
 
 This node has no named children
@@ -20175,6 +23259,49 @@ This node has no named children
             self.0
         }
     }
+    /**Typed node `@use`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atuse<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atuse<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atuse<'tree> {
+        type WithLifetime<'a> = Atuse<'a>;
+        const KIND: &'static str = "@use";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@use" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@use");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
     /**Typed node `@verbatim`
 
 This node has no named children
@@ -20203,6 +23330,92 @@ This node has no named children
         #[inline]
         unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
             debug_assert_eq!(node.kind(), "@verbatim");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@vite`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atvite<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atvite<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atvite<'tree> {
+        type WithLifetime<'a> = Atvite<'a>;
+        const KIND: &'static str = "@vite";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@vite" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@vite");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@viteReactRefresh`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atvitereactrefresh<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atvitereactrefresh<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atvitereactrefresh<'tree> {
+        type WithLifetime<'a> = Atvitereactrefresh<'a>;
+        const KIND: &'static str = "@viteReactRefresh";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@viteReactRefresh" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@viteReactRefresh");
             Self(node)
         }
         #[inline]
@@ -20289,6 +23502,92 @@ This node has no named children
         #[inline]
         unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
             debug_assert_eq!(node.kind(), "@while");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@wireUiScripts`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atwireuiscripts<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atwireuiscripts<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atwireuiscripts<'tree> {
+        type WithLifetime<'a> = Atwireuiscripts<'a>;
+        const KIND: &'static str = "@wireUiScripts";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@wireUiScripts" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@wireUiScripts");
+            Self(node)
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            &self.0
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            &mut self.0
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            self.0
+        }
+    }
+    /**Typed node `@yield`
+
+This node has no named children
+*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[repr(transparent)]
+    #[allow(non_camel_case_types)]
+    pub struct Atyield<'tree>(::type_sitter::raw::Node<'tree>);
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Atyield<'tree> {}
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree> for Atyield<'tree> {
+        type WithLifetime<'a> = Atyield<'a>;
+        const KIND: &'static str = "@yield";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if node.kind() == "@yield" {
+                Ok(Self(node))
+            } else {
+                Err(::type_sitter::IncorrectKind::new::<Self>(node))
+            }
+        }
+        #[inline]
+        unsafe fn from_raw_unchecked(node: ::type_sitter::raw::Node<'tree>) -> Self {
+            debug_assert_eq!(node.kind(), "@yield");
             Self(node)
         }
         #[inline]
@@ -21905,6 +25204,14 @@ Follows the following chain:
         pub fn as_authorization(self) -> ::std::option::Option<Authorization<'tree>> {
             self.as_conditional()?.as_authorization()
         }
+        /**Returns the node if it is of type `context` ([`Context`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_context(self) -> ::std::option::Option<Context<'tree>> {
+            self.as_conditional()?.as_context()
+        }
         /**Returns the node if it is of type `custom` ([`Custom`]), otherwise returns `None`.
 
 Follows the following chain:
@@ -21992,6 +25299,14 @@ Follows the following chain:
         #[inline]
         pub fn as_sectionmissing(self) -> ::std::option::Option<Sectionmissing<'tree>> {
             self.as_conditional()?.as_sectionmissing()
+        }
+        /**Returns the node if it is of type `session` ([`Session`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_session(self) -> ::std::option::Option<Session<'tree>> {
+            self.as_conditional()?.as_session()
         }
         /**Returns the node if it is of type `unless` ([`Unless`]), otherwise returns `None`.
 
@@ -22631,6 +25946,14 @@ Follows the following chain:
         pub fn as_authorization(self) -> ::std::option::Option<Authorization<'tree>> {
             self.as_conditional()?.as_authorization()
         }
+        /**Returns the node if it is of type `context` ([`Context`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_context(self) -> ::std::option::Option<Context<'tree>> {
+            self.as_conditional()?.as_context()
+        }
         /**Returns the node if it is of type `custom` ([`Custom`]), otherwise returns `None`.
 
 Follows the following chain:
@@ -22718,6 +26041,14 @@ Follows the following chain:
         #[inline]
         pub fn as_sectionmissing(self) -> ::std::option::Option<Sectionmissing<'tree>> {
             self.as_conditional()?.as_sectionmissing()
+        }
+        /**Returns the node if it is of type `session` ([`Session`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_session(self) -> ::std::option::Option<Session<'tree>> {
+            self.as_conditional()?.as_session()
         }
         /**Returns the node if it is of type `unless` ([`Unless`]), otherwise returns `None`.
 
@@ -23719,6 +27050,1110 @@ Follows the following chain:
             }
         }
     }
+    /**One of `{break | comment | conditional | continue | element | entity | erroneous_end_tag | inline_directive | keyword | loops | php_statement | props | script_element | style_element | switch | text}`:
+- [`Break`]
+- [`Comment`]
+- [`Conditional`]
+- [`Continue`]
+- [`Element`]
+- [`Entity`]
+- [`ErroneousEndTag`]
+- [`InlineDirective`]
+- [`Keyword`]
+- [`Loops`]
+- [`PhpStatement`]
+- [`Props`]
+- [`ScriptElement`]
+- [`StyleElement`]
+- [`Switch`]
+- [`Text`]*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[allow(non_camel_case_types)]
+    pub enum Anon157328565830607199464138490469069561301<'tree> {
+        Break(Break<'tree>),
+        Comment(Comment<'tree>),
+        Conditional(Conditional<'tree>),
+        Continue(Continue<'tree>),
+        Element(Element<'tree>),
+        Entity(Entity<'tree>),
+        ErroneousEndTag(ErroneousEndTag<'tree>),
+        InlineDirective(InlineDirective<'tree>),
+        Keyword(Keyword<'tree>),
+        Loops(Loops<'tree>),
+        PhpStatement(PhpStatement<'tree>),
+        Props(Props<'tree>),
+        ScriptElement(ScriptElement<'tree>),
+        StyleElement(StyleElement<'tree>),
+        Switch(Switch<'tree>),
+        Text(Text<'tree>),
+    }
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Anon157328565830607199464138490469069561301<'tree> {
+        ///Returns the node if it is of type `break` ([`Break`]), otherwise returns `None`
+        #[inline]
+        pub fn as_break(self) -> ::std::option::Option<Break<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Break(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `comment` ([`Comment`]), otherwise returns `None`
+        #[inline]
+        pub fn as_comment(self) -> ::std::option::Option<Comment<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Comment(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `conditional` ([`Conditional`]), otherwise returns `None`
+        #[inline]
+        pub fn as_conditional(self) -> ::std::option::Option<Conditional<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Conditional(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `continue` ([`Continue`]), otherwise returns `None`
+        #[inline]
+        pub fn as_continue(self) -> ::std::option::Option<Continue<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Continue(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `element` ([`Element`]), otherwise returns `None`
+        #[inline]
+        pub fn as_element(self) -> ::std::option::Option<Element<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Element(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `entity` ([`Entity`]), otherwise returns `None`
+        #[inline]
+        pub fn as_entity(self) -> ::std::option::Option<Entity<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Entity(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `erroneous_end_tag` ([`ErroneousEndTag`]), otherwise returns `None`
+        #[inline]
+        pub fn as_erroneous_end_tag(
+            self,
+        ) -> ::std::option::Option<ErroneousEndTag<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::ErroneousEndTag(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `inline_directive` ([`InlineDirective`]), otherwise returns `None`
+        #[inline]
+        pub fn as_inline_directive(
+            self,
+        ) -> ::std::option::Option<InlineDirective<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::InlineDirective(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `keyword` ([`Keyword`]), otherwise returns `None`
+        #[inline]
+        pub fn as_keyword(self) -> ::std::option::Option<Keyword<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Keyword(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `loops` ([`Loops`]), otherwise returns `None`
+        #[inline]
+        pub fn as_loops(self) -> ::std::option::Option<Loops<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Loops(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `php_statement` ([`PhpStatement`]), otherwise returns `None`
+        #[inline]
+        pub fn as_php_statement(self) -> ::std::option::Option<PhpStatement<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::PhpStatement(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `props` ([`Props`]), otherwise returns `None`
+        #[inline]
+        pub fn as_props(self) -> ::std::option::Option<Props<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Props(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `script_element` ([`ScriptElement`]), otherwise returns `None`
+        #[inline]
+        pub fn as_script_element(self) -> ::std::option::Option<ScriptElement<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::ScriptElement(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `style_element` ([`StyleElement`]), otherwise returns `None`
+        #[inline]
+        pub fn as_style_element(self) -> ::std::option::Option<StyleElement<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::StyleElement(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `switch` ([`Switch`]), otherwise returns `None`
+        #[inline]
+        pub fn as_switch(self) -> ::std::option::Option<Switch<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Switch(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `text` ([`Text`]), otherwise returns `None`
+        #[inline]
+        pub fn as_text(self) -> ::std::option::Option<Text<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Text(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        /**Returns the node if it is of type `auth` ([`Auth`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_auth(self) -> ::std::option::Option<Auth<'tree>> {
+            self.as_conditional()?.as_auth()
+        }
+        /**Returns the node if it is of type `authorization` ([`Authorization`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_authorization(self) -> ::std::option::Option<Authorization<'tree>> {
+            self.as_conditional()?.as_authorization()
+        }
+        /**Returns the node if it is of type `context` ([`Context`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_context(self) -> ::std::option::Option<Context<'tree>> {
+            self.as_conditional()?.as_context()
+        }
+        /**Returns the node if it is of type `custom` ([`Custom`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_custom(self) -> ::std::option::Option<Custom<'tree>> {
+            self.as_conditional()?.as_custom()
+        }
+        /**Returns the node if it is of type `empty` ([`Empty`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_empty(self) -> ::std::option::Option<Empty<'tree>> {
+            self.as_conditional()?.as_empty()
+        }
+        /**Returns the node if it is of type `env` ([`Env`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_env(self) -> ::std::option::Option<Env<'tree>> {
+            self.as_conditional()?.as_env()
+        }
+        /**Returns the node if it is of type `error` ([`Error`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_error(self) -> ::std::option::Option<Error<'tree>> {
+            self.as_conditional()?.as_error()
+        }
+        /**Returns the node if it is of type `feature` ([`Feature`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_feature(self) -> ::std::option::Option<Feature<'tree>> {
+            self.as_conditional()?.as_feature()
+        }
+        /**Returns the node if it is of type `guest` ([`Guest`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_guest(self) -> ::std::option::Option<Guest<'tree>> {
+            self.as_conditional()?.as_guest()
+        }
+        /**Returns the node if it is of type `hasSection` ([`Hassection`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_hassection(self) -> ::std::option::Option<Hassection<'tree>> {
+            self.as_conditional()?.as_hassection()
+        }
+        /**Returns the node if it is of type `if` ([`If`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_if(self) -> ::std::option::Option<If<'tree>> {
+            self.as_conditional()?.as_if()
+        }
+        /**Returns the node if it is of type `isset` ([`Isset`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_isset(self) -> ::std::option::Option<Isset<'tree>> {
+            self.as_conditional()?.as_isset()
+        }
+        /**Returns the node if it is of type `production` ([`Production`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_production(self) -> ::std::option::Option<Production<'tree>> {
+            self.as_conditional()?.as_production()
+        }
+        /**Returns the node if it is of type `sectionMissing` ([`Sectionmissing`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_sectionmissing(self) -> ::std::option::Option<Sectionmissing<'tree>> {
+            self.as_conditional()?.as_sectionmissing()
+        }
+        /**Returns the node if it is of type `session` ([`Session`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_session(self) -> ::std::option::Option<Session<'tree>> {
+            self.as_conditional()?.as_session()
+        }
+        /**Returns the node if it is of type `unless` ([`Unless`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_unless(self) -> ::std::option::Option<Unless<'tree>> {
+            self.as_conditional()?.as_unless()
+        }
+        /**Returns the node if it is of type `for_directive` ([`ForDirective`]), otherwise returns `None`.
+
+Follows the following chain:
+- `loops` ([`Loops < 'tree >`], from [`as_loops`](Self::as_loops))*/
+        #[inline]
+        pub fn as_for_directive(self) -> ::std::option::Option<ForDirective<'tree>> {
+            self.as_loops()?.as_for_directive()
+        }
+        /**Returns the node if it is of type `foreach_directive` ([`ForeachDirective`]), otherwise returns `None`.
+
+Follows the following chain:
+- `loops` ([`Loops < 'tree >`], from [`as_loops`](Self::as_loops))*/
+        #[inline]
+        pub fn as_foreach_directive(
+            self,
+        ) -> ::std::option::Option<ForeachDirective<'tree>> {
+            self.as_loops()?.as_foreach_directive()
+        }
+        /**Returns the node if it is of type `forelse_directive` ([`ForelseDirective`]), otherwise returns `None`.
+
+Follows the following chain:
+- `loops` ([`Loops < 'tree >`], from [`as_loops`](Self::as_loops))*/
+        #[inline]
+        pub fn as_forelse_directive(
+            self,
+        ) -> ::std::option::Option<ForelseDirective<'tree>> {
+            self.as_loops()?.as_forelse_directive()
+        }
+        /**Returns the node if it is of type `while_directive` ([`WhileDirective`]), otherwise returns `None`.
+
+Follows the following chain:
+- `loops` ([`Loops < 'tree >`], from [`as_loops`](Self::as_loops))*/
+        #[inline]
+        pub fn as_while_directive(self) -> ::std::option::Option<WhileDirective<'tree>> {
+            self.as_loops()?.as_while_directive()
+        }
+        /**Returns the node if it is of type `escaped` ([`Escaped`]), otherwise returns `None`.
+
+Follows the following chain:
+- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
+        #[inline]
+        pub fn as_escaped(self) -> ::std::option::Option<Escaped<'tree>> {
+            self.as_php_statement()?.as_escaped()
+        }
+        /**Returns the node if it is of type `inline_raw` ([`InlineRaw`]), otherwise returns `None`.
+
+Follows the following chain:
+- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
+        #[inline]
+        pub fn as_inline_raw(self) -> ::std::option::Option<InlineRaw<'tree>> {
+            self.as_php_statement()?.as_inline_raw()
+        }
+        /**Returns the node if it is of type `multi_line_raw` ([`MultiLineRaw`]), otherwise returns `None`.
+
+Follows the following chain:
+- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
+        #[inline]
+        pub fn as_multi_line_raw(self) -> ::std::option::Option<MultiLineRaw<'tree>> {
+            self.as_php_statement()?.as_multi_line_raw()
+        }
+        /**Returns the node if it is of type `php` ([`Php`]), otherwise returns `None`.
+
+Follows the following chain:
+- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
+        #[inline]
+        pub fn as_php(self) -> ::std::option::Option<Php<'tree>> {
+            self.as_php_statement()?.as_php()
+        }
+        /**Returns the node if it is of type `setup` ([`Setup`]), otherwise returns `None`.
+
+Follows the following chain:
+- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
+        #[inline]
+        pub fn as_setup(self) -> ::std::option::Option<Setup<'tree>> {
+            self.as_php_statement()?.as_setup()
+        }
+        /**Returns the node if it is of type `unescaped` ([`Unescaped`]), otherwise returns `None`.
+
+Follows the following chain:
+- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
+        #[inline]
+        pub fn as_unescaped(self) -> ::std::option::Option<Unescaped<'tree>> {
+            self.as_php_statement()?.as_unescaped()
+        }
+    }
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree>
+    for Anon157328565830607199464138490469069561301<'tree> {
+        type WithLifetime<'a> = Anon157328565830607199464138490469069561301<'a>;
+        const KIND: &'static str = "{break | comment | conditional | continue | element | entity | erroneous_end_tag | inline_directive | keyword | loops | php_statement | props | script_element | style_element | switch | text}";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if let Ok(this) = <Break<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Break(this));
+            }
+            if let Ok(this) = <Comment<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Comment(this));
+            }
+            if let Ok(this) = <Conditional<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Conditional(this));
+            }
+            if let Ok(this) = <Continue<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Continue(this));
+            }
+            if let Ok(this) = <Element<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Element(this));
+            }
+            if let Ok(this) = <Entity<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Entity(this));
+            }
+            if let Ok(this) = <ErroneousEndTag<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::ErroneousEndTag(this));
+            }
+            if let Ok(this) = <InlineDirective<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::InlineDirective(this));
+            }
+            if let Ok(this) = <Keyword<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Keyword(this));
+            }
+            if let Ok(this) = <Loops<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Loops(this));
+            }
+            if let Ok(this) = <PhpStatement<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::PhpStatement(this));
+            }
+            if let Ok(this) = <Props<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Props(this));
+            }
+            if let Ok(this) = <ScriptElement<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::ScriptElement(this));
+            }
+            if let Ok(this) = <StyleElement<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::StyleElement(this));
+            }
+            if let Ok(this) = <Switch<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Switch(this));
+            }
+            if let Ok(this) = <Text<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Text(this));
+            }
+            Err(::type_sitter::IncorrectKind::new::<Self>(node))
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            match self {
+                Self::Break(x) => ::type_sitter::Node::raw(x),
+                Self::Comment(x) => ::type_sitter::Node::raw(x),
+                Self::Conditional(x) => ::type_sitter::Node::raw(x),
+                Self::Continue(x) => ::type_sitter::Node::raw(x),
+                Self::Element(x) => ::type_sitter::Node::raw(x),
+                Self::Entity(x) => ::type_sitter::Node::raw(x),
+                Self::ErroneousEndTag(x) => ::type_sitter::Node::raw(x),
+                Self::InlineDirective(x) => ::type_sitter::Node::raw(x),
+                Self::Keyword(x) => ::type_sitter::Node::raw(x),
+                Self::Loops(x) => ::type_sitter::Node::raw(x),
+                Self::PhpStatement(x) => ::type_sitter::Node::raw(x),
+                Self::Props(x) => ::type_sitter::Node::raw(x),
+                Self::ScriptElement(x) => ::type_sitter::Node::raw(x),
+                Self::StyleElement(x) => ::type_sitter::Node::raw(x),
+                Self::Switch(x) => ::type_sitter::Node::raw(x),
+                Self::Text(x) => ::type_sitter::Node::raw(x),
+            }
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            match self {
+                Self::Break(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Comment(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Conditional(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Continue(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Element(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Entity(x) => ::type_sitter::Node::raw_mut(x),
+                Self::ErroneousEndTag(x) => ::type_sitter::Node::raw_mut(x),
+                Self::InlineDirective(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Keyword(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Loops(x) => ::type_sitter::Node::raw_mut(x),
+                Self::PhpStatement(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Props(x) => ::type_sitter::Node::raw_mut(x),
+                Self::ScriptElement(x) => ::type_sitter::Node::raw_mut(x),
+                Self::StyleElement(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Switch(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Text(x) => ::type_sitter::Node::raw_mut(x),
+            }
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            match self {
+                Self::Break(x) => x.into_raw(),
+                Self::Comment(x) => x.into_raw(),
+                Self::Conditional(x) => x.into_raw(),
+                Self::Continue(x) => x.into_raw(),
+                Self::Element(x) => x.into_raw(),
+                Self::Entity(x) => x.into_raw(),
+                Self::ErroneousEndTag(x) => x.into_raw(),
+                Self::InlineDirective(x) => x.into_raw(),
+                Self::Keyword(x) => x.into_raw(),
+                Self::Loops(x) => x.into_raw(),
+                Self::PhpStatement(x) => x.into_raw(),
+                Self::Props(x) => x.into_raw(),
+                Self::ScriptElement(x) => x.into_raw(),
+                Self::StyleElement(x) => x.into_raw(),
+                Self::Switch(x) => x.into_raw(),
+                Self::Text(x) => x.into_raw(),
+            }
+        }
+    }
+    /**One of `{comment | conditional | element | entity | erroneous_end_tag | inline_directive | keyword | livewire | loops | php_statement | props | script_element | style_element | text}`:
+- [`Comment`]
+- [`Conditional`]
+- [`Element`]
+- [`Entity`]
+- [`ErroneousEndTag`]
+- [`InlineDirective`]
+- [`Keyword`]
+- [`Livewire`]
+- [`Loops`]
+- [`PhpStatement`]
+- [`Props`]
+- [`ScriptElement`]
+- [`StyleElement`]
+- [`Text`]*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[allow(non_camel_case_types)]
+    pub enum Anon167075698660054349028849392320454892501<'tree> {
+        Comment(Comment<'tree>),
+        Conditional(Conditional<'tree>),
+        Element(Element<'tree>),
+        Entity(Entity<'tree>),
+        ErroneousEndTag(ErroneousEndTag<'tree>),
+        InlineDirective(InlineDirective<'tree>),
+        Keyword(Keyword<'tree>),
+        Livewire(Livewire<'tree>),
+        Loops(Loops<'tree>),
+        PhpStatement(PhpStatement<'tree>),
+        Props(Props<'tree>),
+        ScriptElement(ScriptElement<'tree>),
+        StyleElement(StyleElement<'tree>),
+        Text(Text<'tree>),
+    }
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Anon167075698660054349028849392320454892501<'tree> {
+        ///Returns the node if it is of type `comment` ([`Comment`]), otherwise returns `None`
+        #[inline]
+        pub fn as_comment(self) -> ::std::option::Option<Comment<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Comment(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `conditional` ([`Conditional`]), otherwise returns `None`
+        #[inline]
+        pub fn as_conditional(self) -> ::std::option::Option<Conditional<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Conditional(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `element` ([`Element`]), otherwise returns `None`
+        #[inline]
+        pub fn as_element(self) -> ::std::option::Option<Element<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Element(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `entity` ([`Entity`]), otherwise returns `None`
+        #[inline]
+        pub fn as_entity(self) -> ::std::option::Option<Entity<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Entity(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `erroneous_end_tag` ([`ErroneousEndTag`]), otherwise returns `None`
+        #[inline]
+        pub fn as_erroneous_end_tag(
+            self,
+        ) -> ::std::option::Option<ErroneousEndTag<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::ErroneousEndTag(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `inline_directive` ([`InlineDirective`]), otherwise returns `None`
+        #[inline]
+        pub fn as_inline_directive(
+            self,
+        ) -> ::std::option::Option<InlineDirective<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::InlineDirective(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `keyword` ([`Keyword`]), otherwise returns `None`
+        #[inline]
+        pub fn as_keyword(self) -> ::std::option::Option<Keyword<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Keyword(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `livewire` ([`Livewire`]), otherwise returns `None`
+        #[inline]
+        pub fn as_livewire(self) -> ::std::option::Option<Livewire<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Livewire(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `loops` ([`Loops`]), otherwise returns `None`
+        #[inline]
+        pub fn as_loops(self) -> ::std::option::Option<Loops<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Loops(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `php_statement` ([`PhpStatement`]), otherwise returns `None`
+        #[inline]
+        pub fn as_php_statement(self) -> ::std::option::Option<PhpStatement<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::PhpStatement(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `props` ([`Props`]), otherwise returns `None`
+        #[inline]
+        pub fn as_props(self) -> ::std::option::Option<Props<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Props(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `script_element` ([`ScriptElement`]), otherwise returns `None`
+        #[inline]
+        pub fn as_script_element(self) -> ::std::option::Option<ScriptElement<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::ScriptElement(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `style_element` ([`StyleElement`]), otherwise returns `None`
+        #[inline]
+        pub fn as_style_element(self) -> ::std::option::Option<StyleElement<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::StyleElement(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `text` ([`Text`]), otherwise returns `None`
+        #[inline]
+        pub fn as_text(self) -> ::std::option::Option<Text<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Text(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        /**Returns the node if it is of type `auth` ([`Auth`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_auth(self) -> ::std::option::Option<Auth<'tree>> {
+            self.as_conditional()?.as_auth()
+        }
+        /**Returns the node if it is of type `authorization` ([`Authorization`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_authorization(self) -> ::std::option::Option<Authorization<'tree>> {
+            self.as_conditional()?.as_authorization()
+        }
+        /**Returns the node if it is of type `context` ([`Context`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_context(self) -> ::std::option::Option<Context<'tree>> {
+            self.as_conditional()?.as_context()
+        }
+        /**Returns the node if it is of type `custom` ([`Custom`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_custom(self) -> ::std::option::Option<Custom<'tree>> {
+            self.as_conditional()?.as_custom()
+        }
+        /**Returns the node if it is of type `empty` ([`Empty`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_empty(self) -> ::std::option::Option<Empty<'tree>> {
+            self.as_conditional()?.as_empty()
+        }
+        /**Returns the node if it is of type `env` ([`Env`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_env(self) -> ::std::option::Option<Env<'tree>> {
+            self.as_conditional()?.as_env()
+        }
+        /**Returns the node if it is of type `error` ([`Error`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_error(self) -> ::std::option::Option<Error<'tree>> {
+            self.as_conditional()?.as_error()
+        }
+        /**Returns the node if it is of type `feature` ([`Feature`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_feature(self) -> ::std::option::Option<Feature<'tree>> {
+            self.as_conditional()?.as_feature()
+        }
+        /**Returns the node if it is of type `guest` ([`Guest`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_guest(self) -> ::std::option::Option<Guest<'tree>> {
+            self.as_conditional()?.as_guest()
+        }
+        /**Returns the node if it is of type `hasSection` ([`Hassection`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_hassection(self) -> ::std::option::Option<Hassection<'tree>> {
+            self.as_conditional()?.as_hassection()
+        }
+        /**Returns the node if it is of type `if` ([`If`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_if(self) -> ::std::option::Option<If<'tree>> {
+            self.as_conditional()?.as_if()
+        }
+        /**Returns the node if it is of type `isset` ([`Isset`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_isset(self) -> ::std::option::Option<Isset<'tree>> {
+            self.as_conditional()?.as_isset()
+        }
+        /**Returns the node if it is of type `production` ([`Production`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_production(self) -> ::std::option::Option<Production<'tree>> {
+            self.as_conditional()?.as_production()
+        }
+        /**Returns the node if it is of type `sectionMissing` ([`Sectionmissing`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_sectionmissing(self) -> ::std::option::Option<Sectionmissing<'tree>> {
+            self.as_conditional()?.as_sectionmissing()
+        }
+        /**Returns the node if it is of type `session` ([`Session`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_session(self) -> ::std::option::Option<Session<'tree>> {
+            self.as_conditional()?.as_session()
+        }
+        /**Returns the node if it is of type `unless` ([`Unless`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_unless(self) -> ::std::option::Option<Unless<'tree>> {
+            self.as_conditional()?.as_unless()
+        }
+        /**Returns the node if it is of type `for_directive` ([`ForDirective`]), otherwise returns `None`.
+
+Follows the following chain:
+- `loops` ([`Loops < 'tree >`], from [`as_loops`](Self::as_loops))*/
+        #[inline]
+        pub fn as_for_directive(self) -> ::std::option::Option<ForDirective<'tree>> {
+            self.as_loops()?.as_for_directive()
+        }
+        /**Returns the node if it is of type `foreach_directive` ([`ForeachDirective`]), otherwise returns `None`.
+
+Follows the following chain:
+- `loops` ([`Loops < 'tree >`], from [`as_loops`](Self::as_loops))*/
+        #[inline]
+        pub fn as_foreach_directive(
+            self,
+        ) -> ::std::option::Option<ForeachDirective<'tree>> {
+            self.as_loops()?.as_foreach_directive()
+        }
+        /**Returns the node if it is of type `forelse_directive` ([`ForelseDirective`]), otherwise returns `None`.
+
+Follows the following chain:
+- `loops` ([`Loops < 'tree >`], from [`as_loops`](Self::as_loops))*/
+        #[inline]
+        pub fn as_forelse_directive(
+            self,
+        ) -> ::std::option::Option<ForelseDirective<'tree>> {
+            self.as_loops()?.as_forelse_directive()
+        }
+        /**Returns the node if it is of type `while_directive` ([`WhileDirective`]), otherwise returns `None`.
+
+Follows the following chain:
+- `loops` ([`Loops < 'tree >`], from [`as_loops`](Self::as_loops))*/
+        #[inline]
+        pub fn as_while_directive(self) -> ::std::option::Option<WhileDirective<'tree>> {
+            self.as_loops()?.as_while_directive()
+        }
+        /**Returns the node if it is of type `escaped` ([`Escaped`]), otherwise returns `None`.
+
+Follows the following chain:
+- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
+        #[inline]
+        pub fn as_escaped(self) -> ::std::option::Option<Escaped<'tree>> {
+            self.as_php_statement()?.as_escaped()
+        }
+        /**Returns the node if it is of type `inline_raw` ([`InlineRaw`]), otherwise returns `None`.
+
+Follows the following chain:
+- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
+        #[inline]
+        pub fn as_inline_raw(self) -> ::std::option::Option<InlineRaw<'tree>> {
+            self.as_php_statement()?.as_inline_raw()
+        }
+        /**Returns the node if it is of type `multi_line_raw` ([`MultiLineRaw`]), otherwise returns `None`.
+
+Follows the following chain:
+- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
+        #[inline]
+        pub fn as_multi_line_raw(self) -> ::std::option::Option<MultiLineRaw<'tree>> {
+            self.as_php_statement()?.as_multi_line_raw()
+        }
+        /**Returns the node if it is of type `php` ([`Php`]), otherwise returns `None`.
+
+Follows the following chain:
+- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
+        #[inline]
+        pub fn as_php(self) -> ::std::option::Option<Php<'tree>> {
+            self.as_php_statement()?.as_php()
+        }
+        /**Returns the node if it is of type `setup` ([`Setup`]), otherwise returns `None`.
+
+Follows the following chain:
+- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
+        #[inline]
+        pub fn as_setup(self) -> ::std::option::Option<Setup<'tree>> {
+            self.as_php_statement()?.as_setup()
+        }
+        /**Returns the node if it is of type `unescaped` ([`Unescaped`]), otherwise returns `None`.
+
+Follows the following chain:
+- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
+        #[inline]
+        pub fn as_unescaped(self) -> ::std::option::Option<Unescaped<'tree>> {
+            self.as_php_statement()?.as_unescaped()
+        }
+    }
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree>
+    for Anon167075698660054349028849392320454892501<'tree> {
+        type WithLifetime<'a> = Anon167075698660054349028849392320454892501<'a>;
+        const KIND: &'static str = "{comment | conditional | element | entity | erroneous_end_tag | inline_directive | keyword | livewire | loops | php_statement | props | script_element | style_element | text}";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if let Ok(this) = <Comment<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Comment(this));
+            }
+            if let Ok(this) = <Conditional<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Conditional(this));
+            }
+            if let Ok(this) = <Element<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Element(this));
+            }
+            if let Ok(this) = <Entity<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Entity(this));
+            }
+            if let Ok(this) = <ErroneousEndTag<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::ErroneousEndTag(this));
+            }
+            if let Ok(this) = <InlineDirective<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::InlineDirective(this));
+            }
+            if let Ok(this) = <Keyword<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Keyword(this));
+            }
+            if let Ok(this) = <Livewire<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Livewire(this));
+            }
+            if let Ok(this) = <Loops<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Loops(this));
+            }
+            if let Ok(this) = <PhpStatement<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::PhpStatement(this));
+            }
+            if let Ok(this) = <Props<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Props(this));
+            }
+            if let Ok(this) = <ScriptElement<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::ScriptElement(this));
+            }
+            if let Ok(this) = <StyleElement<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::StyleElement(this));
+            }
+            if let Ok(this) = <Text<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Text(this));
+            }
+            Err(::type_sitter::IncorrectKind::new::<Self>(node))
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            match self {
+                Self::Comment(x) => ::type_sitter::Node::raw(x),
+                Self::Conditional(x) => ::type_sitter::Node::raw(x),
+                Self::Element(x) => ::type_sitter::Node::raw(x),
+                Self::Entity(x) => ::type_sitter::Node::raw(x),
+                Self::ErroneousEndTag(x) => ::type_sitter::Node::raw(x),
+                Self::InlineDirective(x) => ::type_sitter::Node::raw(x),
+                Self::Keyword(x) => ::type_sitter::Node::raw(x),
+                Self::Livewire(x) => ::type_sitter::Node::raw(x),
+                Self::Loops(x) => ::type_sitter::Node::raw(x),
+                Self::PhpStatement(x) => ::type_sitter::Node::raw(x),
+                Self::Props(x) => ::type_sitter::Node::raw(x),
+                Self::ScriptElement(x) => ::type_sitter::Node::raw(x),
+                Self::StyleElement(x) => ::type_sitter::Node::raw(x),
+                Self::Text(x) => ::type_sitter::Node::raw(x),
+            }
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            match self {
+                Self::Comment(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Conditional(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Element(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Entity(x) => ::type_sitter::Node::raw_mut(x),
+                Self::ErroneousEndTag(x) => ::type_sitter::Node::raw_mut(x),
+                Self::InlineDirective(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Keyword(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Livewire(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Loops(x) => ::type_sitter::Node::raw_mut(x),
+                Self::PhpStatement(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Props(x) => ::type_sitter::Node::raw_mut(x),
+                Self::ScriptElement(x) => ::type_sitter::Node::raw_mut(x),
+                Self::StyleElement(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Text(x) => ::type_sitter::Node::raw_mut(x),
+            }
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            match self {
+                Self::Comment(x) => x.into_raw(),
+                Self::Conditional(x) => x.into_raw(),
+                Self::Element(x) => x.into_raw(),
+                Self::Entity(x) => x.into_raw(),
+                Self::ErroneousEndTag(x) => x.into_raw(),
+                Self::InlineDirective(x) => x.into_raw(),
+                Self::Keyword(x) => x.into_raw(),
+                Self::Livewire(x) => x.into_raw(),
+                Self::Loops(x) => x.into_raw(),
+                Self::PhpStatement(x) => x.into_raw(),
+                Self::Props(x) => x.into_raw(),
+                Self::ScriptElement(x) => x.into_raw(),
+                Self::StyleElement(x) => x.into_raw(),
+                Self::Text(x) => x.into_raw(),
+            }
+        }
+    }
     /**One of `{dynamic_variable_name | member_access_expression | name | nullsafe_member_access_expression | qualified_name | scoped_property_access_expression | subscript_expression | variable_name}`:
 - [`DynamicVariableName`]
 - [`MemberAccessExpression`]
@@ -24293,6 +28728,14 @@ Follows the following chain:
         pub fn as_authorization(self) -> ::std::option::Option<Authorization<'tree>> {
             self.as_conditional()?.as_authorization()
         }
+        /**Returns the node if it is of type `context` ([`Context`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_context(self) -> ::std::option::Option<Context<'tree>> {
+            self.as_conditional()?.as_context()
+        }
         /**Returns the node if it is of type `custom` ([`Custom`]), otherwise returns `None`.
 
 Follows the following chain:
@@ -24380,6 +28823,14 @@ Follows the following chain:
         #[inline]
         pub fn as_sectionmissing(self) -> ::std::option::Option<Sectionmissing<'tree>> {
             self.as_conditional()?.as_sectionmissing()
+        }
+        /**Returns the node if it is of type `session` ([`Session`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_session(self) -> ::std::option::Option<Session<'tree>> {
+            self.as_conditional()?.as_session()
         }
         /**Returns the node if it is of type `unless` ([`Unless`]), otherwise returns `None`.
 
@@ -24957,6 +29408,14 @@ Follows the following chain:
         pub fn as_authorization(self) -> ::std::option::Option<Authorization<'tree>> {
             self.as_conditional()?.as_authorization()
         }
+        /**Returns the node if it is of type `context` ([`Context`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_context(self) -> ::std::option::Option<Context<'tree>> {
+            self.as_conditional()?.as_context()
+        }
         /**Returns the node if it is of type `custom` ([`Custom`]), otherwise returns `None`.
 
 Follows the following chain:
@@ -25044,6 +29503,14 @@ Follows the following chain:
         #[inline]
         pub fn as_sectionmissing(self) -> ::std::option::Option<Sectionmissing<'tree>> {
             self.as_conditional()?.as_sectionmissing()
+        }
+        /**Returns the node if it is of type `session` ([`Session`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_session(self) -> ::std::option::Option<Session<'tree>> {
+            self.as_conditional()?.as_session()
         }
         /**Returns the node if it is of type `unless` ([`Unless`]), otherwise returns `None`.
 
@@ -25573,6 +30040,14 @@ Follows the following chain:
         pub fn as_authorization(self) -> ::std::option::Option<Authorization<'tree>> {
             self.as_conditional()?.as_authorization()
         }
+        /**Returns the node if it is of type `context` ([`Context`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_context(self) -> ::std::option::Option<Context<'tree>> {
+            self.as_conditional()?.as_context()
+        }
         /**Returns the node if it is of type `custom` ([`Custom`]), otherwise returns `None`.
 
 Follows the following chain:
@@ -25660,6 +30135,14 @@ Follows the following chain:
         #[inline]
         pub fn as_sectionmissing(self) -> ::std::option::Option<Sectionmissing<'tree>> {
             self.as_conditional()?.as_sectionmissing()
+        }
+        /**Returns the node if it is of type `session` ([`Session`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_session(self) -> ::std::option::Option<Session<'tree>> {
+            self.as_conditional()?.as_session()
         }
         /**Returns the node if it is of type `unless` ([`Unless`]), otherwise returns `None`.
 
@@ -26171,6 +30654,558 @@ Follows the following chain:
             }
         }
     }
+    /**One of `{case | comment | conditional | element | entity | erroneous_end_tag | inline_directive | keyword | livewire | loops | php_statement | props | script_element | style_element | text}`:
+- [`Case`]
+- [`Comment`]
+- [`Conditional`]
+- [`Element`]
+- [`Entity`]
+- [`ErroneousEndTag`]
+- [`InlineDirective`]
+- [`Keyword`]
+- [`Livewire`]
+- [`Loops`]
+- [`PhpStatement`]
+- [`Props`]
+- [`ScriptElement`]
+- [`StyleElement`]
+- [`Text`]*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[allow(non_camel_case_types)]
+    pub enum Anon265773906404915117180595828464400795297<'tree> {
+        Case(Case<'tree>),
+        Comment(Comment<'tree>),
+        Conditional(Conditional<'tree>),
+        Element(Element<'tree>),
+        Entity(Entity<'tree>),
+        ErroneousEndTag(ErroneousEndTag<'tree>),
+        InlineDirective(InlineDirective<'tree>),
+        Keyword(Keyword<'tree>),
+        Livewire(Livewire<'tree>),
+        Loops(Loops<'tree>),
+        PhpStatement(PhpStatement<'tree>),
+        Props(Props<'tree>),
+        ScriptElement(ScriptElement<'tree>),
+        StyleElement(StyleElement<'tree>),
+        Text(Text<'tree>),
+    }
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Anon265773906404915117180595828464400795297<'tree> {
+        ///Returns the node if it is of type `case` ([`Case`]), otherwise returns `None`
+        #[inline]
+        pub fn as_case(self) -> ::std::option::Option<Case<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Case(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `comment` ([`Comment`]), otherwise returns `None`
+        #[inline]
+        pub fn as_comment(self) -> ::std::option::Option<Comment<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Comment(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `conditional` ([`Conditional`]), otherwise returns `None`
+        #[inline]
+        pub fn as_conditional(self) -> ::std::option::Option<Conditional<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Conditional(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `element` ([`Element`]), otherwise returns `None`
+        #[inline]
+        pub fn as_element(self) -> ::std::option::Option<Element<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Element(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `entity` ([`Entity`]), otherwise returns `None`
+        #[inline]
+        pub fn as_entity(self) -> ::std::option::Option<Entity<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Entity(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `erroneous_end_tag` ([`ErroneousEndTag`]), otherwise returns `None`
+        #[inline]
+        pub fn as_erroneous_end_tag(
+            self,
+        ) -> ::std::option::Option<ErroneousEndTag<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::ErroneousEndTag(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `inline_directive` ([`InlineDirective`]), otherwise returns `None`
+        #[inline]
+        pub fn as_inline_directive(
+            self,
+        ) -> ::std::option::Option<InlineDirective<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::InlineDirective(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `keyword` ([`Keyword`]), otherwise returns `None`
+        #[inline]
+        pub fn as_keyword(self) -> ::std::option::Option<Keyword<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Keyword(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `livewire` ([`Livewire`]), otherwise returns `None`
+        #[inline]
+        pub fn as_livewire(self) -> ::std::option::Option<Livewire<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Livewire(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `loops` ([`Loops`]), otherwise returns `None`
+        #[inline]
+        pub fn as_loops(self) -> ::std::option::Option<Loops<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Loops(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `php_statement` ([`PhpStatement`]), otherwise returns `None`
+        #[inline]
+        pub fn as_php_statement(self) -> ::std::option::Option<PhpStatement<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::PhpStatement(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `props` ([`Props`]), otherwise returns `None`
+        #[inline]
+        pub fn as_props(self) -> ::std::option::Option<Props<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Props(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `script_element` ([`ScriptElement`]), otherwise returns `None`
+        #[inline]
+        pub fn as_script_element(self) -> ::std::option::Option<ScriptElement<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::ScriptElement(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `style_element` ([`StyleElement`]), otherwise returns `None`
+        #[inline]
+        pub fn as_style_element(self) -> ::std::option::Option<StyleElement<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::StyleElement(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `text` ([`Text`]), otherwise returns `None`
+        #[inline]
+        pub fn as_text(self) -> ::std::option::Option<Text<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Text(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        /**Returns the node if it is of type `auth` ([`Auth`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_auth(self) -> ::std::option::Option<Auth<'tree>> {
+            self.as_conditional()?.as_auth()
+        }
+        /**Returns the node if it is of type `authorization` ([`Authorization`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_authorization(self) -> ::std::option::Option<Authorization<'tree>> {
+            self.as_conditional()?.as_authorization()
+        }
+        /**Returns the node if it is of type `context` ([`Context`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_context(self) -> ::std::option::Option<Context<'tree>> {
+            self.as_conditional()?.as_context()
+        }
+        /**Returns the node if it is of type `custom` ([`Custom`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_custom(self) -> ::std::option::Option<Custom<'tree>> {
+            self.as_conditional()?.as_custom()
+        }
+        /**Returns the node if it is of type `empty` ([`Empty`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_empty(self) -> ::std::option::Option<Empty<'tree>> {
+            self.as_conditional()?.as_empty()
+        }
+        /**Returns the node if it is of type `env` ([`Env`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_env(self) -> ::std::option::Option<Env<'tree>> {
+            self.as_conditional()?.as_env()
+        }
+        /**Returns the node if it is of type `error` ([`Error`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_error(self) -> ::std::option::Option<Error<'tree>> {
+            self.as_conditional()?.as_error()
+        }
+        /**Returns the node if it is of type `feature` ([`Feature`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_feature(self) -> ::std::option::Option<Feature<'tree>> {
+            self.as_conditional()?.as_feature()
+        }
+        /**Returns the node if it is of type `guest` ([`Guest`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_guest(self) -> ::std::option::Option<Guest<'tree>> {
+            self.as_conditional()?.as_guest()
+        }
+        /**Returns the node if it is of type `hasSection` ([`Hassection`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_hassection(self) -> ::std::option::Option<Hassection<'tree>> {
+            self.as_conditional()?.as_hassection()
+        }
+        /**Returns the node if it is of type `if` ([`If`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_if(self) -> ::std::option::Option<If<'tree>> {
+            self.as_conditional()?.as_if()
+        }
+        /**Returns the node if it is of type `isset` ([`Isset`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_isset(self) -> ::std::option::Option<Isset<'tree>> {
+            self.as_conditional()?.as_isset()
+        }
+        /**Returns the node if it is of type `production` ([`Production`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_production(self) -> ::std::option::Option<Production<'tree>> {
+            self.as_conditional()?.as_production()
+        }
+        /**Returns the node if it is of type `sectionMissing` ([`Sectionmissing`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_sectionmissing(self) -> ::std::option::Option<Sectionmissing<'tree>> {
+            self.as_conditional()?.as_sectionmissing()
+        }
+        /**Returns the node if it is of type `session` ([`Session`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_session(self) -> ::std::option::Option<Session<'tree>> {
+            self.as_conditional()?.as_session()
+        }
+        /**Returns the node if it is of type `unless` ([`Unless`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_unless(self) -> ::std::option::Option<Unless<'tree>> {
+            self.as_conditional()?.as_unless()
+        }
+        /**Returns the node if it is of type `for_directive` ([`ForDirective`]), otherwise returns `None`.
+
+Follows the following chain:
+- `loops` ([`Loops < 'tree >`], from [`as_loops`](Self::as_loops))*/
+        #[inline]
+        pub fn as_for_directive(self) -> ::std::option::Option<ForDirective<'tree>> {
+            self.as_loops()?.as_for_directive()
+        }
+        /**Returns the node if it is of type `foreach_directive` ([`ForeachDirective`]), otherwise returns `None`.
+
+Follows the following chain:
+- `loops` ([`Loops < 'tree >`], from [`as_loops`](Self::as_loops))*/
+        #[inline]
+        pub fn as_foreach_directive(
+            self,
+        ) -> ::std::option::Option<ForeachDirective<'tree>> {
+            self.as_loops()?.as_foreach_directive()
+        }
+        /**Returns the node if it is of type `forelse_directive` ([`ForelseDirective`]), otherwise returns `None`.
+
+Follows the following chain:
+- `loops` ([`Loops < 'tree >`], from [`as_loops`](Self::as_loops))*/
+        #[inline]
+        pub fn as_forelse_directive(
+            self,
+        ) -> ::std::option::Option<ForelseDirective<'tree>> {
+            self.as_loops()?.as_forelse_directive()
+        }
+        /**Returns the node if it is of type `while_directive` ([`WhileDirective`]), otherwise returns `None`.
+
+Follows the following chain:
+- `loops` ([`Loops < 'tree >`], from [`as_loops`](Self::as_loops))*/
+        #[inline]
+        pub fn as_while_directive(self) -> ::std::option::Option<WhileDirective<'tree>> {
+            self.as_loops()?.as_while_directive()
+        }
+        /**Returns the node if it is of type `escaped` ([`Escaped`]), otherwise returns `None`.
+
+Follows the following chain:
+- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
+        #[inline]
+        pub fn as_escaped(self) -> ::std::option::Option<Escaped<'tree>> {
+            self.as_php_statement()?.as_escaped()
+        }
+        /**Returns the node if it is of type `inline_raw` ([`InlineRaw`]), otherwise returns `None`.
+
+Follows the following chain:
+- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
+        #[inline]
+        pub fn as_inline_raw(self) -> ::std::option::Option<InlineRaw<'tree>> {
+            self.as_php_statement()?.as_inline_raw()
+        }
+        /**Returns the node if it is of type `multi_line_raw` ([`MultiLineRaw`]), otherwise returns `None`.
+
+Follows the following chain:
+- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
+        #[inline]
+        pub fn as_multi_line_raw(self) -> ::std::option::Option<MultiLineRaw<'tree>> {
+            self.as_php_statement()?.as_multi_line_raw()
+        }
+        /**Returns the node if it is of type `php` ([`Php`]), otherwise returns `None`.
+
+Follows the following chain:
+- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
+        #[inline]
+        pub fn as_php(self) -> ::std::option::Option<Php<'tree>> {
+            self.as_php_statement()?.as_php()
+        }
+        /**Returns the node if it is of type `setup` ([`Setup`]), otherwise returns `None`.
+
+Follows the following chain:
+- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
+        #[inline]
+        pub fn as_setup(self) -> ::std::option::Option<Setup<'tree>> {
+            self.as_php_statement()?.as_setup()
+        }
+        /**Returns the node if it is of type `unescaped` ([`Unescaped`]), otherwise returns `None`.
+
+Follows the following chain:
+- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
+        #[inline]
+        pub fn as_unescaped(self) -> ::std::option::Option<Unescaped<'tree>> {
+            self.as_php_statement()?.as_unescaped()
+        }
+    }
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree>
+    for Anon265773906404915117180595828464400795297<'tree> {
+        type WithLifetime<'a> = Anon265773906404915117180595828464400795297<'a>;
+        const KIND: &'static str = "{case | comment | conditional | element | entity | erroneous_end_tag | inline_directive | keyword | livewire | loops | php_statement | props | script_element | style_element | text}";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if let Ok(this) = <Case<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Case(this));
+            }
+            if let Ok(this) = <Comment<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Comment(this));
+            }
+            if let Ok(this) = <Conditional<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Conditional(this));
+            }
+            if let Ok(this) = <Element<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Element(this));
+            }
+            if let Ok(this) = <Entity<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Entity(this));
+            }
+            if let Ok(this) = <ErroneousEndTag<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::ErroneousEndTag(this));
+            }
+            if let Ok(this) = <InlineDirective<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::InlineDirective(this));
+            }
+            if let Ok(this) = <Keyword<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Keyword(this));
+            }
+            if let Ok(this) = <Livewire<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Livewire(this));
+            }
+            if let Ok(this) = <Loops<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Loops(this));
+            }
+            if let Ok(this) = <PhpStatement<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::PhpStatement(this));
+            }
+            if let Ok(this) = <Props<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Props(this));
+            }
+            if let Ok(this) = <ScriptElement<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::ScriptElement(this));
+            }
+            if let Ok(this) = <StyleElement<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::StyleElement(this));
+            }
+            if let Ok(this) = <Text<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Text(this));
+            }
+            Err(::type_sitter::IncorrectKind::new::<Self>(node))
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            match self {
+                Self::Case(x) => ::type_sitter::Node::raw(x),
+                Self::Comment(x) => ::type_sitter::Node::raw(x),
+                Self::Conditional(x) => ::type_sitter::Node::raw(x),
+                Self::Element(x) => ::type_sitter::Node::raw(x),
+                Self::Entity(x) => ::type_sitter::Node::raw(x),
+                Self::ErroneousEndTag(x) => ::type_sitter::Node::raw(x),
+                Self::InlineDirective(x) => ::type_sitter::Node::raw(x),
+                Self::Keyword(x) => ::type_sitter::Node::raw(x),
+                Self::Livewire(x) => ::type_sitter::Node::raw(x),
+                Self::Loops(x) => ::type_sitter::Node::raw(x),
+                Self::PhpStatement(x) => ::type_sitter::Node::raw(x),
+                Self::Props(x) => ::type_sitter::Node::raw(x),
+                Self::ScriptElement(x) => ::type_sitter::Node::raw(x),
+                Self::StyleElement(x) => ::type_sitter::Node::raw(x),
+                Self::Text(x) => ::type_sitter::Node::raw(x),
+            }
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            match self {
+                Self::Case(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Comment(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Conditional(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Element(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Entity(x) => ::type_sitter::Node::raw_mut(x),
+                Self::ErroneousEndTag(x) => ::type_sitter::Node::raw_mut(x),
+                Self::InlineDirective(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Keyword(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Livewire(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Loops(x) => ::type_sitter::Node::raw_mut(x),
+                Self::PhpStatement(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Props(x) => ::type_sitter::Node::raw_mut(x),
+                Self::ScriptElement(x) => ::type_sitter::Node::raw_mut(x),
+                Self::StyleElement(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Text(x) => ::type_sitter::Node::raw_mut(x),
+            }
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            match self {
+                Self::Case(x) => x.into_raw(),
+                Self::Comment(x) => x.into_raw(),
+                Self::Conditional(x) => x.into_raw(),
+                Self::Element(x) => x.into_raw(),
+                Self::Entity(x) => x.into_raw(),
+                Self::ErroneousEndTag(x) => x.into_raw(),
+                Self::InlineDirective(x) => x.into_raw(),
+                Self::Keyword(x) => x.into_raw(),
+                Self::Livewire(x) => x.into_raw(),
+                Self::Loops(x) => x.into_raw(),
+                Self::PhpStatement(x) => x.into_raw(),
+                Self::Props(x) => x.into_raw(),
+                Self::ScriptElement(x) => x.into_raw(),
+                Self::StyleElement(x) => x.into_raw(),
+                Self::Text(x) => x.into_raw(),
+            }
+        }
+    }
     /**One of `{comment | conditional | element | entity | erroneous_end_tag | inline_directive | keyword | loops | php_statement | props | script_element | style_element | switch | text | verbatim}`:
 - [`Comment`]
 - [`Conditional`]
@@ -26379,6 +31414,14 @@ Follows the following chain:
         pub fn as_authorization(self) -> ::std::option::Option<Authorization<'tree>> {
             self.as_conditional()?.as_authorization()
         }
+        /**Returns the node if it is of type `context` ([`Context`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_context(self) -> ::std::option::Option<Context<'tree>> {
+            self.as_conditional()?.as_context()
+        }
         /**Returns the node if it is of type `custom` ([`Custom`]), otherwise returns `None`.
 
 Follows the following chain:
@@ -26466,6 +31509,14 @@ Follows the following chain:
         #[inline]
         pub fn as_sectionmissing(self) -> ::std::option::Option<Sectionmissing<'tree>> {
             self.as_conditional()?.as_sectionmissing()
+        }
+        /**Returns the node if it is of type `session` ([`Session`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_session(self) -> ::std::option::Option<Session<'tree>> {
+            self.as_conditional()?.as_session()
         }
         /**Returns the node if it is of type `unless` ([`Unless`]), otherwise returns `None`.
 
@@ -27586,6 +32637,598 @@ Follows the following chain:
             }
         }
     }
+    /**One of `{@empty | break | comment | conditional | continue | element | entity | erroneous_end_tag | inline_directive | keyword | loops | php_statement | props | script_element | style_element | switch | text}`:
+- [`symbols::Atempty`]
+- [`Break`]
+- [`Comment`]
+- [`Conditional`]
+- [`Continue`]
+- [`Element`]
+- [`Entity`]
+- [`ErroneousEndTag`]
+- [`InlineDirective`]
+- [`Keyword`]
+- [`Loops`]
+- [`PhpStatement`]
+- [`Props`]
+- [`ScriptElement`]
+- [`StyleElement`]
+- [`Switch`]
+- [`Text`]*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[allow(non_camel_case_types)]
+    pub enum Anon309827680676981897040739421666452955669<'tree> {
+        Atempty(symbols::Atempty<'tree>),
+        Break(Break<'tree>),
+        Comment(Comment<'tree>),
+        Conditional(Conditional<'tree>),
+        Continue(Continue<'tree>),
+        Element(Element<'tree>),
+        Entity(Entity<'tree>),
+        ErroneousEndTag(ErroneousEndTag<'tree>),
+        InlineDirective(InlineDirective<'tree>),
+        Keyword(Keyword<'tree>),
+        Loops(Loops<'tree>),
+        PhpStatement(PhpStatement<'tree>),
+        Props(Props<'tree>),
+        ScriptElement(ScriptElement<'tree>),
+        StyleElement(StyleElement<'tree>),
+        Switch(Switch<'tree>),
+        Text(Text<'tree>),
+    }
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> Anon309827680676981897040739421666452955669<'tree> {
+        ///Returns the node if it is of type `@empty` ([`symbols::Atempty`]), otherwise returns `None`
+        #[inline]
+        pub fn as_atempty(self) -> ::std::option::Option<symbols::Atempty<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Atempty(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `break` ([`Break`]), otherwise returns `None`
+        #[inline]
+        pub fn as_break(self) -> ::std::option::Option<Break<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Break(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `comment` ([`Comment`]), otherwise returns `None`
+        #[inline]
+        pub fn as_comment(self) -> ::std::option::Option<Comment<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Comment(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `conditional` ([`Conditional`]), otherwise returns `None`
+        #[inline]
+        pub fn as_conditional(self) -> ::std::option::Option<Conditional<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Conditional(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `continue` ([`Continue`]), otherwise returns `None`
+        #[inline]
+        pub fn as_continue(self) -> ::std::option::Option<Continue<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Continue(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `element` ([`Element`]), otherwise returns `None`
+        #[inline]
+        pub fn as_element(self) -> ::std::option::Option<Element<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Element(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `entity` ([`Entity`]), otherwise returns `None`
+        #[inline]
+        pub fn as_entity(self) -> ::std::option::Option<Entity<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Entity(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `erroneous_end_tag` ([`ErroneousEndTag`]), otherwise returns `None`
+        #[inline]
+        pub fn as_erroneous_end_tag(
+            self,
+        ) -> ::std::option::Option<ErroneousEndTag<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::ErroneousEndTag(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `inline_directive` ([`InlineDirective`]), otherwise returns `None`
+        #[inline]
+        pub fn as_inline_directive(
+            self,
+        ) -> ::std::option::Option<InlineDirective<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::InlineDirective(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `keyword` ([`Keyword`]), otherwise returns `None`
+        #[inline]
+        pub fn as_keyword(self) -> ::std::option::Option<Keyword<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Keyword(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `loops` ([`Loops`]), otherwise returns `None`
+        #[inline]
+        pub fn as_loops(self) -> ::std::option::Option<Loops<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Loops(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `php_statement` ([`PhpStatement`]), otherwise returns `None`
+        #[inline]
+        pub fn as_php_statement(self) -> ::std::option::Option<PhpStatement<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::PhpStatement(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `props` ([`Props`]), otherwise returns `None`
+        #[inline]
+        pub fn as_props(self) -> ::std::option::Option<Props<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Props(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `script_element` ([`ScriptElement`]), otherwise returns `None`
+        #[inline]
+        pub fn as_script_element(self) -> ::std::option::Option<ScriptElement<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::ScriptElement(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `style_element` ([`StyleElement`]), otherwise returns `None`
+        #[inline]
+        pub fn as_style_element(self) -> ::std::option::Option<StyleElement<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::StyleElement(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `switch` ([`Switch`]), otherwise returns `None`
+        #[inline]
+        pub fn as_switch(self) -> ::std::option::Option<Switch<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Switch(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `text` ([`Text`]), otherwise returns `None`
+        #[inline]
+        pub fn as_text(self) -> ::std::option::Option<Text<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Text(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        /**Returns the node if it is of type `auth` ([`Auth`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_auth(self) -> ::std::option::Option<Auth<'tree>> {
+            self.as_conditional()?.as_auth()
+        }
+        /**Returns the node if it is of type `authorization` ([`Authorization`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_authorization(self) -> ::std::option::Option<Authorization<'tree>> {
+            self.as_conditional()?.as_authorization()
+        }
+        /**Returns the node if it is of type `context` ([`Context`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_context(self) -> ::std::option::Option<Context<'tree>> {
+            self.as_conditional()?.as_context()
+        }
+        /**Returns the node if it is of type `custom` ([`Custom`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_custom(self) -> ::std::option::Option<Custom<'tree>> {
+            self.as_conditional()?.as_custom()
+        }
+        /**Returns the node if it is of type `empty` ([`Empty`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_empty(self) -> ::std::option::Option<Empty<'tree>> {
+            self.as_conditional()?.as_empty()
+        }
+        /**Returns the node if it is of type `env` ([`Env`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_env(self) -> ::std::option::Option<Env<'tree>> {
+            self.as_conditional()?.as_env()
+        }
+        /**Returns the node if it is of type `error` ([`Error`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_error(self) -> ::std::option::Option<Error<'tree>> {
+            self.as_conditional()?.as_error()
+        }
+        /**Returns the node if it is of type `feature` ([`Feature`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_feature(self) -> ::std::option::Option<Feature<'tree>> {
+            self.as_conditional()?.as_feature()
+        }
+        /**Returns the node if it is of type `guest` ([`Guest`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_guest(self) -> ::std::option::Option<Guest<'tree>> {
+            self.as_conditional()?.as_guest()
+        }
+        /**Returns the node if it is of type `hasSection` ([`Hassection`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_hassection(self) -> ::std::option::Option<Hassection<'tree>> {
+            self.as_conditional()?.as_hassection()
+        }
+        /**Returns the node if it is of type `if` ([`If`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_if(self) -> ::std::option::Option<If<'tree>> {
+            self.as_conditional()?.as_if()
+        }
+        /**Returns the node if it is of type `isset` ([`Isset`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_isset(self) -> ::std::option::Option<Isset<'tree>> {
+            self.as_conditional()?.as_isset()
+        }
+        /**Returns the node if it is of type `production` ([`Production`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_production(self) -> ::std::option::Option<Production<'tree>> {
+            self.as_conditional()?.as_production()
+        }
+        /**Returns the node if it is of type `sectionMissing` ([`Sectionmissing`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_sectionmissing(self) -> ::std::option::Option<Sectionmissing<'tree>> {
+            self.as_conditional()?.as_sectionmissing()
+        }
+        /**Returns the node if it is of type `session` ([`Session`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_session(self) -> ::std::option::Option<Session<'tree>> {
+            self.as_conditional()?.as_session()
+        }
+        /**Returns the node if it is of type `unless` ([`Unless`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_unless(self) -> ::std::option::Option<Unless<'tree>> {
+            self.as_conditional()?.as_unless()
+        }
+        /**Returns the node if it is of type `for_directive` ([`ForDirective`]), otherwise returns `None`.
+
+Follows the following chain:
+- `loops` ([`Loops < 'tree >`], from [`as_loops`](Self::as_loops))*/
+        #[inline]
+        pub fn as_for_directive(self) -> ::std::option::Option<ForDirective<'tree>> {
+            self.as_loops()?.as_for_directive()
+        }
+        /**Returns the node if it is of type `foreach_directive` ([`ForeachDirective`]), otherwise returns `None`.
+
+Follows the following chain:
+- `loops` ([`Loops < 'tree >`], from [`as_loops`](Self::as_loops))*/
+        #[inline]
+        pub fn as_foreach_directive(
+            self,
+        ) -> ::std::option::Option<ForeachDirective<'tree>> {
+            self.as_loops()?.as_foreach_directive()
+        }
+        /**Returns the node if it is of type `forelse_directive` ([`ForelseDirective`]), otherwise returns `None`.
+
+Follows the following chain:
+- `loops` ([`Loops < 'tree >`], from [`as_loops`](Self::as_loops))*/
+        #[inline]
+        pub fn as_forelse_directive(
+            self,
+        ) -> ::std::option::Option<ForelseDirective<'tree>> {
+            self.as_loops()?.as_forelse_directive()
+        }
+        /**Returns the node if it is of type `while_directive` ([`WhileDirective`]), otherwise returns `None`.
+
+Follows the following chain:
+- `loops` ([`Loops < 'tree >`], from [`as_loops`](Self::as_loops))*/
+        #[inline]
+        pub fn as_while_directive(self) -> ::std::option::Option<WhileDirective<'tree>> {
+            self.as_loops()?.as_while_directive()
+        }
+        /**Returns the node if it is of type `escaped` ([`Escaped`]), otherwise returns `None`.
+
+Follows the following chain:
+- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
+        #[inline]
+        pub fn as_escaped(self) -> ::std::option::Option<Escaped<'tree>> {
+            self.as_php_statement()?.as_escaped()
+        }
+        /**Returns the node if it is of type `inline_raw` ([`InlineRaw`]), otherwise returns `None`.
+
+Follows the following chain:
+- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
+        #[inline]
+        pub fn as_inline_raw(self) -> ::std::option::Option<InlineRaw<'tree>> {
+            self.as_php_statement()?.as_inline_raw()
+        }
+        /**Returns the node if it is of type `multi_line_raw` ([`MultiLineRaw`]), otherwise returns `None`.
+
+Follows the following chain:
+- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
+        #[inline]
+        pub fn as_multi_line_raw(self) -> ::std::option::Option<MultiLineRaw<'tree>> {
+            self.as_php_statement()?.as_multi_line_raw()
+        }
+        /**Returns the node if it is of type `php` ([`Php`]), otherwise returns `None`.
+
+Follows the following chain:
+- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
+        #[inline]
+        pub fn as_php(self) -> ::std::option::Option<Php<'tree>> {
+            self.as_php_statement()?.as_php()
+        }
+        /**Returns the node if it is of type `setup` ([`Setup`]), otherwise returns `None`.
+
+Follows the following chain:
+- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
+        #[inline]
+        pub fn as_setup(self) -> ::std::option::Option<Setup<'tree>> {
+            self.as_php_statement()?.as_setup()
+        }
+        /**Returns the node if it is of type `unescaped` ([`Unescaped`]), otherwise returns `None`.
+
+Follows the following chain:
+- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
+        #[inline]
+        pub fn as_unescaped(self) -> ::std::option::Option<Unescaped<'tree>> {
+            self.as_php_statement()?.as_unescaped()
+        }
+    }
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree>
+    for Anon309827680676981897040739421666452955669<'tree> {
+        type WithLifetime<'a> = Anon309827680676981897040739421666452955669<'a>;
+        const KIND: &'static str = "{@empty | break | comment | conditional | continue | element | entity | erroneous_end_tag | inline_directive | keyword | loops | php_statement | props | script_element | style_element | switch | text}";
+        #[inline]
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            if let Ok(this) = <symbols::Atempty<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Atempty(this));
+            }
+            if let Ok(this) = <Break<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Break(this));
+            }
+            if let Ok(this) = <Comment<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Comment(this));
+            }
+            if let Ok(this) = <Conditional<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Conditional(this));
+            }
+            if let Ok(this) = <Continue<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Continue(this));
+            }
+            if let Ok(this) = <Element<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Element(this));
+            }
+            if let Ok(this) = <Entity<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Entity(this));
+            }
+            if let Ok(this) = <ErroneousEndTag<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::ErroneousEndTag(this));
+            }
+            if let Ok(this) = <InlineDirective<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::InlineDirective(this));
+            }
+            if let Ok(this) = <Keyword<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Keyword(this));
+            }
+            if let Ok(this) = <Loops<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Loops(this));
+            }
+            if let Ok(this) = <PhpStatement<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::PhpStatement(this));
+            }
+            if let Ok(this) = <Props<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Props(this));
+            }
+            if let Ok(this) = <ScriptElement<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::ScriptElement(this));
+            }
+            if let Ok(this) = <StyleElement<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::StyleElement(this));
+            }
+            if let Ok(this) = <Switch<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Switch(this));
+            }
+            if let Ok(this) = <Text<
+                'tree,
+            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
+                return Ok(Self::Text(this));
+            }
+            Err(::type_sitter::IncorrectKind::new::<Self>(node))
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            match self {
+                Self::Atempty(x) => ::type_sitter::Node::raw(x),
+                Self::Break(x) => ::type_sitter::Node::raw(x),
+                Self::Comment(x) => ::type_sitter::Node::raw(x),
+                Self::Conditional(x) => ::type_sitter::Node::raw(x),
+                Self::Continue(x) => ::type_sitter::Node::raw(x),
+                Self::Element(x) => ::type_sitter::Node::raw(x),
+                Self::Entity(x) => ::type_sitter::Node::raw(x),
+                Self::ErroneousEndTag(x) => ::type_sitter::Node::raw(x),
+                Self::InlineDirective(x) => ::type_sitter::Node::raw(x),
+                Self::Keyword(x) => ::type_sitter::Node::raw(x),
+                Self::Loops(x) => ::type_sitter::Node::raw(x),
+                Self::PhpStatement(x) => ::type_sitter::Node::raw(x),
+                Self::Props(x) => ::type_sitter::Node::raw(x),
+                Self::ScriptElement(x) => ::type_sitter::Node::raw(x),
+                Self::StyleElement(x) => ::type_sitter::Node::raw(x),
+                Self::Switch(x) => ::type_sitter::Node::raw(x),
+                Self::Text(x) => ::type_sitter::Node::raw(x),
+            }
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            match self {
+                Self::Atempty(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Break(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Comment(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Conditional(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Continue(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Element(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Entity(x) => ::type_sitter::Node::raw_mut(x),
+                Self::ErroneousEndTag(x) => ::type_sitter::Node::raw_mut(x),
+                Self::InlineDirective(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Keyword(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Loops(x) => ::type_sitter::Node::raw_mut(x),
+                Self::PhpStatement(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Props(x) => ::type_sitter::Node::raw_mut(x),
+                Self::ScriptElement(x) => ::type_sitter::Node::raw_mut(x),
+                Self::StyleElement(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Switch(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Text(x) => ::type_sitter::Node::raw_mut(x),
+            }
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            match self {
+                Self::Atempty(x) => x.into_raw(),
+                Self::Break(x) => x.into_raw(),
+                Self::Comment(x) => x.into_raw(),
+                Self::Conditional(x) => x.into_raw(),
+                Self::Continue(x) => x.into_raw(),
+                Self::Element(x) => x.into_raw(),
+                Self::Entity(x) => x.into_raw(),
+                Self::ErroneousEndTag(x) => x.into_raw(),
+                Self::InlineDirective(x) => x.into_raw(),
+                Self::Keyword(x) => x.into_raw(),
+                Self::Loops(x) => x.into_raw(),
+                Self::PhpStatement(x) => x.into_raw(),
+                Self::Props(x) => x.into_raw(),
+                Self::ScriptElement(x) => x.into_raw(),
+                Self::StyleElement(x) => x.into_raw(),
+                Self::Switch(x) => x.into_raw(),
+                Self::Text(x) => x.into_raw(),
+            }
+        }
+    }
     /**One of `{array_creation_expression | dynamic_variable_name | member_access_expression | nullsafe_member_access_expression | parenthesized_expression | scoped_property_access_expression | subscript_expression | variable_name}`:
 - [`ArrayCreationExpression`]
 - [`DynamicVariableName`]
@@ -28140,6 +33783,14 @@ Follows the following chain:
         pub fn as_authorization(self) -> ::std::option::Option<Authorization<'tree>> {
             self.as_conditional()?.as_authorization()
         }
+        /**Returns the node if it is of type `context` ([`Context`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_context(self) -> ::std::option::Option<Context<'tree>> {
+            self.as_conditional()?.as_context()
+        }
         /**Returns the node if it is of type `custom` ([`Custom`]), otherwise returns `None`.
 
 Follows the following chain:
@@ -28227,6 +33878,14 @@ Follows the following chain:
         #[inline]
         pub fn as_sectionmissing(self) -> ::std::option::Option<Sectionmissing<'tree>> {
             self.as_conditional()?.as_sectionmissing()
+        }
+        /**Returns the node if it is of type `session` ([`Session`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_session(self) -> ::std::option::Option<Session<'tree>> {
+            self.as_conditional()?.as_session()
         }
         /**Returns the node if it is of type `unless` ([`Unless`]), otherwise returns `None`.
 
@@ -28826,1474 +34485,751 @@ Follows the following chain:
             }
         }
     }
-    /**One of `{comment | conditional | directive | element | entity | erroneous_end_tag | inline_directive | keyword | livewire | loops | php_statement | props | script_element | style_element | text}`:
-- [`Comment`]
-- [`Conditional`]
-- [`Directive`]
-- [`Element`]
-- [`Entity`]
-- [`ErroneousEndTag`]
-- [`InlineDirective`]
-- [`Keyword`]
-- [`Livewire`]
-- [`Loops`]
-- [`PhpStatement`]
-- [`Props`]
-- [`ScriptElement`]
-- [`StyleElement`]
-- [`Text`]*/
+    /**One of `{@asset | @aware | @each | @extends | @extract | @field | @import | @include | @includeFirst | @includeIf | @includeIsolated | @includeUnless | @includeWhen | @inject | @js | @json | @livewire | @method | @options | @script | @servers | @set | @stack | @svg | @thumbnail | @use | @vite | @wireUiScripts | @yield}`:
+- [`symbols::Atasset`]
+- [`symbols::Ataware`]
+- [`symbols::Ateach`]
+- [`symbols::Atextends`]
+- [`symbols::Atextract`]
+- [`symbols::Atfield`]
+- [`symbols::Atimport`]
+- [`symbols::Atinclude`]
+- [`symbols::Atincludefirst`]
+- [`symbols::Atincludeif`]
+- [`symbols::Atincludeisolated`]
+- [`symbols::Atincludeunless`]
+- [`symbols::Atincludewhen`]
+- [`symbols::Atinject`]
+- [`symbols::Atjs`]
+- [`symbols::Atjson`]
+- [`symbols::Atlivewire`]
+- [`symbols::Atmethod`]
+- [`symbols::Atoptions`]
+- [`symbols::Atscript`]
+- [`symbols::Atservers`]
+- [`symbols::Atset`]
+- [`symbols::Atstack`]
+- [`symbols::Atsvg`]
+- [`symbols::Atthumbnail`]
+- [`symbols::Atuse`]
+- [`symbols::Atvite`]
+- [`symbols::Atwireuiscripts`]
+- [`symbols::Atyield`]*/
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     #[allow(non_camel_case_types)]
-    pub enum Anon37655723591181308797305058825199978824<'tree> {
-        Comment(Comment<'tree>),
-        Conditional(Conditional<'tree>),
-        Directive(Directive<'tree>),
-        Element(Element<'tree>),
-        Entity(Entity<'tree>),
-        ErroneousEndTag(ErroneousEndTag<'tree>),
-        InlineDirective(InlineDirective<'tree>),
-        Keyword(Keyword<'tree>),
-        Livewire(Livewire<'tree>),
-        Loops(Loops<'tree>),
-        PhpStatement(PhpStatement<'tree>),
-        Props(Props<'tree>),
-        ScriptElement(ScriptElement<'tree>),
-        StyleElement(StyleElement<'tree>),
-        Text(Text<'tree>),
+    pub enum Anon65615705433508867044542883489645159018<'tree> {
+        Atasset(symbols::Atasset<'tree>),
+        Ataware(symbols::Ataware<'tree>),
+        Ateach(symbols::Ateach<'tree>),
+        Atextends(symbols::Atextends<'tree>),
+        Atextract(symbols::Atextract<'tree>),
+        Atfield(symbols::Atfield<'tree>),
+        Atimport(symbols::Atimport<'tree>),
+        Atinclude(symbols::Atinclude<'tree>),
+        Atincludefirst(symbols::Atincludefirst<'tree>),
+        Atincludeif(symbols::Atincludeif<'tree>),
+        Atincludeisolated(symbols::Atincludeisolated<'tree>),
+        Atincludeunless(symbols::Atincludeunless<'tree>),
+        Atincludewhen(symbols::Atincludewhen<'tree>),
+        Atinject(symbols::Atinject<'tree>),
+        Atjs(symbols::Atjs<'tree>),
+        Atjson(symbols::Atjson<'tree>),
+        Atlivewire(symbols::Atlivewire<'tree>),
+        Atmethod(symbols::Atmethod<'tree>),
+        Atoptions(symbols::Atoptions<'tree>),
+        Atscript(symbols::Atscript<'tree>),
+        Atservers(symbols::Atservers<'tree>),
+        Atset(symbols::Atset<'tree>),
+        Atstack(symbols::Atstack<'tree>),
+        Atsvg(symbols::Atsvg<'tree>),
+        Atthumbnail(symbols::Atthumbnail<'tree>),
+        Atuse(symbols::Atuse<'tree>),
+        Atvite(symbols::Atvite<'tree>),
+        Atwireuiscripts(symbols::Atwireuiscripts<'tree>),
+        Atyield(symbols::Atyield<'tree>),
     }
     #[automatically_derived]
     #[allow(unused)]
-    impl<'tree> Anon37655723591181308797305058825199978824<'tree> {
-        ///Returns the node if it is of type `comment` ([`Comment`]), otherwise returns `None`
+    impl<'tree> Anon65615705433508867044542883489645159018<'tree> {
+        ///Returns the node if it is of type `@asset` ([`symbols::Atasset`]), otherwise returns `None`
         #[inline]
-        pub fn as_comment(self) -> ::std::option::Option<Comment<'tree>> {
+        pub fn as_atasset(self) -> ::std::option::Option<symbols::Atasset<'tree>> {
             #[allow(irrefutable_let_patterns)]
-            if let Self::Comment(x) = self {
+            if let Self::Atasset(x) = self {
                 ::std::option::Option::Some(x)
             } else {
                 ::std::option::Option::None
             }
         }
-        ///Returns the node if it is of type `conditional` ([`Conditional`]), otherwise returns `None`
+        ///Returns the node if it is of type `@aware` ([`symbols::Ataware`]), otherwise returns `None`
         #[inline]
-        pub fn as_conditional(self) -> ::std::option::Option<Conditional<'tree>> {
+        pub fn as_ataware(self) -> ::std::option::Option<symbols::Ataware<'tree>> {
             #[allow(irrefutable_let_patterns)]
-            if let Self::Conditional(x) = self {
+            if let Self::Ataware(x) = self {
                 ::std::option::Option::Some(x)
             } else {
                 ::std::option::Option::None
             }
         }
-        ///Returns the node if it is of type `directive` ([`Directive`]), otherwise returns `None`
+        ///Returns the node if it is of type `@each` ([`symbols::Ateach`]), otherwise returns `None`
         #[inline]
-        pub fn as_directive(self) -> ::std::option::Option<Directive<'tree>> {
+        pub fn as_ateach(self) -> ::std::option::Option<symbols::Ateach<'tree>> {
             #[allow(irrefutable_let_patterns)]
-            if let Self::Directive(x) = self {
+            if let Self::Ateach(x) = self {
                 ::std::option::Option::Some(x)
             } else {
                 ::std::option::Option::None
             }
         }
-        ///Returns the node if it is of type `element` ([`Element`]), otherwise returns `None`
+        ///Returns the node if it is of type `@extends` ([`symbols::Atextends`]), otherwise returns `None`
         #[inline]
-        pub fn as_element(self) -> ::std::option::Option<Element<'tree>> {
+        pub fn as_atextends(self) -> ::std::option::Option<symbols::Atextends<'tree>> {
             #[allow(irrefutable_let_patterns)]
-            if let Self::Element(x) = self {
+            if let Self::Atextends(x) = self {
                 ::std::option::Option::Some(x)
             } else {
                 ::std::option::Option::None
             }
         }
-        ///Returns the node if it is of type `entity` ([`Entity`]), otherwise returns `None`
+        ///Returns the node if it is of type `@extract` ([`symbols::Atextract`]), otherwise returns `None`
         #[inline]
-        pub fn as_entity(self) -> ::std::option::Option<Entity<'tree>> {
+        pub fn as_atextract(self) -> ::std::option::Option<symbols::Atextract<'tree>> {
             #[allow(irrefutable_let_patterns)]
-            if let Self::Entity(x) = self {
+            if let Self::Atextract(x) = self {
                 ::std::option::Option::Some(x)
             } else {
                 ::std::option::Option::None
             }
         }
-        ///Returns the node if it is of type `erroneous_end_tag` ([`ErroneousEndTag`]), otherwise returns `None`
+        ///Returns the node if it is of type `@field` ([`symbols::Atfield`]), otherwise returns `None`
         #[inline]
-        pub fn as_erroneous_end_tag(
+        pub fn as_atfield(self) -> ::std::option::Option<symbols::Atfield<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Atfield(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `@import` ([`symbols::Atimport`]), otherwise returns `None`
+        #[inline]
+        pub fn as_atimport(self) -> ::std::option::Option<symbols::Atimport<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Atimport(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `@include` ([`symbols::Atinclude`]), otherwise returns `None`
+        #[inline]
+        pub fn as_atinclude(self) -> ::std::option::Option<symbols::Atinclude<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Atinclude(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `@includeFirst` ([`symbols::Atincludefirst`]), otherwise returns `None`
+        #[inline]
+        pub fn as_atincludefirst(
             self,
-        ) -> ::std::option::Option<ErroneousEndTag<'tree>> {
+        ) -> ::std::option::Option<symbols::Atincludefirst<'tree>> {
             #[allow(irrefutable_let_patterns)]
-            if let Self::ErroneousEndTag(x) = self {
+            if let Self::Atincludefirst(x) = self {
                 ::std::option::Option::Some(x)
             } else {
                 ::std::option::Option::None
             }
         }
-        ///Returns the node if it is of type `inline_directive` ([`InlineDirective`]), otherwise returns `None`
+        ///Returns the node if it is of type `@includeIf` ([`symbols::Atincludeif`]), otherwise returns `None`
         #[inline]
-        pub fn as_inline_directive(
+        pub fn as_atincludeif(
             self,
-        ) -> ::std::option::Option<InlineDirective<'tree>> {
+        ) -> ::std::option::Option<symbols::Atincludeif<'tree>> {
             #[allow(irrefutable_let_patterns)]
-            if let Self::InlineDirective(x) = self {
+            if let Self::Atincludeif(x) = self {
                 ::std::option::Option::Some(x)
             } else {
                 ::std::option::Option::None
             }
         }
-        ///Returns the node if it is of type `keyword` ([`Keyword`]), otherwise returns `None`
+        ///Returns the node if it is of type `@includeIsolated` ([`symbols::Atincludeisolated`]), otherwise returns `None`
         #[inline]
-        pub fn as_keyword(self) -> ::std::option::Option<Keyword<'tree>> {
-            #[allow(irrefutable_let_patterns)]
-            if let Self::Keyword(x) = self {
-                ::std::option::Option::Some(x)
-            } else {
-                ::std::option::Option::None
-            }
-        }
-        ///Returns the node if it is of type `livewire` ([`Livewire`]), otherwise returns `None`
-        #[inline]
-        pub fn as_livewire(self) -> ::std::option::Option<Livewire<'tree>> {
-            #[allow(irrefutable_let_patterns)]
-            if let Self::Livewire(x) = self {
-                ::std::option::Option::Some(x)
-            } else {
-                ::std::option::Option::None
-            }
-        }
-        ///Returns the node if it is of type `loops` ([`Loops`]), otherwise returns `None`
-        #[inline]
-        pub fn as_loops(self) -> ::std::option::Option<Loops<'tree>> {
-            #[allow(irrefutable_let_patterns)]
-            if let Self::Loops(x) = self {
-                ::std::option::Option::Some(x)
-            } else {
-                ::std::option::Option::None
-            }
-        }
-        ///Returns the node if it is of type `php_statement` ([`PhpStatement`]), otherwise returns `None`
-        #[inline]
-        pub fn as_php_statement(self) -> ::std::option::Option<PhpStatement<'tree>> {
-            #[allow(irrefutable_let_patterns)]
-            if let Self::PhpStatement(x) = self {
-                ::std::option::Option::Some(x)
-            } else {
-                ::std::option::Option::None
-            }
-        }
-        ///Returns the node if it is of type `props` ([`Props`]), otherwise returns `None`
-        #[inline]
-        pub fn as_props(self) -> ::std::option::Option<Props<'tree>> {
-            #[allow(irrefutable_let_patterns)]
-            if let Self::Props(x) = self {
-                ::std::option::Option::Some(x)
-            } else {
-                ::std::option::Option::None
-            }
-        }
-        ///Returns the node if it is of type `script_element` ([`ScriptElement`]), otherwise returns `None`
-        #[inline]
-        pub fn as_script_element(self) -> ::std::option::Option<ScriptElement<'tree>> {
-            #[allow(irrefutable_let_patterns)]
-            if let Self::ScriptElement(x) = self {
-                ::std::option::Option::Some(x)
-            } else {
-                ::std::option::Option::None
-            }
-        }
-        ///Returns the node if it is of type `style_element` ([`StyleElement`]), otherwise returns `None`
-        #[inline]
-        pub fn as_style_element(self) -> ::std::option::Option<StyleElement<'tree>> {
-            #[allow(irrefutable_let_patterns)]
-            if let Self::StyleElement(x) = self {
-                ::std::option::Option::Some(x)
-            } else {
-                ::std::option::Option::None
-            }
-        }
-        ///Returns the node if it is of type `text` ([`Text`]), otherwise returns `None`
-        #[inline]
-        pub fn as_text(self) -> ::std::option::Option<Text<'tree>> {
-            #[allow(irrefutable_let_patterns)]
-            if let Self::Text(x) = self {
-                ::std::option::Option::Some(x)
-            } else {
-                ::std::option::Option::None
-            }
-        }
-        /**Returns the node if it is of type `auth` ([`Auth`]), otherwise returns `None`.
-
-Follows the following chain:
-- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
-        #[inline]
-        pub fn as_auth(self) -> ::std::option::Option<Auth<'tree>> {
-            self.as_conditional()?.as_auth()
-        }
-        /**Returns the node if it is of type `authorization` ([`Authorization`]), otherwise returns `None`.
-
-Follows the following chain:
-- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
-        #[inline]
-        pub fn as_authorization(self) -> ::std::option::Option<Authorization<'tree>> {
-            self.as_conditional()?.as_authorization()
-        }
-        /**Returns the node if it is of type `custom` ([`Custom`]), otherwise returns `None`.
-
-Follows the following chain:
-- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
-        #[inline]
-        pub fn as_custom(self) -> ::std::option::Option<Custom<'tree>> {
-            self.as_conditional()?.as_custom()
-        }
-        /**Returns the node if it is of type `empty` ([`Empty`]), otherwise returns `None`.
-
-Follows the following chain:
-- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
-        #[inline]
-        pub fn as_empty(self) -> ::std::option::Option<Empty<'tree>> {
-            self.as_conditional()?.as_empty()
-        }
-        /**Returns the node if it is of type `env` ([`Env`]), otherwise returns `None`.
-
-Follows the following chain:
-- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
-        #[inline]
-        pub fn as_env(self) -> ::std::option::Option<Env<'tree>> {
-            self.as_conditional()?.as_env()
-        }
-        /**Returns the node if it is of type `error` ([`Error`]), otherwise returns `None`.
-
-Follows the following chain:
-- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
-        #[inline]
-        pub fn as_error(self) -> ::std::option::Option<Error<'tree>> {
-            self.as_conditional()?.as_error()
-        }
-        /**Returns the node if it is of type `feature` ([`Feature`]), otherwise returns `None`.
-
-Follows the following chain:
-- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
-        #[inline]
-        pub fn as_feature(self) -> ::std::option::Option<Feature<'tree>> {
-            self.as_conditional()?.as_feature()
-        }
-        /**Returns the node if it is of type `guest` ([`Guest`]), otherwise returns `None`.
-
-Follows the following chain:
-- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
-        #[inline]
-        pub fn as_guest(self) -> ::std::option::Option<Guest<'tree>> {
-            self.as_conditional()?.as_guest()
-        }
-        /**Returns the node if it is of type `hasSection` ([`Hassection`]), otherwise returns `None`.
-
-Follows the following chain:
-- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
-        #[inline]
-        pub fn as_hassection(self) -> ::std::option::Option<Hassection<'tree>> {
-            self.as_conditional()?.as_hassection()
-        }
-        /**Returns the node if it is of type `if` ([`If`]), otherwise returns `None`.
-
-Follows the following chain:
-- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
-        #[inline]
-        pub fn as_if(self) -> ::std::option::Option<If<'tree>> {
-            self.as_conditional()?.as_if()
-        }
-        /**Returns the node if it is of type `isset` ([`Isset`]), otherwise returns `None`.
-
-Follows the following chain:
-- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
-        #[inline]
-        pub fn as_isset(self) -> ::std::option::Option<Isset<'tree>> {
-            self.as_conditional()?.as_isset()
-        }
-        /**Returns the node if it is of type `production` ([`Production`]), otherwise returns `None`.
-
-Follows the following chain:
-- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
-        #[inline]
-        pub fn as_production(self) -> ::std::option::Option<Production<'tree>> {
-            self.as_conditional()?.as_production()
-        }
-        /**Returns the node if it is of type `sectionMissing` ([`Sectionmissing`]), otherwise returns `None`.
-
-Follows the following chain:
-- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
-        #[inline]
-        pub fn as_sectionmissing(self) -> ::std::option::Option<Sectionmissing<'tree>> {
-            self.as_conditional()?.as_sectionmissing()
-        }
-        /**Returns the node if it is of type `unless` ([`Unless`]), otherwise returns `None`.
-
-Follows the following chain:
-- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
-        #[inline]
-        pub fn as_unless(self) -> ::std::option::Option<Unless<'tree>> {
-            self.as_conditional()?.as_unless()
-        }
-        /**Returns the node if it is of type `for_directive` ([`ForDirective`]), otherwise returns `None`.
-
-Follows the following chain:
-- `loops` ([`Loops < 'tree >`], from [`as_loops`](Self::as_loops))*/
-        #[inline]
-        pub fn as_for_directive(self) -> ::std::option::Option<ForDirective<'tree>> {
-            self.as_loops()?.as_for_directive()
-        }
-        /**Returns the node if it is of type `foreach_directive` ([`ForeachDirective`]), otherwise returns `None`.
-
-Follows the following chain:
-- `loops` ([`Loops < 'tree >`], from [`as_loops`](Self::as_loops))*/
-        #[inline]
-        pub fn as_foreach_directive(
+        pub fn as_atincludeisolated(
             self,
-        ) -> ::std::option::Option<ForeachDirective<'tree>> {
-            self.as_loops()?.as_foreach_directive()
+        ) -> ::std::option::Option<symbols::Atincludeisolated<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Atincludeisolated(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
         }
-        /**Returns the node if it is of type `forelse_directive` ([`ForelseDirective`]), otherwise returns `None`.
-
-Follows the following chain:
-- `loops` ([`Loops < 'tree >`], from [`as_loops`](Self::as_loops))*/
+        ///Returns the node if it is of type `@includeUnless` ([`symbols::Atincludeunless`]), otherwise returns `None`
         #[inline]
-        pub fn as_forelse_directive(
+        pub fn as_atincludeunless(
             self,
-        ) -> ::std::option::Option<ForelseDirective<'tree>> {
-            self.as_loops()?.as_forelse_directive()
+        ) -> ::std::option::Option<symbols::Atincludeunless<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Atincludeunless(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
         }
-        /**Returns the node if it is of type `while_directive` ([`WhileDirective`]), otherwise returns `None`.
-
-Follows the following chain:
-- `loops` ([`Loops < 'tree >`], from [`as_loops`](Self::as_loops))*/
+        ///Returns the node if it is of type `@includeWhen` ([`symbols::Atincludewhen`]), otherwise returns `None`
         #[inline]
-        pub fn as_while_directive(self) -> ::std::option::Option<WhileDirective<'tree>> {
-            self.as_loops()?.as_while_directive()
+        pub fn as_atincludewhen(
+            self,
+        ) -> ::std::option::Option<symbols::Atincludewhen<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Atincludewhen(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
         }
-        /**Returns the node if it is of type `escaped` ([`Escaped`]), otherwise returns `None`.
-
-Follows the following chain:
-- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
+        ///Returns the node if it is of type `@inject` ([`symbols::Atinject`]), otherwise returns `None`
         #[inline]
-        pub fn as_escaped(self) -> ::std::option::Option<Escaped<'tree>> {
-            self.as_php_statement()?.as_escaped()
+        pub fn as_atinject(self) -> ::std::option::Option<symbols::Atinject<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Atinject(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
         }
-        /**Returns the node if it is of type `inline_raw` ([`InlineRaw`]), otherwise returns `None`.
-
-Follows the following chain:
-- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
+        ///Returns the node if it is of type `@js` ([`symbols::Atjs`]), otherwise returns `None`
         #[inline]
-        pub fn as_inline_raw(self) -> ::std::option::Option<InlineRaw<'tree>> {
-            self.as_php_statement()?.as_inline_raw()
+        pub fn as_atjs(self) -> ::std::option::Option<symbols::Atjs<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Atjs(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
         }
-        /**Returns the node if it is of type `multi_line_raw` ([`MultiLineRaw`]), otherwise returns `None`.
-
-Follows the following chain:
-- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
+        ///Returns the node if it is of type `@json` ([`symbols::Atjson`]), otherwise returns `None`
         #[inline]
-        pub fn as_multi_line_raw(self) -> ::std::option::Option<MultiLineRaw<'tree>> {
-            self.as_php_statement()?.as_multi_line_raw()
+        pub fn as_atjson(self) -> ::std::option::Option<symbols::Atjson<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Atjson(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
         }
-        /**Returns the node if it is of type `php` ([`Php`]), otherwise returns `None`.
-
-Follows the following chain:
-- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
+        ///Returns the node if it is of type `@livewire` ([`symbols::Atlivewire`]), otherwise returns `None`
         #[inline]
-        pub fn as_php(self) -> ::std::option::Option<Php<'tree>> {
-            self.as_php_statement()?.as_php()
+        pub fn as_atlivewire(self) -> ::std::option::Option<symbols::Atlivewire<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Atlivewire(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
         }
-        /**Returns the node if it is of type `setup` ([`Setup`]), otherwise returns `None`.
-
-Follows the following chain:
-- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
+        ///Returns the node if it is of type `@method` ([`symbols::Atmethod`]), otherwise returns `None`
         #[inline]
-        pub fn as_setup(self) -> ::std::option::Option<Setup<'tree>> {
-            self.as_php_statement()?.as_setup()
+        pub fn as_atmethod(self) -> ::std::option::Option<symbols::Atmethod<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Atmethod(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
         }
-        /**Returns the node if it is of type `unescaped` ([`Unescaped`]), otherwise returns `None`.
-
-Follows the following chain:
-- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
+        ///Returns the node if it is of type `@options` ([`symbols::Atoptions`]), otherwise returns `None`
         #[inline]
-        pub fn as_unescaped(self) -> ::std::option::Option<Unescaped<'tree>> {
-            self.as_php_statement()?.as_unescaped()
+        pub fn as_atoptions(self) -> ::std::option::Option<symbols::Atoptions<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Atoptions(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `@script` ([`symbols::Atscript`]), otherwise returns `None`
+        #[inline]
+        pub fn as_atscript(self) -> ::std::option::Option<symbols::Atscript<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Atscript(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `@servers` ([`symbols::Atservers`]), otherwise returns `None`
+        #[inline]
+        pub fn as_atservers(self) -> ::std::option::Option<symbols::Atservers<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Atservers(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `@set` ([`symbols::Atset`]), otherwise returns `None`
+        #[inline]
+        pub fn as_atset(self) -> ::std::option::Option<symbols::Atset<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Atset(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `@stack` ([`symbols::Atstack`]), otherwise returns `None`
+        #[inline]
+        pub fn as_atstack(self) -> ::std::option::Option<symbols::Atstack<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Atstack(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `@svg` ([`symbols::Atsvg`]), otherwise returns `None`
+        #[inline]
+        pub fn as_atsvg(self) -> ::std::option::Option<symbols::Atsvg<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Atsvg(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `@thumbnail` ([`symbols::Atthumbnail`]), otherwise returns `None`
+        #[inline]
+        pub fn as_atthumbnail(
+            self,
+        ) -> ::std::option::Option<symbols::Atthumbnail<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Atthumbnail(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `@use` ([`symbols::Atuse`]), otherwise returns `None`
+        #[inline]
+        pub fn as_atuse(self) -> ::std::option::Option<symbols::Atuse<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Atuse(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `@vite` ([`symbols::Atvite`]), otherwise returns `None`
+        #[inline]
+        pub fn as_atvite(self) -> ::std::option::Option<symbols::Atvite<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Atvite(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `@wireUiScripts` ([`symbols::Atwireuiscripts`]), otherwise returns `None`
+        #[inline]
+        pub fn as_atwireuiscripts(
+            self,
+        ) -> ::std::option::Option<symbols::Atwireuiscripts<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Atwireuiscripts(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
+        }
+        ///Returns the node if it is of type `@yield` ([`symbols::Atyield`]), otherwise returns `None`
+        #[inline]
+        pub fn as_atyield(self) -> ::std::option::Option<symbols::Atyield<'tree>> {
+            #[allow(irrefutable_let_patterns)]
+            if let Self::Atyield(x) = self {
+                ::std::option::Option::Some(x)
+            } else {
+                ::std::option::Option::None
+            }
         }
     }
     #[automatically_derived]
     impl<'tree> ::type_sitter::Node<'tree>
-    for Anon37655723591181308797305058825199978824<'tree> {
-        type WithLifetime<'a> = Anon37655723591181308797305058825199978824<'a>;
-        const KIND: &'static str = "{comment | conditional | directive | element | entity | erroneous_end_tag | inline_directive | keyword | livewire | loops | php_statement | props | script_element | style_element | text}";
+    for Anon65615705433508867044542883489645159018<'tree> {
+        type WithLifetime<'a> = Anon65615705433508867044542883489645159018<'a>;
+        const KIND: &'static str = "{@asset | @aware | @each | @extends | @extract | @field | @import | @include | @includeFirst | @includeIf | @includeIsolated | @includeUnless | @includeWhen | @inject | @js | @json | @livewire | @method | @options | @script | @servers | @set | @stack | @svg | @thumbnail | @use | @vite | @wireUiScripts | @yield}";
         #[inline]
         fn try_from_raw(
             node: ::type_sitter::raw::Node<'tree>,
         ) -> ::type_sitter::NodeResult<'tree, Self> {
-            if let Ok(this) = <Comment<
-                'tree,
-            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
-                return Ok(Self::Comment(this));
+            match node.kind() {
+                "@asset" => {
+                    Ok(unsafe {
+                        Self::Atasset(
+                            <symbols::Atasset<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "@aware" => {
+                    Ok(unsafe {
+                        Self::Ataware(
+                            <symbols::Ataware<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "@each" => {
+                    Ok(unsafe {
+                        Self::Ateach(
+                            <symbols::Ateach<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "@extends" => {
+                    Ok(unsafe {
+                        Self::Atextends(
+                            <symbols::Atextends<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "@extract" => {
+                    Ok(unsafe {
+                        Self::Atextract(
+                            <symbols::Atextract<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "@field" => {
+                    Ok(unsafe {
+                        Self::Atfield(
+                            <symbols::Atfield<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "@import" => {
+                    Ok(unsafe {
+                        Self::Atimport(
+                            <symbols::Atimport<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "@include" => {
+                    Ok(unsafe {
+                        Self::Atinclude(
+                            <symbols::Atinclude<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "@includeFirst" => {
+                    Ok(unsafe {
+                        Self::Atincludefirst(
+                            <symbols::Atincludefirst<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "@includeIf" => {
+                    Ok(unsafe {
+                        Self::Atincludeif(
+                            <symbols::Atincludeif<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "@includeIsolated" => {
+                    Ok(unsafe {
+                        Self::Atincludeisolated(
+                            <symbols::Atincludeisolated<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "@includeUnless" => {
+                    Ok(unsafe {
+                        Self::Atincludeunless(
+                            <symbols::Atincludeunless<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "@includeWhen" => {
+                    Ok(unsafe {
+                        Self::Atincludewhen(
+                            <symbols::Atincludewhen<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "@inject" => {
+                    Ok(unsafe {
+                        Self::Atinject(
+                            <symbols::Atinject<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "@js" => {
+                    Ok(unsafe {
+                        Self::Atjs(
+                            <symbols::Atjs<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "@json" => {
+                    Ok(unsafe {
+                        Self::Atjson(
+                            <symbols::Atjson<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "@livewire" => {
+                    Ok(unsafe {
+                        Self::Atlivewire(
+                            <symbols::Atlivewire<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "@method" => {
+                    Ok(unsafe {
+                        Self::Atmethod(
+                            <symbols::Atmethod<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "@options" => {
+                    Ok(unsafe {
+                        Self::Atoptions(
+                            <symbols::Atoptions<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "@script" => {
+                    Ok(unsafe {
+                        Self::Atscript(
+                            <symbols::Atscript<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "@servers" => {
+                    Ok(unsafe {
+                        Self::Atservers(
+                            <symbols::Atservers<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "@set" => {
+                    Ok(unsafe {
+                        Self::Atset(
+                            <symbols::Atset<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "@stack" => {
+                    Ok(unsafe {
+                        Self::Atstack(
+                            <symbols::Atstack<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "@svg" => {
+                    Ok(unsafe {
+                        Self::Atsvg(
+                            <symbols::Atsvg<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "@thumbnail" => {
+                    Ok(unsafe {
+                        Self::Atthumbnail(
+                            <symbols::Atthumbnail<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "@use" => {
+                    Ok(unsafe {
+                        Self::Atuse(
+                            <symbols::Atuse<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "@vite" => {
+                    Ok(unsafe {
+                        Self::Atvite(
+                            <symbols::Atvite<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "@wireUiScripts" => {
+                    Ok(unsafe {
+                        Self::Atwireuiscripts(
+                            <symbols::Atwireuiscripts<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "@yield" => {
+                    Ok(unsafe {
+                        Self::Atyield(
+                            <symbols::Atyield<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                _ => Err(::type_sitter::IncorrectKind::new::<Self>(node)),
             }
-            if let Ok(this) = <Conditional<
-                'tree,
-            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
-                return Ok(Self::Conditional(this));
-            }
-            if let Ok(this) = <Directive<
-                'tree,
-            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
-                return Ok(Self::Directive(this));
-            }
-            if let Ok(this) = <Element<
-                'tree,
-            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
-                return Ok(Self::Element(this));
-            }
-            if let Ok(this) = <Entity<
-                'tree,
-            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
-                return Ok(Self::Entity(this));
-            }
-            if let Ok(this) = <ErroneousEndTag<
-                'tree,
-            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
-                return Ok(Self::ErroneousEndTag(this));
-            }
-            if let Ok(this) = <InlineDirective<
-                'tree,
-            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
-                return Ok(Self::InlineDirective(this));
-            }
-            if let Ok(this) = <Keyword<
-                'tree,
-            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
-                return Ok(Self::Keyword(this));
-            }
-            if let Ok(this) = <Livewire<
-                'tree,
-            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
-                return Ok(Self::Livewire(this));
-            }
-            if let Ok(this) = <Loops<
-                'tree,
-            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
-                return Ok(Self::Loops(this));
-            }
-            if let Ok(this) = <PhpStatement<
-                'tree,
-            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
-                return Ok(Self::PhpStatement(this));
-            }
-            if let Ok(this) = <Props<
-                'tree,
-            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
-                return Ok(Self::Props(this));
-            }
-            if let Ok(this) = <ScriptElement<
-                'tree,
-            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
-                return Ok(Self::ScriptElement(this));
-            }
-            if let Ok(this) = <StyleElement<
-                'tree,
-            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
-                return Ok(Self::StyleElement(this));
-            }
-            if let Ok(this) = <Text<
-                'tree,
-            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
-                return Ok(Self::Text(this));
-            }
-            Err(::type_sitter::IncorrectKind::new::<Self>(node))
         }
         #[inline]
         fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
             match self {
-                Self::Comment(x) => ::type_sitter::Node::raw(x),
-                Self::Conditional(x) => ::type_sitter::Node::raw(x),
-                Self::Directive(x) => ::type_sitter::Node::raw(x),
-                Self::Element(x) => ::type_sitter::Node::raw(x),
-                Self::Entity(x) => ::type_sitter::Node::raw(x),
-                Self::ErroneousEndTag(x) => ::type_sitter::Node::raw(x),
-                Self::InlineDirective(x) => ::type_sitter::Node::raw(x),
-                Self::Keyword(x) => ::type_sitter::Node::raw(x),
-                Self::Livewire(x) => ::type_sitter::Node::raw(x),
-                Self::Loops(x) => ::type_sitter::Node::raw(x),
-                Self::PhpStatement(x) => ::type_sitter::Node::raw(x),
-                Self::Props(x) => ::type_sitter::Node::raw(x),
-                Self::ScriptElement(x) => ::type_sitter::Node::raw(x),
-                Self::StyleElement(x) => ::type_sitter::Node::raw(x),
-                Self::Text(x) => ::type_sitter::Node::raw(x),
+                Self::Atasset(x) => ::type_sitter::Node::raw(x),
+                Self::Ataware(x) => ::type_sitter::Node::raw(x),
+                Self::Ateach(x) => ::type_sitter::Node::raw(x),
+                Self::Atextends(x) => ::type_sitter::Node::raw(x),
+                Self::Atextract(x) => ::type_sitter::Node::raw(x),
+                Self::Atfield(x) => ::type_sitter::Node::raw(x),
+                Self::Atimport(x) => ::type_sitter::Node::raw(x),
+                Self::Atinclude(x) => ::type_sitter::Node::raw(x),
+                Self::Atincludefirst(x) => ::type_sitter::Node::raw(x),
+                Self::Atincludeif(x) => ::type_sitter::Node::raw(x),
+                Self::Atincludeisolated(x) => ::type_sitter::Node::raw(x),
+                Self::Atincludeunless(x) => ::type_sitter::Node::raw(x),
+                Self::Atincludewhen(x) => ::type_sitter::Node::raw(x),
+                Self::Atinject(x) => ::type_sitter::Node::raw(x),
+                Self::Atjs(x) => ::type_sitter::Node::raw(x),
+                Self::Atjson(x) => ::type_sitter::Node::raw(x),
+                Self::Atlivewire(x) => ::type_sitter::Node::raw(x),
+                Self::Atmethod(x) => ::type_sitter::Node::raw(x),
+                Self::Atoptions(x) => ::type_sitter::Node::raw(x),
+                Self::Atscript(x) => ::type_sitter::Node::raw(x),
+                Self::Atservers(x) => ::type_sitter::Node::raw(x),
+                Self::Atset(x) => ::type_sitter::Node::raw(x),
+                Self::Atstack(x) => ::type_sitter::Node::raw(x),
+                Self::Atsvg(x) => ::type_sitter::Node::raw(x),
+                Self::Atthumbnail(x) => ::type_sitter::Node::raw(x),
+                Self::Atuse(x) => ::type_sitter::Node::raw(x),
+                Self::Atvite(x) => ::type_sitter::Node::raw(x),
+                Self::Atwireuiscripts(x) => ::type_sitter::Node::raw(x),
+                Self::Atyield(x) => ::type_sitter::Node::raw(x),
             }
         }
         #[inline]
         fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
             match self {
-                Self::Comment(x) => ::type_sitter::Node::raw_mut(x),
-                Self::Conditional(x) => ::type_sitter::Node::raw_mut(x),
-                Self::Directive(x) => ::type_sitter::Node::raw_mut(x),
-                Self::Element(x) => ::type_sitter::Node::raw_mut(x),
-                Self::Entity(x) => ::type_sitter::Node::raw_mut(x),
-                Self::ErroneousEndTag(x) => ::type_sitter::Node::raw_mut(x),
-                Self::InlineDirective(x) => ::type_sitter::Node::raw_mut(x),
-                Self::Keyword(x) => ::type_sitter::Node::raw_mut(x),
-                Self::Livewire(x) => ::type_sitter::Node::raw_mut(x),
-                Self::Loops(x) => ::type_sitter::Node::raw_mut(x),
-                Self::PhpStatement(x) => ::type_sitter::Node::raw_mut(x),
-                Self::Props(x) => ::type_sitter::Node::raw_mut(x),
-                Self::ScriptElement(x) => ::type_sitter::Node::raw_mut(x),
-                Self::StyleElement(x) => ::type_sitter::Node::raw_mut(x),
-                Self::Text(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Atasset(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Ataware(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Ateach(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Atextends(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Atextract(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Atfield(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Atimport(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Atinclude(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Atincludefirst(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Atincludeif(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Atincludeisolated(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Atincludeunless(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Atincludewhen(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Atinject(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Atjs(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Atjson(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Atlivewire(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Atmethod(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Atoptions(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Atscript(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Atservers(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Atset(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Atstack(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Atsvg(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Atthumbnail(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Atuse(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Atvite(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Atwireuiscripts(x) => ::type_sitter::Node::raw_mut(x),
+                Self::Atyield(x) => ::type_sitter::Node::raw_mut(x),
             }
         }
         #[inline]
         fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
             match self {
-                Self::Comment(x) => x.into_raw(),
-                Self::Conditional(x) => x.into_raw(),
-                Self::Directive(x) => x.into_raw(),
-                Self::Element(x) => x.into_raw(),
-                Self::Entity(x) => x.into_raw(),
-                Self::ErroneousEndTag(x) => x.into_raw(),
-                Self::InlineDirective(x) => x.into_raw(),
-                Self::Keyword(x) => x.into_raw(),
-                Self::Livewire(x) => x.into_raw(),
-                Self::Loops(x) => x.into_raw(),
-                Self::PhpStatement(x) => x.into_raw(),
-                Self::Props(x) => x.into_raw(),
-                Self::ScriptElement(x) => x.into_raw(),
-                Self::StyleElement(x) => x.into_raw(),
-                Self::Text(x) => x.into_raw(),
-            }
-        }
-    }
-    /**One of `{( | ) | , | comment | conditional | directive | element | entity | erroneous_end_tag | expression | inline_directive | keyword | loops | php_statement | props | script_element | style_element | switch | text}`:
-- [`symbols::LParen`]
-- [`symbols::RParen`]
-- [`symbols::Comma`]
-- [`Comment`]
-- [`Conditional`]
-- [`Directive`]
-- [`Element`]
-- [`Entity`]
-- [`ErroneousEndTag`]
-- [`Expression`]
-- [`InlineDirective`]
-- [`Keyword`]
-- [`Loops`]
-- [`PhpStatement`]
-- [`Props`]
-- [`ScriptElement`]
-- [`StyleElement`]
-- [`Switch`]
-- [`Text`]*/
-    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-    #[allow(non_camel_case_types)]
-    pub enum Anon56463528831969555037115503089298760884<'tree> {
-        LParen(symbols::LParen<'tree>),
-        RParen(symbols::RParen<'tree>),
-        Comma(symbols::Comma<'tree>),
-        Comment(Comment<'tree>),
-        Conditional(Conditional<'tree>),
-        Directive(Directive<'tree>),
-        Element(Element<'tree>),
-        Entity(Entity<'tree>),
-        ErroneousEndTag(ErroneousEndTag<'tree>),
-        Expression(Expression<'tree>),
-        InlineDirective(InlineDirective<'tree>),
-        Keyword(Keyword<'tree>),
-        Loops(Loops<'tree>),
-        PhpStatement(PhpStatement<'tree>),
-        Props(Props<'tree>),
-        ScriptElement(ScriptElement<'tree>),
-        StyleElement(StyleElement<'tree>),
-        Switch(Switch<'tree>),
-        Text(Text<'tree>),
-    }
-    #[automatically_derived]
-    #[allow(unused)]
-    impl<'tree> Anon56463528831969555037115503089298760884<'tree> {
-        ///Returns the node if it is of type `(` ([`symbols::LParen`]), otherwise returns `None`
-        #[inline]
-        pub fn as_l_paren(self) -> ::std::option::Option<symbols::LParen<'tree>> {
-            #[allow(irrefutable_let_patterns)]
-            if let Self::LParen(x) = self {
-                ::std::option::Option::Some(x)
-            } else {
-                ::std::option::Option::None
-            }
-        }
-        ///Returns the node if it is of type `)` ([`symbols::RParen`]), otherwise returns `None`
-        #[inline]
-        pub fn as_r_paren(self) -> ::std::option::Option<symbols::RParen<'tree>> {
-            #[allow(irrefutable_let_patterns)]
-            if let Self::RParen(x) = self {
-                ::std::option::Option::Some(x)
-            } else {
-                ::std::option::Option::None
-            }
-        }
-        ///Returns the node if it is of type `,` ([`symbols::Comma`]), otherwise returns `None`
-        #[inline]
-        pub fn as_comma(self) -> ::std::option::Option<symbols::Comma<'tree>> {
-            #[allow(irrefutable_let_patterns)]
-            if let Self::Comma(x) = self {
-                ::std::option::Option::Some(x)
-            } else {
-                ::std::option::Option::None
-            }
-        }
-        ///Returns the node if it is of type `comment` ([`Comment`]), otherwise returns `None`
-        #[inline]
-        pub fn as_comment(self) -> ::std::option::Option<Comment<'tree>> {
-            #[allow(irrefutable_let_patterns)]
-            if let Self::Comment(x) = self {
-                ::std::option::Option::Some(x)
-            } else {
-                ::std::option::Option::None
-            }
-        }
-        ///Returns the node if it is of type `conditional` ([`Conditional`]), otherwise returns `None`
-        #[inline]
-        pub fn as_conditional(self) -> ::std::option::Option<Conditional<'tree>> {
-            #[allow(irrefutable_let_patterns)]
-            if let Self::Conditional(x) = self {
-                ::std::option::Option::Some(x)
-            } else {
-                ::std::option::Option::None
-            }
-        }
-        ///Returns the node if it is of type `directive` ([`Directive`]), otherwise returns `None`
-        #[inline]
-        pub fn as_directive(self) -> ::std::option::Option<Directive<'tree>> {
-            #[allow(irrefutable_let_patterns)]
-            if let Self::Directive(x) = self {
-                ::std::option::Option::Some(x)
-            } else {
-                ::std::option::Option::None
-            }
-        }
-        ///Returns the node if it is of type `element` ([`Element`]), otherwise returns `None`
-        #[inline]
-        pub fn as_element(self) -> ::std::option::Option<Element<'tree>> {
-            #[allow(irrefutable_let_patterns)]
-            if let Self::Element(x) = self {
-                ::std::option::Option::Some(x)
-            } else {
-                ::std::option::Option::None
-            }
-        }
-        ///Returns the node if it is of type `entity` ([`Entity`]), otherwise returns `None`
-        #[inline]
-        pub fn as_entity(self) -> ::std::option::Option<Entity<'tree>> {
-            #[allow(irrefutable_let_patterns)]
-            if let Self::Entity(x) = self {
-                ::std::option::Option::Some(x)
-            } else {
-                ::std::option::Option::None
-            }
-        }
-        ///Returns the node if it is of type `erroneous_end_tag` ([`ErroneousEndTag`]), otherwise returns `None`
-        #[inline]
-        pub fn as_erroneous_end_tag(
-            self,
-        ) -> ::std::option::Option<ErroneousEndTag<'tree>> {
-            #[allow(irrefutable_let_patterns)]
-            if let Self::ErroneousEndTag(x) = self {
-                ::std::option::Option::Some(x)
-            } else {
-                ::std::option::Option::None
-            }
-        }
-        ///Returns the node if it is of type `expression` ([`Expression`]), otherwise returns `None`
-        #[inline]
-        pub fn as_expression(self) -> ::std::option::Option<Expression<'tree>> {
-            #[allow(irrefutable_let_patterns)]
-            if let Self::Expression(x) = self {
-                ::std::option::Option::Some(x)
-            } else {
-                ::std::option::Option::None
-            }
-        }
-        ///Returns the node if it is of type `inline_directive` ([`InlineDirective`]), otherwise returns `None`
-        #[inline]
-        pub fn as_inline_directive(
-            self,
-        ) -> ::std::option::Option<InlineDirective<'tree>> {
-            #[allow(irrefutable_let_patterns)]
-            if let Self::InlineDirective(x) = self {
-                ::std::option::Option::Some(x)
-            } else {
-                ::std::option::Option::None
-            }
-        }
-        ///Returns the node if it is of type `keyword` ([`Keyword`]), otherwise returns `None`
-        #[inline]
-        pub fn as_keyword(self) -> ::std::option::Option<Keyword<'tree>> {
-            #[allow(irrefutable_let_patterns)]
-            if let Self::Keyword(x) = self {
-                ::std::option::Option::Some(x)
-            } else {
-                ::std::option::Option::None
-            }
-        }
-        ///Returns the node if it is of type `loops` ([`Loops`]), otherwise returns `None`
-        #[inline]
-        pub fn as_loops(self) -> ::std::option::Option<Loops<'tree>> {
-            #[allow(irrefutable_let_patterns)]
-            if let Self::Loops(x) = self {
-                ::std::option::Option::Some(x)
-            } else {
-                ::std::option::Option::None
-            }
-        }
-        ///Returns the node if it is of type `php_statement` ([`PhpStatement`]), otherwise returns `None`
-        #[inline]
-        pub fn as_php_statement(self) -> ::std::option::Option<PhpStatement<'tree>> {
-            #[allow(irrefutable_let_patterns)]
-            if let Self::PhpStatement(x) = self {
-                ::std::option::Option::Some(x)
-            } else {
-                ::std::option::Option::None
-            }
-        }
-        ///Returns the node if it is of type `props` ([`Props`]), otherwise returns `None`
-        #[inline]
-        pub fn as_props(self) -> ::std::option::Option<Props<'tree>> {
-            #[allow(irrefutable_let_patterns)]
-            if let Self::Props(x) = self {
-                ::std::option::Option::Some(x)
-            } else {
-                ::std::option::Option::None
-            }
-        }
-        ///Returns the node if it is of type `script_element` ([`ScriptElement`]), otherwise returns `None`
-        #[inline]
-        pub fn as_script_element(self) -> ::std::option::Option<ScriptElement<'tree>> {
-            #[allow(irrefutable_let_patterns)]
-            if let Self::ScriptElement(x) = self {
-                ::std::option::Option::Some(x)
-            } else {
-                ::std::option::Option::None
-            }
-        }
-        ///Returns the node if it is of type `style_element` ([`StyleElement`]), otherwise returns `None`
-        #[inline]
-        pub fn as_style_element(self) -> ::std::option::Option<StyleElement<'tree>> {
-            #[allow(irrefutable_let_patterns)]
-            if let Self::StyleElement(x) = self {
-                ::std::option::Option::Some(x)
-            } else {
-                ::std::option::Option::None
-            }
-        }
-        ///Returns the node if it is of type `switch` ([`Switch`]), otherwise returns `None`
-        #[inline]
-        pub fn as_switch(self) -> ::std::option::Option<Switch<'tree>> {
-            #[allow(irrefutable_let_patterns)]
-            if let Self::Switch(x) = self {
-                ::std::option::Option::Some(x)
-            } else {
-                ::std::option::Option::None
-            }
-        }
-        ///Returns the node if it is of type `text` ([`Text`]), otherwise returns `None`
-        #[inline]
-        pub fn as_text(self) -> ::std::option::Option<Text<'tree>> {
-            #[allow(irrefutable_let_patterns)]
-            if let Self::Text(x) = self {
-                ::std::option::Option::Some(x)
-            } else {
-                ::std::option::Option::None
-            }
-        }
-        /**Returns the node if it is of type `auth` ([`Auth`]), otherwise returns `None`.
-
-Follows the following chain:
-- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
-        #[inline]
-        pub fn as_auth(self) -> ::std::option::Option<Auth<'tree>> {
-            self.as_conditional()?.as_auth()
-        }
-        /**Returns the node if it is of type `authorization` ([`Authorization`]), otherwise returns `None`.
-
-Follows the following chain:
-- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
-        #[inline]
-        pub fn as_authorization(self) -> ::std::option::Option<Authorization<'tree>> {
-            self.as_conditional()?.as_authorization()
-        }
-        /**Returns the node if it is of type `custom` ([`Custom`]), otherwise returns `None`.
-
-Follows the following chain:
-- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
-        #[inline]
-        pub fn as_custom(self) -> ::std::option::Option<Custom<'tree>> {
-            self.as_conditional()?.as_custom()
-        }
-        /**Returns the node if it is of type `empty` ([`Empty`]), otherwise returns `None`.
-
-Follows the following chain:
-- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
-        #[inline]
-        pub fn as_empty(self) -> ::std::option::Option<Empty<'tree>> {
-            self.as_conditional()?.as_empty()
-        }
-        /**Returns the node if it is of type `env` ([`Env`]), otherwise returns `None`.
-
-Follows the following chain:
-- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
-        #[inline]
-        pub fn as_env(self) -> ::std::option::Option<Env<'tree>> {
-            self.as_conditional()?.as_env()
-        }
-        /**Returns the node if it is of type `error` ([`Error`]), otherwise returns `None`.
-
-Follows the following chain:
-- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
-        #[inline]
-        pub fn as_error(self) -> ::std::option::Option<Error<'tree>> {
-            self.as_conditional()?.as_error()
-        }
-        /**Returns the node if it is of type `feature` ([`Feature`]), otherwise returns `None`.
-
-Follows the following chain:
-- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
-        #[inline]
-        pub fn as_feature(self) -> ::std::option::Option<Feature<'tree>> {
-            self.as_conditional()?.as_feature()
-        }
-        /**Returns the node if it is of type `guest` ([`Guest`]), otherwise returns `None`.
-
-Follows the following chain:
-- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
-        #[inline]
-        pub fn as_guest(self) -> ::std::option::Option<Guest<'tree>> {
-            self.as_conditional()?.as_guest()
-        }
-        /**Returns the node if it is of type `hasSection` ([`Hassection`]), otherwise returns `None`.
-
-Follows the following chain:
-- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
-        #[inline]
-        pub fn as_hassection(self) -> ::std::option::Option<Hassection<'tree>> {
-            self.as_conditional()?.as_hassection()
-        }
-        /**Returns the node if it is of type `if` ([`If`]), otherwise returns `None`.
-
-Follows the following chain:
-- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
-        #[inline]
-        pub fn as_if(self) -> ::std::option::Option<If<'tree>> {
-            self.as_conditional()?.as_if()
-        }
-        /**Returns the node if it is of type `isset` ([`Isset`]), otherwise returns `None`.
-
-Follows the following chain:
-- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
-        #[inline]
-        pub fn as_isset(self) -> ::std::option::Option<Isset<'tree>> {
-            self.as_conditional()?.as_isset()
-        }
-        /**Returns the node if it is of type `production` ([`Production`]), otherwise returns `None`.
-
-Follows the following chain:
-- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
-        #[inline]
-        pub fn as_production(self) -> ::std::option::Option<Production<'tree>> {
-            self.as_conditional()?.as_production()
-        }
-        /**Returns the node if it is of type `sectionMissing` ([`Sectionmissing`]), otherwise returns `None`.
-
-Follows the following chain:
-- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
-        #[inline]
-        pub fn as_sectionmissing(self) -> ::std::option::Option<Sectionmissing<'tree>> {
-            self.as_conditional()?.as_sectionmissing()
-        }
-        /**Returns the node if it is of type `unless` ([`Unless`]), otherwise returns `None`.
-
-Follows the following chain:
-- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
-        #[inline]
-        pub fn as_unless(self) -> ::std::option::Option<Unless<'tree>> {
-            self.as_conditional()?.as_unless()
-        }
-        /**Returns the node if it is of type `assignment_expression` ([`AssignmentExpression`]), otherwise returns `None`.
-
-Follows the following chain:
-- `expression` ([`Expression < 'tree >`], from [`as_expression`](Self::as_expression))*/
-        #[inline]
-        pub fn as_assignment_expression(
-            self,
-        ) -> ::std::option::Option<AssignmentExpression<'tree>> {
-            self.as_expression()?.as_assignment_expression()
-        }
-        /**Returns the node if it is of type `augmented_assignment_expression` ([`AugmentedAssignmentExpression`]), otherwise returns `None`.
-
-Follows the following chain:
-- `expression` ([`Expression < 'tree >`], from [`as_expression`](Self::as_expression))*/
-        #[inline]
-        pub fn as_augmented_assignment_expression(
-            self,
-        ) -> ::std::option::Option<AugmentedAssignmentExpression<'tree>> {
-            self.as_expression()?.as_augmented_assignment_expression()
-        }
-        /**Returns the node if it is of type `binary_expression` ([`BinaryExpression`]), otherwise returns `None`.
-
-Follows the following chain:
-- `expression` ([`Expression < 'tree >`], from [`as_expression`](Self::as_expression))*/
-        #[inline]
-        pub fn as_binary_expression(
-            self,
-        ) -> ::std::option::Option<BinaryExpression<'tree>> {
-            self.as_expression()?.as_binary_expression()
-        }
-        /**Returns the node if it is of type `cast_expression` ([`CastExpression`]), otherwise returns `None`.
-
-Follows the following chain:
-- `expression` ([`Expression < 'tree >`], from [`as_expression`](Self::as_expression))*/
-        #[inline]
-        pub fn as_cast_expression(self) -> ::std::option::Option<CastExpression<'tree>> {
-            self.as_expression()?.as_cast_expression()
-        }
-        /**Returns the node if it is of type `conditional_expression` ([`ConditionalExpression`]), otherwise returns `None`.
-
-Follows the following chain:
-- `expression` ([`Expression < 'tree >`], from [`as_expression`](Self::as_expression))*/
-        #[inline]
-        pub fn as_conditional_expression(
-            self,
-        ) -> ::std::option::Option<ConditionalExpression<'tree>> {
-            self.as_expression()?.as_conditional_expression()
-        }
-        /**Returns the node if it is of type `primary_expression` ([`PrimaryExpression`]), otherwise returns `None`.
-
-Follows the following chain:
-- `expression` ([`Expression < 'tree >`], from [`as_expression`](Self::as_expression))*/
-        #[inline]
-        pub fn as_primary_expression(
-            self,
-        ) -> ::std::option::Option<PrimaryExpression<'tree>> {
-            self.as_expression()?.as_primary_expression()
-        }
-        /**Returns the node if it is of type `unary_op_expression` ([`UnaryOpExpression`]), otherwise returns `None`.
-
-Follows the following chain:
-- `expression` ([`Expression < 'tree >`], from [`as_expression`](Self::as_expression))*/
-        #[inline]
-        pub fn as_unary_op_expression(
-            self,
-        ) -> ::std::option::Option<UnaryOpExpression<'tree>> {
-            self.as_expression()?.as_unary_op_expression()
-        }
-        /**Returns the node if it is of type `anonymous_function` ([`AnonymousFunction`]), otherwise returns `None`.
-
-Follows the following chain:
-- `expression` ([`Expression < 'tree >`], from [`as_expression`](Self::as_expression))
-- `primary_expression` ([`PrimaryExpression < 'tree >`], from [`as_primary_expression`](Expression < 'tree >::as_primary_expression))*/
-        #[inline]
-        pub fn as_anonymous_function(
-            self,
-        ) -> ::std::option::Option<AnonymousFunction<'tree>> {
-            self.as_expression()?.as_primary_expression()?.as_anonymous_function()
-        }
-        /**Returns the node if it is of type `array_creation_expression` ([`ArrayCreationExpression`]), otherwise returns `None`.
-
-Follows the following chain:
-- `expression` ([`Expression < 'tree >`], from [`as_expression`](Self::as_expression))
-- `primary_expression` ([`PrimaryExpression < 'tree >`], from [`as_primary_expression`](Expression < 'tree >::as_primary_expression))*/
-        #[inline]
-        pub fn as_array_creation_expression(
-            self,
-        ) -> ::std::option::Option<ArrayCreationExpression<'tree>> {
-            self.as_expression()?.as_primary_expression()?.as_array_creation_expression()
-        }
-        /**Returns the node if it is of type `arrow_function` ([`ArrowFunction`]), otherwise returns `None`.
-
-Follows the following chain:
-- `expression` ([`Expression < 'tree >`], from [`as_expression`](Self::as_expression))
-- `primary_expression` ([`PrimaryExpression < 'tree >`], from [`as_primary_expression`](Expression < 'tree >::as_primary_expression))*/
-        #[inline]
-        pub fn as_arrow_function(self) -> ::std::option::Option<ArrowFunction<'tree>> {
-            self.as_expression()?.as_primary_expression()?.as_arrow_function()
-        }
-        /**Returns the node if it is of type `class_constant_access_expression` ([`ClassConstantAccessExpression`]), otherwise returns `None`.
-
-Follows the following chain:
-- `expression` ([`Expression < 'tree >`], from [`as_expression`](Self::as_expression))
-- `primary_expression` ([`PrimaryExpression < 'tree >`], from [`as_primary_expression`](Expression < 'tree >::as_primary_expression))*/
-        #[inline]
-        pub fn as_class_constant_access_expression(
-            self,
-        ) -> ::std::option::Option<ClassConstantAccessExpression<'tree>> {
-            self.as_expression()?
-                .as_primary_expression()?
-                .as_class_constant_access_expression()
-        }
-        /**Returns the node if it is of type `function_call_expression` ([`FunctionCallExpression`]), otherwise returns `None`.
-
-Follows the following chain:
-- `expression` ([`Expression < 'tree >`], from [`as_expression`](Self::as_expression))
-- `primary_expression` ([`PrimaryExpression < 'tree >`], from [`as_primary_expression`](Expression < 'tree >::as_primary_expression))*/
-        #[inline]
-        pub fn as_function_call_expression(
-            self,
-        ) -> ::std::option::Option<FunctionCallExpression<'tree>> {
-            self.as_expression()?.as_primary_expression()?.as_function_call_expression()
-        }
-        /**Returns the node if it is of type `literal` ([`Literal`]), otherwise returns `None`.
-
-Follows the following chain:
-- `expression` ([`Expression < 'tree >`], from [`as_expression`](Self::as_expression))
-- `primary_expression` ([`PrimaryExpression < 'tree >`], from [`as_primary_expression`](Expression < 'tree >::as_primary_expression))*/
-        #[inline]
-        pub fn as_literal(self) -> ::std::option::Option<Literal<'tree>> {
-            self.as_expression()?.as_primary_expression()?.as_literal()
-        }
-        /**Returns the node if it is of type `member_access_expression` ([`MemberAccessExpression`]), otherwise returns `None`.
-
-Follows the following chain:
-- `expression` ([`Expression < 'tree >`], from [`as_expression`](Self::as_expression))
-- `primary_expression` ([`PrimaryExpression < 'tree >`], from [`as_primary_expression`](Expression < 'tree >::as_primary_expression))*/
-        #[inline]
-        pub fn as_member_access_expression(
-            self,
-        ) -> ::std::option::Option<MemberAccessExpression<'tree>> {
-            self.as_expression()?.as_primary_expression()?.as_member_access_expression()
-        }
-        /**Returns the node if it is of type `name` ([`Name`]), otherwise returns `None`.
-
-Follows the following chain:
-- `expression` ([`Expression < 'tree >`], from [`as_expression`](Self::as_expression))
-- `primary_expression` ([`PrimaryExpression < 'tree >`], from [`as_primary_expression`](Expression < 'tree >::as_primary_expression))*/
-        #[inline]
-        pub fn as_name(self) -> ::std::option::Option<Name<'tree>> {
-            self.as_expression()?.as_primary_expression()?.as_name()
-        }
-        /**Returns the node if it is of type `object_creation_expression` ([`ObjectCreationExpression`]), otherwise returns `None`.
-
-Follows the following chain:
-- `expression` ([`Expression < 'tree >`], from [`as_expression`](Self::as_expression))
-- `primary_expression` ([`PrimaryExpression < 'tree >`], from [`as_primary_expression`](Expression < 'tree >::as_primary_expression))*/
-        #[inline]
-        pub fn as_object_creation_expression(
-            self,
-        ) -> ::std::option::Option<ObjectCreationExpression<'tree>> {
-            self.as_expression()?
-                .as_primary_expression()?
-                .as_object_creation_expression()
-        }
-        /**Returns the node if it is of type `parenthesized_expression` ([`ParenthesizedExpression`]), otherwise returns `None`.
-
-Follows the following chain:
-- `expression` ([`Expression < 'tree >`], from [`as_expression`](Self::as_expression))
-- `primary_expression` ([`PrimaryExpression < 'tree >`], from [`as_primary_expression`](Expression < 'tree >::as_primary_expression))*/
-        #[inline]
-        pub fn as_parenthesized_expression(
-            self,
-        ) -> ::std::option::Option<ParenthesizedExpression<'tree>> {
-            self.as_expression()?.as_primary_expression()?.as_parenthesized_expression()
-        }
-        /**Returns the node if it is of type `print_intrinsic` ([`PrintIntrinsic`]), otherwise returns `None`.
-
-Follows the following chain:
-- `expression` ([`Expression < 'tree >`], from [`as_expression`](Self::as_expression))
-- `primary_expression` ([`PrimaryExpression < 'tree >`], from [`as_primary_expression`](Expression < 'tree >::as_primary_expression))*/
-        #[inline]
-        pub fn as_print_intrinsic(self) -> ::std::option::Option<PrintIntrinsic<'tree>> {
-            self.as_expression()?.as_primary_expression()?.as_print_intrinsic()
-        }
-        /**Returns the node if it is of type `qualified_name` ([`QualifiedName`]), otherwise returns `None`.
-
-Follows the following chain:
-- `expression` ([`Expression < 'tree >`], from [`as_expression`](Self::as_expression))
-- `primary_expression` ([`PrimaryExpression < 'tree >`], from [`as_primary_expression`](Expression < 'tree >::as_primary_expression))*/
-        #[inline]
-        pub fn as_qualified_name(self) -> ::std::option::Option<QualifiedName<'tree>> {
-            self.as_expression()?.as_primary_expression()?.as_qualified_name()
-        }
-        /**Returns the node if it is of type `relative_name` ([`RelativeName`]), otherwise returns `None`.
-
-Follows the following chain:
-- `expression` ([`Expression < 'tree >`], from [`as_expression`](Self::as_expression))
-- `primary_expression` ([`PrimaryExpression < 'tree >`], from [`as_primary_expression`](Expression < 'tree >::as_primary_expression))*/
-        #[inline]
-        pub fn as_relative_name(self) -> ::std::option::Option<RelativeName<'tree>> {
-            self.as_expression()?.as_primary_expression()?.as_relative_name()
-        }
-        /**Returns the node if it is of type `scoped_call_expression` ([`ScopedCallExpression`]), otherwise returns `None`.
-
-Follows the following chain:
-- `expression` ([`Expression < 'tree >`], from [`as_expression`](Self::as_expression))
-- `primary_expression` ([`PrimaryExpression < 'tree >`], from [`as_primary_expression`](Expression < 'tree >::as_primary_expression))*/
-        #[inline]
-        pub fn as_scoped_call_expression(
-            self,
-        ) -> ::std::option::Option<ScopedCallExpression<'tree>> {
-            self.as_expression()?.as_primary_expression()?.as_scoped_call_expression()
-        }
-        /**Returns the node if it is of type `subscript_expression` ([`SubscriptExpression`]), otherwise returns `None`.
-
-Follows the following chain:
-- `expression` ([`Expression < 'tree >`], from [`as_expression`](Self::as_expression))
-- `primary_expression` ([`PrimaryExpression < 'tree >`], from [`as_primary_expression`](Expression < 'tree >::as_primary_expression))*/
-        #[inline]
-        pub fn as_subscript_expression(
-            self,
-        ) -> ::std::option::Option<SubscriptExpression<'tree>> {
-            self.as_expression()?.as_primary_expression()?.as_subscript_expression()
-        }
-        /**Returns the node if it is of type `throw_expression` ([`ThrowExpression`]), otherwise returns `None`.
-
-Follows the following chain:
-- `expression` ([`Expression < 'tree >`], from [`as_expression`](Self::as_expression))
-- `primary_expression` ([`PrimaryExpression < 'tree >`], from [`as_primary_expression`](Expression < 'tree >::as_primary_expression))*/
-        #[inline]
-        pub fn as_throw_expression(
-            self,
-        ) -> ::std::option::Option<ThrowExpression<'tree>> {
-            self.as_expression()?.as_primary_expression()?.as_throw_expression()
-        }
-        /**Returns the node if it is of type `update_expression` ([`UpdateExpression`]), otherwise returns `None`.
-
-Follows the following chain:
-- `expression` ([`Expression < 'tree >`], from [`as_expression`](Self::as_expression))
-- `primary_expression` ([`PrimaryExpression < 'tree >`], from [`as_primary_expression`](Expression < 'tree >::as_primary_expression))*/
-        #[inline]
-        pub fn as_update_expression(
-            self,
-        ) -> ::std::option::Option<UpdateExpression<'tree>> {
-            self.as_expression()?.as_primary_expression()?.as_update_expression()
-        }
-        /**Returns the node if it is of type `variable_name` ([`VariableName`]), otherwise returns `None`.
-
-Follows the following chain:
-- `expression` ([`Expression < 'tree >`], from [`as_expression`](Self::as_expression))
-- `primary_expression` ([`PrimaryExpression < 'tree >`], from [`as_primary_expression`](Expression < 'tree >::as_primary_expression))*/
-        #[inline]
-        pub fn as_variable_name(self) -> ::std::option::Option<VariableName<'tree>> {
-            self.as_expression()?.as_primary_expression()?.as_variable_name()
-        }
-        /**Returns the node if it is of type `boolean` ([`Boolean`]), otherwise returns `None`.
-
-Follows the following chain:
-- `expression` ([`Expression < 'tree >`], from [`as_expression`](Self::as_expression))
-- `primary_expression` ([`PrimaryExpression < 'tree >`], from [`as_primary_expression`](Expression < 'tree >::as_primary_expression))
-- `literal` ([`Literal < 'tree >`], from [`as_literal`](PrimaryExpression < 'tree >::as_literal))*/
-        #[inline]
-        pub fn as_boolean(self) -> ::std::option::Option<Boolean<'tree>> {
-            self.as_expression()?.as_primary_expression()?.as_literal()?.as_boolean()
-        }
-        /**Returns the node if it is of type `encapsed_string` ([`EncapsedString`]), otherwise returns `None`.
-
-Follows the following chain:
-- `expression` ([`Expression < 'tree >`], from [`as_expression`](Self::as_expression))
-- `primary_expression` ([`PrimaryExpression < 'tree >`], from [`as_primary_expression`](Expression < 'tree >::as_primary_expression))
-- `literal` ([`Literal < 'tree >`], from [`as_literal`](PrimaryExpression < 'tree >::as_literal))*/
-        #[inline]
-        pub fn as_encapsed_string(self) -> ::std::option::Option<EncapsedString<'tree>> {
-            self.as_expression()?
-                .as_primary_expression()?
-                .as_literal()?
-                .as_encapsed_string()
-        }
-        /**Returns the node if it is of type `float` ([`Float`]), otherwise returns `None`.
-
-Follows the following chain:
-- `expression` ([`Expression < 'tree >`], from [`as_expression`](Self::as_expression))
-- `primary_expression` ([`PrimaryExpression < 'tree >`], from [`as_primary_expression`](Expression < 'tree >::as_primary_expression))
-- `literal` ([`Literal < 'tree >`], from [`as_literal`](PrimaryExpression < 'tree >::as_literal))*/
-        #[inline]
-        pub fn as_float(self) -> ::std::option::Option<Float<'tree>> {
-            self.as_expression()?.as_primary_expression()?.as_literal()?.as_float()
-        }
-        /**Returns the node if it is of type `integer` ([`Integer`]), otherwise returns `None`.
-
-Follows the following chain:
-- `expression` ([`Expression < 'tree >`], from [`as_expression`](Self::as_expression))
-- `primary_expression` ([`PrimaryExpression < 'tree >`], from [`as_primary_expression`](Expression < 'tree >::as_primary_expression))
-- `literal` ([`Literal < 'tree >`], from [`as_literal`](PrimaryExpression < 'tree >::as_literal))*/
-        #[inline]
-        pub fn as_integer(self) -> ::std::option::Option<Integer<'tree>> {
-            self.as_expression()?.as_primary_expression()?.as_literal()?.as_integer()
-        }
-        /**Returns the node if it is of type `null` ([`Null`]), otherwise returns `None`.
-
-Follows the following chain:
-- `expression` ([`Expression < 'tree >`], from [`as_expression`](Self::as_expression))
-- `primary_expression` ([`PrimaryExpression < 'tree >`], from [`as_primary_expression`](Expression < 'tree >::as_primary_expression))
-- `literal` ([`Literal < 'tree >`], from [`as_literal`](PrimaryExpression < 'tree >::as_literal))*/
-        #[inline]
-        pub fn as_null(self) -> ::std::option::Option<Null<'tree>> {
-            self.as_expression()?.as_primary_expression()?.as_literal()?.as_null()
-        }
-        /**Returns the node if it is of type `string` ([`String`]), otherwise returns `None`.
-
-Follows the following chain:
-- `expression` ([`Expression < 'tree >`], from [`as_expression`](Self::as_expression))
-- `primary_expression` ([`PrimaryExpression < 'tree >`], from [`as_primary_expression`](Expression < 'tree >::as_primary_expression))
-- `literal` ([`Literal < 'tree >`], from [`as_literal`](PrimaryExpression < 'tree >::as_literal))*/
-        #[inline]
-        pub fn as_string(self) -> ::std::option::Option<String<'tree>> {
-            self.as_expression()?.as_primary_expression()?.as_literal()?.as_string()
-        }
-        /**Returns the node if it is of type `for_directive` ([`ForDirective`]), otherwise returns `None`.
-
-Follows the following chain:
-- `loops` ([`Loops < 'tree >`], from [`as_loops`](Self::as_loops))*/
-        #[inline]
-        pub fn as_for_directive(self) -> ::std::option::Option<ForDirective<'tree>> {
-            self.as_loops()?.as_for_directive()
-        }
-        /**Returns the node if it is of type `foreach_directive` ([`ForeachDirective`]), otherwise returns `None`.
-
-Follows the following chain:
-- `loops` ([`Loops < 'tree >`], from [`as_loops`](Self::as_loops))*/
-        #[inline]
-        pub fn as_foreach_directive(
-            self,
-        ) -> ::std::option::Option<ForeachDirective<'tree>> {
-            self.as_loops()?.as_foreach_directive()
-        }
-        /**Returns the node if it is of type `forelse_directive` ([`ForelseDirective`]), otherwise returns `None`.
-
-Follows the following chain:
-- `loops` ([`Loops < 'tree >`], from [`as_loops`](Self::as_loops))*/
-        #[inline]
-        pub fn as_forelse_directive(
-            self,
-        ) -> ::std::option::Option<ForelseDirective<'tree>> {
-            self.as_loops()?.as_forelse_directive()
-        }
-        /**Returns the node if it is of type `while_directive` ([`WhileDirective`]), otherwise returns `None`.
-
-Follows the following chain:
-- `loops` ([`Loops < 'tree >`], from [`as_loops`](Self::as_loops))*/
-        #[inline]
-        pub fn as_while_directive(self) -> ::std::option::Option<WhileDirective<'tree>> {
-            self.as_loops()?.as_while_directive()
-        }
-        /**Returns the node if it is of type `escaped` ([`Escaped`]), otherwise returns `None`.
-
-Follows the following chain:
-- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
-        #[inline]
-        pub fn as_escaped(self) -> ::std::option::Option<Escaped<'tree>> {
-            self.as_php_statement()?.as_escaped()
-        }
-        /**Returns the node if it is of type `inline_raw` ([`InlineRaw`]), otherwise returns `None`.
-
-Follows the following chain:
-- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
-        #[inline]
-        pub fn as_inline_raw(self) -> ::std::option::Option<InlineRaw<'tree>> {
-            self.as_php_statement()?.as_inline_raw()
-        }
-        /**Returns the node if it is of type `multi_line_raw` ([`MultiLineRaw`]), otherwise returns `None`.
-
-Follows the following chain:
-- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
-        #[inline]
-        pub fn as_multi_line_raw(self) -> ::std::option::Option<MultiLineRaw<'tree>> {
-            self.as_php_statement()?.as_multi_line_raw()
-        }
-        /**Returns the node if it is of type `php` ([`Php`]), otherwise returns `None`.
-
-Follows the following chain:
-- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
-        #[inline]
-        pub fn as_php(self) -> ::std::option::Option<Php<'tree>> {
-            self.as_php_statement()?.as_php()
-        }
-        /**Returns the node if it is of type `setup` ([`Setup`]), otherwise returns `None`.
-
-Follows the following chain:
-- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
-        #[inline]
-        pub fn as_setup(self) -> ::std::option::Option<Setup<'tree>> {
-            self.as_php_statement()?.as_setup()
-        }
-        /**Returns the node if it is of type `unescaped` ([`Unescaped`]), otherwise returns `None`.
-
-Follows the following chain:
-- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
-        #[inline]
-        pub fn as_unescaped(self) -> ::std::option::Option<Unescaped<'tree>> {
-            self.as_php_statement()?.as_unescaped()
-        }
-    }
-    #[automatically_derived]
-    impl<'tree> ::type_sitter::Node<'tree>
-    for Anon56463528831969555037115503089298760884<'tree> {
-        type WithLifetime<'a> = Anon56463528831969555037115503089298760884<'a>;
-        const KIND: &'static str = "{( | ) | , | comment | conditional | directive | element | entity | erroneous_end_tag | expression | inline_directive | keyword | loops | php_statement | props | script_element | style_element | switch | text}";
-        #[inline]
-        fn try_from_raw(
-            node: ::type_sitter::raw::Node<'tree>,
-        ) -> ::type_sitter::NodeResult<'tree, Self> {
-            if let Ok(this) = <symbols::LParen<
-                'tree,
-            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
-                return Ok(Self::LParen(this));
-            }
-            if let Ok(this) = <symbols::RParen<
-                'tree,
-            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
-                return Ok(Self::RParen(this));
-            }
-            if let Ok(this) = <symbols::Comma<
-                'tree,
-            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
-                return Ok(Self::Comma(this));
-            }
-            if let Ok(this) = <Comment<
-                'tree,
-            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
-                return Ok(Self::Comment(this));
-            }
-            if let Ok(this) = <Conditional<
-                'tree,
-            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
-                return Ok(Self::Conditional(this));
-            }
-            if let Ok(this) = <Directive<
-                'tree,
-            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
-                return Ok(Self::Directive(this));
-            }
-            if let Ok(this) = <Element<
-                'tree,
-            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
-                return Ok(Self::Element(this));
-            }
-            if let Ok(this) = <Entity<
-                'tree,
-            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
-                return Ok(Self::Entity(this));
-            }
-            if let Ok(this) = <ErroneousEndTag<
-                'tree,
-            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
-                return Ok(Self::ErroneousEndTag(this));
-            }
-            if let Ok(this) = <Expression<
-                'tree,
-            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
-                return Ok(Self::Expression(this));
-            }
-            if let Ok(this) = <InlineDirective<
-                'tree,
-            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
-                return Ok(Self::InlineDirective(this));
-            }
-            if let Ok(this) = <Keyword<
-                'tree,
-            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
-                return Ok(Self::Keyword(this));
-            }
-            if let Ok(this) = <Loops<
-                'tree,
-            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
-                return Ok(Self::Loops(this));
-            }
-            if let Ok(this) = <PhpStatement<
-                'tree,
-            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
-                return Ok(Self::PhpStatement(this));
-            }
-            if let Ok(this) = <Props<
-                'tree,
-            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
-                return Ok(Self::Props(this));
-            }
-            if let Ok(this) = <ScriptElement<
-                'tree,
-            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
-                return Ok(Self::ScriptElement(this));
-            }
-            if let Ok(this) = <StyleElement<
-                'tree,
-            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
-                return Ok(Self::StyleElement(this));
-            }
-            if let Ok(this) = <Switch<
-                'tree,
-            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
-                return Ok(Self::Switch(this));
-            }
-            if let Ok(this) = <Text<
-                'tree,
-            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
-                return Ok(Self::Text(this));
-            }
-            Err(::type_sitter::IncorrectKind::new::<Self>(node))
-        }
-        #[inline]
-        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
-            match self {
-                Self::LParen(x) => ::type_sitter::Node::raw(x),
-                Self::RParen(x) => ::type_sitter::Node::raw(x),
-                Self::Comma(x) => ::type_sitter::Node::raw(x),
-                Self::Comment(x) => ::type_sitter::Node::raw(x),
-                Self::Conditional(x) => ::type_sitter::Node::raw(x),
-                Self::Directive(x) => ::type_sitter::Node::raw(x),
-                Self::Element(x) => ::type_sitter::Node::raw(x),
-                Self::Entity(x) => ::type_sitter::Node::raw(x),
-                Self::ErroneousEndTag(x) => ::type_sitter::Node::raw(x),
-                Self::Expression(x) => ::type_sitter::Node::raw(x),
-                Self::InlineDirective(x) => ::type_sitter::Node::raw(x),
-                Self::Keyword(x) => ::type_sitter::Node::raw(x),
-                Self::Loops(x) => ::type_sitter::Node::raw(x),
-                Self::PhpStatement(x) => ::type_sitter::Node::raw(x),
-                Self::Props(x) => ::type_sitter::Node::raw(x),
-                Self::ScriptElement(x) => ::type_sitter::Node::raw(x),
-                Self::StyleElement(x) => ::type_sitter::Node::raw(x),
-                Self::Switch(x) => ::type_sitter::Node::raw(x),
-                Self::Text(x) => ::type_sitter::Node::raw(x),
-            }
-        }
-        #[inline]
-        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
-            match self {
-                Self::LParen(x) => ::type_sitter::Node::raw_mut(x),
-                Self::RParen(x) => ::type_sitter::Node::raw_mut(x),
-                Self::Comma(x) => ::type_sitter::Node::raw_mut(x),
-                Self::Comment(x) => ::type_sitter::Node::raw_mut(x),
-                Self::Conditional(x) => ::type_sitter::Node::raw_mut(x),
-                Self::Directive(x) => ::type_sitter::Node::raw_mut(x),
-                Self::Element(x) => ::type_sitter::Node::raw_mut(x),
-                Self::Entity(x) => ::type_sitter::Node::raw_mut(x),
-                Self::ErroneousEndTag(x) => ::type_sitter::Node::raw_mut(x),
-                Self::Expression(x) => ::type_sitter::Node::raw_mut(x),
-                Self::InlineDirective(x) => ::type_sitter::Node::raw_mut(x),
-                Self::Keyword(x) => ::type_sitter::Node::raw_mut(x),
-                Self::Loops(x) => ::type_sitter::Node::raw_mut(x),
-                Self::PhpStatement(x) => ::type_sitter::Node::raw_mut(x),
-                Self::Props(x) => ::type_sitter::Node::raw_mut(x),
-                Self::ScriptElement(x) => ::type_sitter::Node::raw_mut(x),
-                Self::StyleElement(x) => ::type_sitter::Node::raw_mut(x),
-                Self::Switch(x) => ::type_sitter::Node::raw_mut(x),
-                Self::Text(x) => ::type_sitter::Node::raw_mut(x),
-            }
-        }
-        #[inline]
-        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
-            match self {
-                Self::LParen(x) => x.into_raw(),
-                Self::RParen(x) => x.into_raw(),
-                Self::Comma(x) => x.into_raw(),
-                Self::Comment(x) => x.into_raw(),
-                Self::Conditional(x) => x.into_raw(),
-                Self::Directive(x) => x.into_raw(),
-                Self::Element(x) => x.into_raw(),
-                Self::Entity(x) => x.into_raw(),
-                Self::ErroneousEndTag(x) => x.into_raw(),
-                Self::Expression(x) => x.into_raw(),
-                Self::InlineDirective(x) => x.into_raw(),
-                Self::Keyword(x) => x.into_raw(),
-                Self::Loops(x) => x.into_raw(),
-                Self::PhpStatement(x) => x.into_raw(),
-                Self::Props(x) => x.into_raw(),
-                Self::ScriptElement(x) => x.into_raw(),
-                Self::StyleElement(x) => x.into_raw(),
-                Self::Switch(x) => x.into_raw(),
-                Self::Text(x) => x.into_raw(),
+                Self::Atasset(x) => x.into_raw(),
+                Self::Ataware(x) => x.into_raw(),
+                Self::Ateach(x) => x.into_raw(),
+                Self::Atextends(x) => x.into_raw(),
+                Self::Atextract(x) => x.into_raw(),
+                Self::Atfield(x) => x.into_raw(),
+                Self::Atimport(x) => x.into_raw(),
+                Self::Atinclude(x) => x.into_raw(),
+                Self::Atincludefirst(x) => x.into_raw(),
+                Self::Atincludeif(x) => x.into_raw(),
+                Self::Atincludeisolated(x) => x.into_raw(),
+                Self::Atincludeunless(x) => x.into_raw(),
+                Self::Atincludewhen(x) => x.into_raw(),
+                Self::Atinject(x) => x.into_raw(),
+                Self::Atjs(x) => x.into_raw(),
+                Self::Atjson(x) => x.into_raw(),
+                Self::Atlivewire(x) => x.into_raw(),
+                Self::Atmethod(x) => x.into_raw(),
+                Self::Atoptions(x) => x.into_raw(),
+                Self::Atscript(x) => x.into_raw(),
+                Self::Atservers(x) => x.into_raw(),
+                Self::Atset(x) => x.into_raw(),
+                Self::Atstack(x) => x.into_raw(),
+                Self::Atsvg(x) => x.into_raw(),
+                Self::Atthumbnail(x) => x.into_raw(),
+                Self::Atuse(x) => x.into_raw(),
+                Self::Atvite(x) => x.into_raw(),
+                Self::Atwireuiscripts(x) => x.into_raw(),
+                Self::Atyield(x) => x.into_raw(),
             }
         }
     }
@@ -31089,6 +36025,14 @@ Follows the following chain:
         pub fn as_authorization(self) -> ::std::option::Option<Authorization<'tree>> {
             self.as_conditional()?.as_authorization()
         }
+        /**Returns the node if it is of type `context` ([`Context`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_context(self) -> ::std::option::Option<Context<'tree>> {
+            self.as_conditional()?.as_context()
+        }
         /**Returns the node if it is of type `custom` ([`Custom`]), otherwise returns `None`.
 
 Follows the following chain:
@@ -31176,6 +36120,14 @@ Follows the following chain:
         #[inline]
         pub fn as_sectionmissing(self) -> ::std::option::Option<Sectionmissing<'tree>> {
             self.as_conditional()?.as_sectionmissing()
+        }
+        /**Returns the node if it is of type `session` ([`Session`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_session(self) -> ::std::option::Option<Session<'tree>> {
+            self.as_conditional()?.as_session()
         }
         /**Returns the node if it is of type `unless` ([`Unless`]), otherwise returns `None`.
 
@@ -31791,6 +36743,14 @@ Follows the following chain:
         pub fn as_authorization(self) -> ::std::option::Option<Authorization<'tree>> {
             self.as_conditional()?.as_authorization()
         }
+        /**Returns the node if it is of type `context` ([`Context`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_context(self) -> ::std::option::Option<Context<'tree>> {
+            self.as_conditional()?.as_context()
+        }
         /**Returns the node if it is of type `custom` ([`Custom`]), otherwise returns `None`.
 
 Follows the following chain:
@@ -31878,6 +36838,14 @@ Follows the following chain:
         #[inline]
         pub fn as_sectionmissing(self) -> ::std::option::Option<Sectionmissing<'tree>> {
             self.as_conditional()?.as_sectionmissing()
+        }
+        /**Returns the node if it is of type `session` ([`Session`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_session(self) -> ::std::option::Option<Session<'tree>> {
+            self.as_conditional()?.as_session()
         }
         /**Returns the node if it is of type `unless` ([`Unless`]), otherwise returns `None`.
 
@@ -34012,32 +38980,20 @@ Follows the following chain:
             }
         }
     }
-    /**One of `{attribute_name | attribute_value | directive | php_statement | quoted_attribute_value | variable_name}`:
+    /**One of `{attribute_name | attribute_value | quoted_attribute_value}`:
 - [`AttributeName`]
 - [`AttributeValue`]
-- [`Directive`]
-- [`PhpStatement`]
-- [`QuotedAttributeValue`]
-- [`VariableName`]*/
+- [`QuotedAttributeValue`]*/
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     #[allow(non_camel_case_types)]
-    pub enum AttributeName_AttributeValue_Directive_PhpStatement_QuotedAttributeValue_VariableName<
-        'tree,
-    > {
+    pub enum AttributeName_AttributeValue_QuotedAttributeValue<'tree> {
         AttributeName(AttributeName<'tree>),
         AttributeValue(AttributeValue<'tree>),
-        Directive(Directive<'tree>),
-        PhpStatement(PhpStatement<'tree>),
         QuotedAttributeValue(QuotedAttributeValue<'tree>),
-        VariableName(VariableName<'tree>),
     }
     #[automatically_derived]
     #[allow(unused)]
-    impl<
-        'tree,
-    > AttributeName_AttributeValue_Directive_PhpStatement_QuotedAttributeValue_VariableName<
-        'tree,
-    > {
+    impl<'tree> AttributeName_AttributeValue_QuotedAttributeValue<'tree> {
         ///Returns the node if it is of type `attribute_name` ([`AttributeName`]), otherwise returns `None`
         #[inline]
         pub fn as_attribute_name(self) -> ::std::option::Option<AttributeName<'tree>> {
@@ -34058,21 +39014,101 @@ Follows the following chain:
                 ::std::option::Option::None
             }
         }
-        ///Returns the node if it is of type `directive` ([`Directive`]), otherwise returns `None`
+        ///Returns the node if it is of type `quoted_attribute_value` ([`QuotedAttributeValue`]), otherwise returns `None`
         #[inline]
-        pub fn as_directive(self) -> ::std::option::Option<Directive<'tree>> {
+        pub fn as_quoted_attribute_value(
+            self,
+        ) -> ::std::option::Option<QuotedAttributeValue<'tree>> {
             #[allow(irrefutable_let_patterns)]
-            if let Self::Directive(x) = self {
+            if let Self::QuotedAttributeValue(x) = self {
                 ::std::option::Option::Some(x)
             } else {
                 ::std::option::Option::None
             }
         }
-        ///Returns the node if it is of type `php_statement` ([`PhpStatement`]), otherwise returns `None`
+    }
+    #[automatically_derived]
+    impl<'tree> ::type_sitter::Node<'tree>
+    for AttributeName_AttributeValue_QuotedAttributeValue<'tree> {
+        type WithLifetime<'a> = AttributeName_AttributeValue_QuotedAttributeValue<'a>;
+        const KIND: &'static str = "{attribute_name | attribute_value | quoted_attribute_value}";
         #[inline]
-        pub fn as_php_statement(self) -> ::std::option::Option<PhpStatement<'tree>> {
+        fn try_from_raw(
+            node: ::type_sitter::raw::Node<'tree>,
+        ) -> ::type_sitter::NodeResult<'tree, Self> {
+            match node.kind() {
+                "attribute_name" => {
+                    Ok(unsafe {
+                        Self::AttributeName(
+                            <AttributeName<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "attribute_value" => {
+                    Ok(unsafe {
+                        Self::AttributeValue(
+                            <AttributeValue<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "quoted_attribute_value" => {
+                    Ok(unsafe {
+                        Self::QuotedAttributeValue(
+                            <QuotedAttributeValue<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                _ => Err(::type_sitter::IncorrectKind::new::<Self>(node)),
+            }
+        }
+        #[inline]
+        fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
+            match self {
+                Self::AttributeName(x) => ::type_sitter::Node::raw(x),
+                Self::AttributeValue(x) => ::type_sitter::Node::raw(x),
+                Self::QuotedAttributeValue(x) => ::type_sitter::Node::raw(x),
+            }
+        }
+        #[inline]
+        fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
+            match self {
+                Self::AttributeName(x) => ::type_sitter::Node::raw_mut(x),
+                Self::AttributeValue(x) => ::type_sitter::Node::raw_mut(x),
+                Self::QuotedAttributeValue(x) => ::type_sitter::Node::raw_mut(x),
+            }
+        }
+        #[inline]
+        fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
+            match self {
+                Self::AttributeName(x) => x.into_raw(),
+                Self::AttributeValue(x) => x.into_raw(),
+                Self::QuotedAttributeValue(x) => x.into_raw(),
+            }
+        }
+    }
+    /**One of `{attribute_name | quoted_attribute_value}`:
+- [`AttributeName`]
+- [`QuotedAttributeValue`]*/
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[allow(non_camel_case_types)]
+    pub enum AttributeName_QuotedAttributeValue<'tree> {
+        AttributeName(AttributeName<'tree>),
+        QuotedAttributeValue(QuotedAttributeValue<'tree>),
+    }
+    #[automatically_derived]
+    #[allow(unused)]
+    impl<'tree> AttributeName_QuotedAttributeValue<'tree> {
+        ///Returns the node if it is of type `attribute_name` ([`AttributeName`]), otherwise returns `None`
+        #[inline]
+        pub fn as_attribute_name(self) -> ::std::option::Option<AttributeName<'tree>> {
             #[allow(irrefutable_let_patterns)]
-            if let Self::PhpStatement(x) = self {
+            if let Self::AttributeName(x) = self {
                 ::std::option::Option::Some(x)
             } else {
                 ::std::option::Option::None
@@ -34090,141 +39126,57 @@ Follows the following chain:
                 ::std::option::Option::None
             }
         }
-        ///Returns the node if it is of type `variable_name` ([`VariableName`]), otherwise returns `None`
-        #[inline]
-        pub fn as_variable_name(self) -> ::std::option::Option<VariableName<'tree>> {
-            #[allow(irrefutable_let_patterns)]
-            if let Self::VariableName(x) = self {
-                ::std::option::Option::Some(x)
-            } else {
-                ::std::option::Option::None
-            }
-        }
-        /**Returns the node if it is of type `escaped` ([`Escaped`]), otherwise returns `None`.
-
-Follows the following chain:
-- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
-        #[inline]
-        pub fn as_escaped(self) -> ::std::option::Option<Escaped<'tree>> {
-            self.as_php_statement()?.as_escaped()
-        }
-        /**Returns the node if it is of type `inline_raw` ([`InlineRaw`]), otherwise returns `None`.
-
-Follows the following chain:
-- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
-        #[inline]
-        pub fn as_inline_raw(self) -> ::std::option::Option<InlineRaw<'tree>> {
-            self.as_php_statement()?.as_inline_raw()
-        }
-        /**Returns the node if it is of type `multi_line_raw` ([`MultiLineRaw`]), otherwise returns `None`.
-
-Follows the following chain:
-- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
-        #[inline]
-        pub fn as_multi_line_raw(self) -> ::std::option::Option<MultiLineRaw<'tree>> {
-            self.as_php_statement()?.as_multi_line_raw()
-        }
-        /**Returns the node if it is of type `php` ([`Php`]), otherwise returns `None`.
-
-Follows the following chain:
-- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
-        #[inline]
-        pub fn as_php(self) -> ::std::option::Option<Php<'tree>> {
-            self.as_php_statement()?.as_php()
-        }
-        /**Returns the node if it is of type `setup` ([`Setup`]), otherwise returns `None`.
-
-Follows the following chain:
-- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
-        #[inline]
-        pub fn as_setup(self) -> ::std::option::Option<Setup<'tree>> {
-            self.as_php_statement()?.as_setup()
-        }
-        /**Returns the node if it is of type `unescaped` ([`Unescaped`]), otherwise returns `None`.
-
-Follows the following chain:
-- `php_statement` ([`PhpStatement < 'tree >`], from [`as_php_statement`](Self::as_php_statement))*/
-        #[inline]
-        pub fn as_unescaped(self) -> ::std::option::Option<Unescaped<'tree>> {
-            self.as_php_statement()?.as_unescaped()
-        }
     }
     #[automatically_derived]
     impl<'tree> ::type_sitter::Node<'tree>
-    for AttributeName_AttributeValue_Directive_PhpStatement_QuotedAttributeValue_VariableName<
-        'tree,
-    > {
-        type WithLifetime<'a> = AttributeName_AttributeValue_Directive_PhpStatement_QuotedAttributeValue_VariableName<
-            'a,
-        >;
-        const KIND: &'static str = "{attribute_name | attribute_value | directive | php_statement | quoted_attribute_value | variable_name}";
+    for AttributeName_QuotedAttributeValue<'tree> {
+        type WithLifetime<'a> = AttributeName_QuotedAttributeValue<'a>;
+        const KIND: &'static str = "{attribute_name | quoted_attribute_value}";
         #[inline]
         fn try_from_raw(
             node: ::type_sitter::raw::Node<'tree>,
         ) -> ::type_sitter::NodeResult<'tree, Self> {
-            if let Ok(this) = <AttributeName<
-                'tree,
-            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
-                return Ok(Self::AttributeName(this));
+            match node.kind() {
+                "attribute_name" => {
+                    Ok(unsafe {
+                        Self::AttributeName(
+                            <AttributeName<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                "quoted_attribute_value" => {
+                    Ok(unsafe {
+                        Self::QuotedAttributeValue(
+                            <QuotedAttributeValue<
+                                'tree,
+                            > as ::type_sitter::Node<'tree>>::from_raw_unchecked(node),
+                        )
+                    })
+                }
+                _ => Err(::type_sitter::IncorrectKind::new::<Self>(node)),
             }
-            if let Ok(this) = <AttributeValue<
-                'tree,
-            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
-                return Ok(Self::AttributeValue(this));
-            }
-            if let Ok(this) = <Directive<
-                'tree,
-            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
-                return Ok(Self::Directive(this));
-            }
-            if let Ok(this) = <PhpStatement<
-                'tree,
-            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
-                return Ok(Self::PhpStatement(this));
-            }
-            if let Ok(this) = <QuotedAttributeValue<
-                'tree,
-            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
-                return Ok(Self::QuotedAttributeValue(this));
-            }
-            if let Ok(this) = <VariableName<
-                'tree,
-            > as ::type_sitter::Node<'tree>>::try_from_raw(node) {
-                return Ok(Self::VariableName(this));
-            }
-            Err(::type_sitter::IncorrectKind::new::<Self>(node))
         }
         #[inline]
         fn raw(&self) -> &::type_sitter::raw::Node<'tree> {
             match self {
                 Self::AttributeName(x) => ::type_sitter::Node::raw(x),
-                Self::AttributeValue(x) => ::type_sitter::Node::raw(x),
-                Self::Directive(x) => ::type_sitter::Node::raw(x),
-                Self::PhpStatement(x) => ::type_sitter::Node::raw(x),
                 Self::QuotedAttributeValue(x) => ::type_sitter::Node::raw(x),
-                Self::VariableName(x) => ::type_sitter::Node::raw(x),
             }
         }
         #[inline]
         fn raw_mut(&mut self) -> &mut ::type_sitter::raw::Node<'tree> {
             match self {
                 Self::AttributeName(x) => ::type_sitter::Node::raw_mut(x),
-                Self::AttributeValue(x) => ::type_sitter::Node::raw_mut(x),
-                Self::Directive(x) => ::type_sitter::Node::raw_mut(x),
-                Self::PhpStatement(x) => ::type_sitter::Node::raw_mut(x),
                 Self::QuotedAttributeValue(x) => ::type_sitter::Node::raw_mut(x),
-                Self::VariableName(x) => ::type_sitter::Node::raw_mut(x),
             }
         }
         #[inline]
         fn into_raw(self) -> ::type_sitter::raw::Node<'tree> {
             match self {
                 Self::AttributeName(x) => x.into_raw(),
-                Self::AttributeValue(x) => x.into_raw(),
-                Self::Directive(x) => x.into_raw(),
-                Self::PhpStatement(x) => x.into_raw(),
                 Self::QuotedAttributeValue(x) => x.into_raw(),
-                Self::VariableName(x) => x.into_raw(),
             }
         }
     }
@@ -34330,6 +39282,14 @@ Follows the following chain:
         pub fn as_authorization(self) -> ::std::option::Option<Authorization<'tree>> {
             self.as_conditional()?.as_authorization()
         }
+        /**Returns the node if it is of type `context` ([`Context`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_context(self) -> ::std::option::Option<Context<'tree>> {
+            self.as_conditional()?.as_context()
+        }
         /**Returns the node if it is of type `custom` ([`Custom`]), otherwise returns `None`.
 
 Follows the following chain:
@@ -34417,6 +39377,14 @@ Follows the following chain:
         #[inline]
         pub fn as_sectionmissing(self) -> ::std::option::Option<Sectionmissing<'tree>> {
             self.as_conditional()?.as_sectionmissing()
+        }
+        /**Returns the node if it is of type `session` ([`Session`]), otherwise returns `None`.
+
+Follows the following chain:
+- `conditional` ([`Conditional < 'tree >`], from [`as_conditional`](Self::as_conditional))*/
+        #[inline]
+        pub fn as_session(self) -> ::std::option::Option<Session<'tree>> {
+            self.as_conditional()?.as_session()
         }
         /**Returns the node if it is of type `unless` ([`Unless`]), otherwise returns `None`.
 

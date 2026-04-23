@@ -18,6 +18,11 @@ pub trait NodeExt<'tree>: Node<'tree> {
     ) -> impl Iterator<Item = UntypedNode<'tree>> {
         self.raw().children(&mut cursor.0).map(UntypedNode::from)
     }
+
+    /// Iterate over the current node and its ancestors up until the root node
+    fn ancestors(&self) -> impl Iterator<Item = UntypedNode<'tree>> {
+        std::iter::successors(Some(self.upcast()), Node::parent)
+    }
 }
 
 impl<'tree> NodeExt<'tree> for UntypedNode<'tree> {}
