@@ -4,12 +4,17 @@ use tracing::Level;
 async fn main() {
     let dir = std::env::temp_dir();
     eprintln!("file logging at directory: {dir:?}");
+    let max_level = if cfg!(debug_assertions) {
+        Level::DEBUG
+    } else {
+        Level::INFO
+    };
 
     let file_appender = tracing_appender::rolling::daily(dir, "blase.log");
     let (file_appender, _guard) = tracing_appender::non_blocking(file_appender);
     tracing_subscriber::fmt()
         .with_ansi(false)
-        .with_max_level(Level::DEBUG)
+        .with_max_level(max_level)
         .with_writer(file_appender)
         .init();
 
