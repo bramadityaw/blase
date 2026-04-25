@@ -3,7 +3,10 @@ use type_sitter::{HasChild, Node, UntypedNode};
 
 use crate::{
     config::Config,
-    db::{DocumentDatabase, FilePosition},
+    db::{
+        DocumentDatabase, FilePosition,
+        def::{ComponentName, LayoutName},
+    },
     lsp, resolve_path,
 };
 
@@ -60,11 +63,11 @@ fn goto_def_for_component(
     tag_name: ast::blade::TagName,
     contents: &str,
 ) -> Option<Vec<lsp_types::Location>> {
-    let name = contents.get(tag_name.byte_range())?.strip_prefix("x-")?;
-    let (class_path, resources_path) = if name.ends_with("layout") {
-        resolve_path::layout_paths(name.strip_suffix("layout").unwrap(), config)
+    let name = contents.get(tag_name.byte_range())?;
+    let (class_path, resources_path) = if let Some(layout) = LayoutName::new(name) {
+        resolve_path::layout_paths(layout, config)
     } else {
-        resolve_path::component_paths(name, config)
+        resolve_path::component_paths(ComponentName::new(name)?, config)
     };
     tracing::debug!(
         class_path = class_path.as_str(),
