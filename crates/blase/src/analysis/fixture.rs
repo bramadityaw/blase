@@ -132,16 +132,6 @@ impl PositionFixture {
     }
 }
 
-pub fn file(fixture: &str) -> (Analysis, Utf8PathBuf) {
-    let mut host = AnalysisHost::default();
-    let fixture = Fixture::parse(fixture)
-        .first()
-        .cloned()
-        .expect("More than one file");
-    host.set_source_file(fixture.path.clone(), &fixture.text);
-    (host.analysis(), fixture.path.clone())
-}
-
 pub fn position(fixture: &str) -> (Analysis, FilePosition) {
     let mut host = AnalysisHost::default();
     let PositionFixture {
