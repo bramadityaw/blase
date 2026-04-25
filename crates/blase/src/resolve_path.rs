@@ -1,12 +1,15 @@
 use camino::{Utf8Path, Utf8PathBuf};
 
-use crate::config::Config;
+use crate::{
+    config::Config,
+    db::def::{ComponentName, LayoutName},
+};
 
-pub(crate) fn component_paths(name: &str, config: &Config) -> (Utf8PathBuf, Utf8PathBuf) {
+pub(crate) fn component_paths(name: ComponentName, config: &Config) -> (Utf8PathBuf, Utf8PathBuf) {
     let work_path = &config.workspace_folder();
-    let name = name.replace('.', std::path::MAIN_SEPARATOR_STR);
-    let class_path = component_class_path(name.clone(), work_path);
-    let resources_path = component_resources_path(name.clone(), work_path);
+    let path = name.path();
+    let class_path = component_class_path(path.clone(), work_path);
+    let resources_path = component_resources_path(path.clone(), work_path);
     (class_path, resources_path)
 }
 
@@ -27,32 +30,32 @@ fn component_class_path(path: String, work_path: &Utf8Path) -> Utf8PathBuf {
         .join(class_path + ".php")
 }
 
-pub(crate) fn layout_paths(name: &str, config: &Config) -> (Utf8PathBuf, Utf8PathBuf) {
+pub(crate) fn layout_paths(name: LayoutName, config: &Config) -> (Utf8PathBuf, Utf8PathBuf) {
     let work_path = &config.workspace_folder();
-    let class_path = layout_class_path(name, work_path);
-    let resources_path = layout_resources_path(name, work_path);
+    let class_path = layout_class_path(&name, work_path);
+    let resources_path = layout_resources_path(&name, work_path);
     (class_path, resources_path)
 }
 
-fn layout_class_path(name: &str, work_path: &Utf8Path) -> Utf8PathBuf {
-    let name = format!("{}-layout", name);
-    let layout_class_name = convert_case::ccase!(pascal, name);
+fn layout_class_path(name: &LayoutName, work_path: &Utf8Path) -> Utf8PathBuf {
+    let layout_class_name = name.class_name();
     work_path
         .join(component_class_dir())
         .join(layout_class_name + ".php")
 }
 
-fn layout_resources_path(name: &str, work_path: &Utf8Path) -> Utf8PathBuf {
-    let path = if name.is_empty() {
-        work_path
+fn layout_resources_path(name: &LayoutName, work_path: &Utf8Path) -> Utf8PathBuf {
+    let path = match name {
+        LayoutName::Default => work_path
             .join(component_views_dir())
-            .join("layout.blade.php")
-    } else {
-        let layout_name = name.strip_suffix('-').unwrap();
-        let path = Utf8PathBuf::from(views_dir())
-            .join("layouts")
-            .join(layout_name.to_string() + ".blade.php");
-        work_path.join(path)
+            .join("layout.blade.php"),
+        LayoutName::Name(name) => {
+            let template_path = format!("{}.blade.php", name);
+            let path = Utf8PathBuf::from(views_dir())
+                .join("layouts")
+                .join(template_path);
+            work_path.join(path)
+        }
     };
     path
 }

@@ -40,7 +40,11 @@ impl std::fmt::Display for Name {
 
 impl Name {
     pub fn new(str: &str) -> Self {
-        let str = SmolStr::new(str);
+        let str = if str.len() <= 23 {
+            SmolStr::new_inline(str)
+        } else {
+            SmolStr::new(str)
+        };
         Self { str }
     }
 
@@ -271,6 +275,36 @@ impl LayoutId {
     }
 }
 
+pub enum LayoutName {
+    Default,
+    Name(Name),
+}
+
+impl LayoutName {
+    pub fn new(name: &str) -> Option<LayoutName> {
+        let name = name.strip_prefix("x-")?.strip_suffix("-layout")?;
+        let layout = if name.is_empty() {
+            LayoutName::Default
+        } else {
+            LayoutName::Name(Name::new(name))
+        };
+        Some(layout)
+    }
+
+    pub fn tag_name(&self) -> String {
+        match self {
+            LayoutName::Default => "x-layout".to_string(),
+            LayoutName::Name(name) => format!("x-{}-layout", name),
+        }
+    }
+
+    pub fn class_name(&self) -> String {
+        let layout_class_name =
+            convert_case::ccase!(pascal, self.tag_name().strip_prefix("x-").unwrap());
+        layout_class_name
+    }
+}
+
 impl Layout {
     pub fn name(&self, db: &dyn DocumentDatabase) -> Name {
         let file = self.id.file(db);
@@ -288,11 +322,9 @@ impl Layout {
         doc: &ParsedDocument,
         config: &Config,
     ) -> Option<Self> {
-        let name = doc.text_for_node(db, tag)?.strip_prefix("x-")?;
-        if !name.ends_with("layout") {
-            return None;
-        }
-        let (class_path, resources_path) = resolve_path::component_paths(name, config);
+        let name = doc.text_for_node(db, tag)?;
+        let (class_path, resources_path) =
+            resolve_path::layout_paths(LayoutName::new(name)?, config);
         if let Some(class_doc) = db.parsed_document(&class_path) {
             let id = LayoutId::new(db, class_doc.source, LayoutKind::Class);
             Some(Self { id })
@@ -568,27 +600,6 @@ impl Directive {
             Directive::Use => "@use",
         }
     }
-
-    pub fn in_start_tag(
-        db: &dyn DocumentDatabase,
-        tag: ast::blade::StartTag,
-        doc: &ParsedDocument,
-    ) -> Vec<Self> {
-        (|| {
-            let mut directives = Self::globally_available();
-
-            directives.extend([Self::Class, Self::Style, Self::Disabled]);
-
-            let tag_name = tag.tag_name().ok()?;
-            match doc.text_for_node(db, tag_name)? {
-                "input" => directives.extend([Self::ReadOnly, Self::Required]),
-                "option" => directives.extend([Self::Selected]),
-                _ => (),
-            }
-            Some(directives)
-        })()
-        .unwrap_or_default()
-    }
 }
 
 #[salsa::interned(no_lifetime)]
@@ -645,25 +656,43 @@ pub struct Component {
     pub(crate) id: ComponentId,
 }
 
+pub struct ComponentName(Name);
+
+impl ComponentName {
+    pub fn new(name: &str) -> Option<ComponentName> {
+        if name.ends_with("-layout") {
+            return None;
+        }
+        let name = name.strip_prefix("x-")?;
+        Some(ComponentName(Name::new(name)))
+    }
+
+    pub fn path(&self) -> String {
+        let ComponentName(name) = self;
+        name.as_str().replace('.', std::path::MAIN_SEPARATOR_STR)
+    }
+}
+
 #[derive(Clone, Copy, Hash, PartialEq, Eq)]
 pub enum ComponentKind {
     Class,
     Anon,
 }
 
-fn get_tag_name<'tree, Tag: Node<'tree>>(tag: Tag) -> ast::blade::TagName<'tree> {
-    ast::match_node!(tag, {
+pub fn get_tag_name<'tree, Tag: Node<'tree>>(tag: Tag) -> Option<ast::blade::TagName<'tree>> {
+    let tag_name = ast::match_node!(tag, {
         ast::blade::SelfClosingTag(self_tag) => {
-            self_tag.tag_name().unwrap()
+            self_tag.tag_name()
         },
         ast::blade::StartTag(start_tag) => {
-            start_tag.tag_name().unwrap()
+            start_tag.tag_name()
         },
         ast::blade::EndTag(end_tag) => {
-            end_tag.tag_name().unwrap()
+            end_tag.tag_name()
         },
-        _ => unreachable!(),
-    })
+        _ => return None,
+    });
+    tag_name.ok()
 }
 
 impl Component {
@@ -687,7 +716,7 @@ impl Component {
         config: &Config,
     ) -> Option<Self> {
         let tag = attr.parent()?;
-        let tag_name = get_tag_name(tag);
+        let tag_name = get_tag_name(tag)?;
         let component = Self::for_tagname(db, tag_name, doc, config)?;
         Some(component)
     }
@@ -698,11 +727,9 @@ impl Component {
         doc: &ParsedDocument,
         config: &Config,
     ) -> Option<Self> {
-        let name = doc.text_for_node(db, tag)?.strip_prefix("x-")?;
-        if name.ends_with("layout") {
-            return None;
-        }
-        let (class_path, resources_path) = resolve_path::component_paths(name, config);
+        let name = doc.text_for_node(db, tag)?;
+        let (class_path, resources_path) =
+            resolve_path::component_paths(ComponentName::new(name)?, config);
         if let Some(class_doc) = db.parsed_document(&class_path) {
             let id = ComponentId::new(db, class_doc.source, ComponentKind::Class);
             Some(Self { id })
