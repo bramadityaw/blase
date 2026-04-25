@@ -89,6 +89,7 @@ dependencies = [
  "cov-mark",
  "crossbeam-channel",
  "dashmap",
+ "either",
  "expect-test",
  "futures",
  "itertools",

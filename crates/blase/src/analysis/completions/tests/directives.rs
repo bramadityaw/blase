@@ -3,6 +3,135 @@ use expect_test::expect;
 use super::*;
 
 #[test]
+fn no_directive_completion_in_layout_attribute() {
+    check(
+        r#"
+//- /resources/views/layouts/foo.blade.php
+Hello, World!
+
+//- /index.blade.php
+<x-foo-layout @$0
+"#,
+        expect![[r#"
+"#]],
+    );
+}
+
+#[test]
+fn option_tag_attribute_directive() {
+    check(
+        r#"
+<select>
+  <option @$0
+</select>
+"#,
+        expect![[r#"
+            @endif
+            @endunless
+            @endisset
+            @endempty
+            @endauth
+            @endguest
+            @endproduction
+            @endenv
+            @endsession
+            @endcontext
+            @endswitch
+            @endfor
+            @endforeach
+            @endforelse
+            @endwhile
+            @endphp
+            @if
+            @unless
+            @isset
+            @empty
+            @auth
+            @guest
+            @production
+            @env
+            @session
+            @context
+            @hassection
+            @sectionmissing
+            @switch
+            @for
+            @foreach
+            @forelse
+            @while
+            @php
+            @class
+            @style
+            @disabled
+            @selected"#]],
+    );
+}
+
+#[test]
+fn input_tag_attribute_directive() {
+    check(
+        r#"
+<input @$0
+"#,
+        expect![[r#"
+            @endif
+            @endunless
+            @endisset
+            @endempty
+            @endauth
+            @endguest
+            @endproduction
+            @endenv
+            @endsession
+            @endcontext
+            @endswitch
+            @endfor
+            @endforeach
+            @endforelse
+            @endwhile
+            @endphp
+            @if
+            @unless
+            @isset
+            @empty
+            @auth
+            @guest
+            @production
+            @env
+            @session
+            @context
+            @hassection
+            @sectionmissing
+            @switch
+            @for
+            @foreach
+            @forelse
+            @while
+            @php
+            @class
+            @style
+            @disabled
+            @readonly
+            @required"#]],
+    );
+}
+
+#[test]
+fn no_directive_completion_in_component_attribute() {
+    check(
+        r#"
+//- /resources/views/components/foo.blade.php
+Hello, World!
+
+//- /index.blade.php
+<x-foo @$0
+"#,
+        expect![[r#"
+"#]],
+    );
+}
+
+#[test]
 fn completes_after_at() {
     check(
         r#"

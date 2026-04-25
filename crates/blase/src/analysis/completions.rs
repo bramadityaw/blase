@@ -1,16 +1,18 @@
 use std::collections::HashSet;
 
 use ast::NodeExt;
+use either::Either;
 use itertools::Itertools;
-use line_index::TextRange;
+use line_index::{TextRange, TextSize};
 use smol_str::SmolStr;
-use type_sitter::{Node, UntypedNode};
+use type_sitter::{HasChildren, Node, UntypedNode};
 
 use crate::{
     config::Config,
     db::{
         DocumentDatabase, FilePosition, ParsedDocument, RootDatabase, SourceDatabase,
-        def::Directive, text_edit::TextEdit,
+        def::{self, Directive, get_tag_name},
+        text_edit::TextEdit,
     },
 };
 
@@ -24,7 +26,7 @@ pub fn completions(
     trigger_char: Option<char>,
 ) -> Option<Vec<CompletionItem>> {
     let document = db.parsed_document(&position.path)?;
-    let ctx = &CompletionContext::new(db, position, &document, trigger_char)?;
+    let ctx = &CompletionContext::new(db, position, &document, trigger_char, config)?;
     if let Some(trigger) = trigger_char {
         tracing::debug!(?trigger);
         match trigger {
@@ -55,9 +57,31 @@ fn complete_directive(ctx: &CompletionContext) -> Option<Vec<CompletionItem>> {
 
     let mut directives = Directive::globally_available();
     let mut switched = false;
-    if let ContextKind::Directive(Directive::Switch) = ctx.kind {
-        directives.extend([Directive::Break, Directive::Case, Directive::Default]);
-        switched = true;
+
+    let db = ctx.db;
+    let doc = &db.parsed_document(&ctx.position.path).unwrap();
+    match &ctx.kind {
+        ContextKind::Tag { kind } => match kind {
+            Tag::Component(_) | Tag::Layout(_) => return None,
+            Tag::Html(tag) => {
+                directives.extend([Directive::Class, Directive::Style, Directive::Disabled]);
+
+                let tag_name = match tag {
+                    Either::Left(tag) => tag.tag_name(),
+                    Either::Right(tag) => tag.tag_name(),
+                };
+                match doc.text_for_node(db, tag_name)? {
+                    "input" => directives.extend([Directive::ReadOnly, Directive::Required]),
+                    "option" => directives.extend([Directive::Selected]),
+                    _ => (),
+                }
+            }
+        },
+        ContextKind::Directive(Directive::Switch) => {
+            directives.extend([Directive::Break, Directive::Case, Directive::Default]);
+            switched = true;
+        }
+        ContextKind::Document { ident: _ } | ContextKind::Directive(_) => (),
     }
 
     let ancestors = ctx.node.ancestors();
@@ -77,14 +101,15 @@ fn complete_directive(ctx: &CompletionContext) -> Option<Vec<CompletionItem>> {
     let items = directives
         .into_iter()
         .map(|directive| {
+            let at_size = TextSize::of('@');
             let offset = ctx
                 .position
                 .offset
-                .checked_sub(1.into())
+                .checked_sub(at_size)
                 .unwrap_or(ctx.position.offset);
 
             let mut builder = TextEdit::builder();
-            builder.delete(TextRange::at(offset, 1.into()));
+            builder.delete(TextRange::at(offset, at_size));
             let mut insert = directive.label().to_string();
             if directive.has_param(switched) {
                 insert += match directive {
@@ -250,11 +275,12 @@ pub struct CompletionContext<'a> {
     position: FilePosition,
     trigger_char: Option<char>,
     node: type_sitter::UntypedNode<'a>,
-    kind: ContextKind,
+    kind: ContextKind<'a>,
 }
 
 /// Get the nearest child of this node from the offset. Returns the node itself if it is a leaf node.
-fn get_nearest_child<'a>(node: UntypedNode<'a>, offset: usize) -> UntypedNode<'a> {
+fn get_nearest_child<'a, N: Node<'a>>(node: N, offset: usize) -> UntypedNode<'a> {
+    let node = node.upcast();
     let mut cursor = node.walk();
     let children = node
         .untyped_children(&mut cursor)
@@ -273,13 +299,84 @@ fn get_nearest_child<'a>(node: UntypedNode<'a>, offset: usize) -> UntypedNode<'a
     children.into_iter().map(|(_, n)| n).next().unwrap_or(node)
 }
 
-pub enum ContextKind {
+pub enum ContextKind<'a> {
     // The cursor is inside or after a directive
     Directive(Directive),
+    // The cursor is inside an element; specifically the element's start tag or self-closing tag
+    Tag { kind: Tag<'a> },
     // The cursor is in a Text or Document node.
     // If ident is Some, then the cursor is after an identifier and records the beginning offset of
     // that identifier and the identifier itself
     Document { ident: Option<(u32, SmolStr)> },
+}
+
+impl<'a> std::fmt::Debug for ContextKind<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Directive(arg0) => f.debug_tuple("Directive").field(arg0).finish(),
+            Self::Tag { kind } => f.debug_struct("Tag").field("kind", kind).finish(),
+            Self::Document { ident } => {
+                let mut f = f.debug_struct("Document");
+                let n: Option<String> = None;
+                match ident {
+                    Some((_, s)) => {
+                        f.field("ident", &Some(s.to_string()));
+                    }
+                    None => {
+                        f.field("ident", &n);
+                    }
+                }
+                f.finish()
+            }
+        }
+    }
+}
+
+pub enum Tag<'a> {
+    Component(def::Component),
+    Layout(def::Layout),
+    Html(Either<ast::blade::StartTag<'a>, ast::blade::SelfClosingTag<'a>>),
+}
+
+impl<'a> std::fmt::Debug for Tag<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Component(_arg0) => f.debug_tuple("Component").finish(),
+            Self::Layout(_arg0) => f.debug_tuple("Layout").finish(),
+            Self::Html(_arg0) => f.debug_tuple("Html").finish(),
+        }
+    }
+}
+
+impl<'a> Tag<'a> {
+    fn determine(
+        db: &dyn DocumentDatabase,
+        node: UntypedNode<'a>,
+        doc: &ParsedDocument,
+        config: &Config,
+    ) -> Option<Self> {
+        let (tag_name, is_start) = ast::match_node!(node, {
+            ast::blade::StartTag(tag) => (get_tag_name(tag)?, true),
+            ast::blade::SelfClosingTag(tag) => (get_tag_name(tag)?, false),
+            _ => return None,
+        });
+
+        if let Some(component) = def::Component::for_tagname(db, tag_name, doc, config) {
+            return Some(Self::Component(component));
+        }
+
+        if let Some(layout) = def::Layout::for_tagname(db, tag_name, doc, config) {
+            return Some(Self::Layout(layout));
+        }
+
+        let tag = if is_start {
+            Either::Left(node.downcast::<ast::blade::StartTag>().unwrap())
+        } else {
+            Either::Right(node.downcast::<ast::blade::SelfClosingTag>().unwrap())
+        };
+
+        Some(Self::Html(tag))
+    }
 }
 
 fn is_directive_start(node: UntypedNode<'_>) -> bool {
@@ -310,7 +407,8 @@ fn analyze_context_kind<'db>(
     db: &'db RootDatabase,
     node: UntypedNode<'db>,
     FilePosition { path, offset }: &FilePosition,
-) -> ContextKind {
+    config: &Config,
+) -> ContextKind<'db> {
     'bail: {
         if node.is_error() {
             let mut cursor = node.walk();
@@ -325,14 +423,29 @@ fn analyze_context_kind<'db>(
             }
         }
     }
-    if ast::node_is!(node, ast::blade::Document) {
-        let offset = (*offset).into();
+
+    let offset = (*offset).into();
+    if ast::node_is!(node, ast::blade::Document | ast::blade::Text) {
         let contents = &db.contents(path).unwrap();
         return ContextKind::Document {
             ident: extract_ident(contents, offset)
                 .map(|(start, ident)| (start, SmolStr::new(ident))),
         };
     }
+
+    let mut node = node;
+    if let Ok(element) = node.downcast::<ast::blade::Element>() {
+        node = get_nearest_child(element, offset);
+    }
+    let document = &db
+        .parsed_document(path)
+        .expect("file does not exist. this is a bug");
+    if ast::node_is!(node, ast::blade::StartTag | ast::blade::SelfClosingTag)
+        && let Some(tag) = Tag::determine(db, node, document, config)
+    {
+        return ContextKind::Tag { kind: tag };
+    }
+
     ContextKind::Document { ident: None }
 }
 
@@ -347,6 +460,7 @@ impl<'db> CompletionContext<'db> {
         position @ FilePosition { path: _, offset }: FilePosition,
         doc: &'db ParsedDocument,
         trigger_char: Option<char>,
+        config: &Config,
     ) -> Option<Self> {
         let mut node = doc.get_node_at(offset)?;
         if ast::node_is!(node, ast::blade::Comment) {
@@ -363,7 +477,7 @@ impl<'db> CompletionContext<'db> {
         }
 
         let ctx = CompletionContext {
-            kind: analyze_context_kind(db, node, &position),
+            kind: analyze_context_kind(db, node, &position, config),
             position,
             db,
             trigger_char,

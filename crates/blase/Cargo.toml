@@ -39,3 +39,4 @@ type-sitter.workspace = true
 expect-test.workspace = true
 itertools.workspace = true
 cov-mark.workspace = true
+either.workspace = true
