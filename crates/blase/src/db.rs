@@ -21,6 +21,11 @@ pub struct FilePosition {
     pub offset: line_index::TextSize,
 }
 
+pub struct FileRange {
+    pub path: Utf8PathBuf,
+    pub range: line_index::TextRange,
+}
+
 #[salsa::db]
 #[derive(Clone, Default)]
 pub struct RootDatabase {

@@ -4,9 +4,9 @@
 use async_lsp::{
     ErrorCode, ResponseError,
     lsp_types::{
-        CompletionParams, CompletionResponse, GotoDefinitionParams, GotoDefinitionResponse, Hover,
-        HoverContents, HoverParams, InitializeParams, InitializeResult, MarkupContent, MarkupKind,
-        ServerInfo, SignatureHelp, SignatureHelpParams,
+        self, CompletionParams, CompletionResponse, GotoDefinitionParams, GotoDefinitionResponse,
+        Hover, HoverContents, HoverParams, InitializeParams, InitializeResult, MarkupContent,
+        MarkupKind, ServerInfo, SignatureHelp, SignatureHelpParams,
     },
 };
 use camino::Utf8PathBuf;
@@ -89,7 +89,20 @@ pub fn handle_goto_def(
         None => return Ok(None),
     };
     let config = snap.config.read().expect("poison");
-    let locations = lsp::into_proto::cancellable(snap.analysis.goto_def(&config, position))?;
+    let locations = lsp::into_proto::cancellable(snap.analysis.goto_def(&config, position))?
+        .into_iter()
+        .filter_map(|range| {
+            let path = range.path.clone();
+            match lsp::into_proto::location(&snap, range) {
+                Ok(Some(loc)) => Some(loc),
+                Ok(None) | Err(_) => {
+                    tracing::error!("Line index not found");
+                    tracing::error!(?path);
+                    None
+                }
+            }
+        })
+        .collect::<Vec<lsp_types::Location>>();
     tracing::debug!(?locations);
     let response = match locations.len() {
         0 => None,

@@ -1,20 +1,22 @@
-use async_lsp::lsp_types;
 use type_sitter::{HasChild, Node, UntypedNode};
 
 use crate::{
     config::Config,
     db::{
-        DocumentDatabase, FilePosition,
+        DocumentDatabase, FilePosition, FileRange,
         def::{ComponentName, LayoutName},
     },
-    lsp, resolve_path,
+    resolve_path,
 };
+
+#[cfg(test)]
+mod tests;
 
 pub fn goto_definition(
     db: &dyn DocumentDatabase,
     config: &Config,
     FilePosition { path, offset }: FilePosition,
-) -> Option<Vec<lsp_types::Location>> {
+) -> Option<Vec<FileRange>> {
     let document = db.parsed_document(&path)?;
     let contents = &db.contents(&path)?;
     let node = document.get_node_at(offset)?;
@@ -27,13 +29,13 @@ fn goto_def<'tree, N: Node<'tree>>(
     contents: &str,
     work_path: &Config,
     node: N,
-) -> Option<Vec<lsp_types::Location>> {
+) -> Option<Vec<FileRange>> {
     fn inner(
         db: &dyn DocumentDatabase,
         contents: &str,
         config: &Config,
         node: UntypedNode,
-    ) -> Option<Vec<lsp_types::Location>> {
+    ) -> Option<Vec<FileRange>> {
         ast::match_node!(node, {
             ast::blade::TagName(tag_name) => goto_def_for_component(db, config, tag_name, contents),
             ast::blade::StartTag(start_tag) => {
@@ -41,7 +43,7 @@ fn goto_def<'tree, N: Node<'tree>>(
             },
             ast::blade::EndTag(end_tag) => {
                 let tag_name = end_tag.child().ok()?;
-                return goto_def_for_component(db, config, tag_name, contents);
+                goto_def_for_component(db, config, tag_name, contents)
             },
             ast::blade::SelfClosingTag(self_tag) => {
                 goto_def_for_component(db, config, self_tag.tag_name().ok()?, contents)
@@ -62,7 +64,7 @@ fn goto_def_for_component(
     config: &Config,
     tag_name: ast::blade::TagName,
     contents: &str,
-) -> Option<Vec<lsp_types::Location>> {
+) -> Option<Vec<FileRange>> {
     let name = contents.get(tag_name.byte_range())?;
     let (class_path, resources_path) = if let Some(layout) = LayoutName::new(name) {
         resolve_path::layout_paths(layout, config)
@@ -77,11 +79,11 @@ fn goto_def_for_component(
         .into_iter()
         .filter_map(|path| {
             if db.parsed_document(&path).is_some() {
-                let uri = lsp::into_proto::url(&path);
-                Some(lsp_types::Location {
-                    uri,
+                let range = FileRange {
+                    path,
                     range: Default::default(),
-                })
+                };
+                Some(range)
             } else {
                 None
             }

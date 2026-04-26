@@ -1,9 +1,7 @@
-use async_lsp::lsp_types::Location;
-
 use crate::{
     analysis::{Analysis, Cancellable, completions, goto_definition, hover, signature_help},
     config::Config,
-    db::FilePosition,
+    db::{FilePosition, FileRange},
 };
 
 impl Analysis {
@@ -36,7 +34,7 @@ impl Analysis {
     }
 
     #[tracing::instrument(skip(self, config, position), level = "debug")]
-    pub fn goto_def(&self, config: &Config, position: FilePosition) -> Cancellable<Vec<Location>> {
+    pub fn goto_def(&self, config: &Config, position: FilePosition) -> Cancellable<Vec<FileRange>> {
         self.with_db(|db| {
             goto_definition::goto_definition(db, config, position).unwrap_or_default()
         })

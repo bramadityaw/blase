@@ -8,8 +8,9 @@ use crate::{
         signature_help,
     },
     config::Config,
-    db::text_edit::InsertDelete,
+    db::{FileRange, text_edit::InsertDelete},
     line_index::{LineEndings, LineIndex, PositionEncoding},
+    server::ServerStateSnapshot,
 };
 use async_lsp::lsp_types::{self, CompletionResponse, Position, Range, Url};
 use camino::Utf8Path;
@@ -211,8 +212,21 @@ pub fn signature_help(
     }
 }
 
+pub(crate) fn location(
+    snap: &ServerStateSnapshot,
+    frange: FileRange,
+) -> Cancellable<Option<lsp_types::Location>> {
+    let url = url(&frange.path);
+    let Some(line_index) = snap.file_line_index(&frange.path)? else {
+        return Ok(None);
+    };
+    let range = range(&line_index, frange.range);
+    let loc = lsp_types::Location::new(url, range);
+    Ok(Some(loc))
+}
+
 pub fn url(path: &Utf8Path) -> Url {
-    Url::from_file_path(path.as_std_path()).unwrap()
+    Url::from_file_path(dbg!(path.as_std_path())).unwrap()
 }
 
 pub(crate) fn position(line_index: &LineIndex, offset: TextSize) -> lsp_types::Position {
