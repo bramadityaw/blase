@@ -1,5 +1,16 @@
 # (B)lade (LA)nguage (SE)rver
 
 Milestones:
-- [ ] Parse Blade files with treesitter and report syntactic errors.
-    + [ ] hookup lsp and neovim
+- [x] Go To Definition (Components & Layouts)
+- [x] Hover (Components & Layouts w/ documentation)
+- [ ] Completion
+    = [x] Directives
+        - [x] Control flow (@if, @while, ...)
+        - [x] Element dependent inline attributes (@checked, @selected, etc.)
+        - [ ] Component/Layout
+- [x] Signature Help (Components & Layouts)
+- [ ] Diagnostic
+    - [x] Syntax
+    - [ ] Unknown component/layout
+- [ ] Workspace Symbols
+- [ ] Find References
