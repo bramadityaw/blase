@@ -36,7 +36,12 @@ tree-sitter-php.workspace = true
 convert_case.workspace = true
 camino.workspace = true
 type-sitter.workspace = true
-expect-test.workspace = true
 itertools.workspace = true
 cov-mark.workspace = true
 either.workspace = true
+serde.workspace = true
+
+[dev-dependencies]
+expect-test.workspace = true
+insta.workspace = true
+serde.workspace = true

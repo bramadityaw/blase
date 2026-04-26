@@ -26,6 +26,21 @@ pub struct FileRange {
     pub range: line_index::TextRange,
 }
 
+// This Serialize impl is only used for snapshot testing
+#[cfg(debug_assertions)]
+impl serde::Serialize for FileRange {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+        let mut state = serializer.serialize_struct("FileRange", 2)?;
+        state.serialize_field("path", self.path.as_str())?;
+        state.serialize_field("range", &format!("{:?}", self.range))?;
+        state.end()
+    }
+}
+
 #[salsa::db]
 #[derive(Clone, Default)]
 pub struct RootDatabase {
