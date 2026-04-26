@@ -8,7 +8,7 @@ use camino::{Utf8Path, Utf8PathBuf};
 use dashmap::DashMap;
 use line_index::LineIndex;
 use salsa::{Accumulator, Database, Setter};
-use type_sitter::UntypedNode;
+use type_sitter::{Node, UntypedNode};
 
 use crate::{line_index::LineEndings, lsp, util::FileType};
 
@@ -309,7 +309,7 @@ fn test_document_eq_diff_ws_contents() {
 
 impl Eq for ParsedDocument {}
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub enum ParseError {
     Missing {
         range: tree_sitter::Range,
@@ -370,7 +370,9 @@ pub fn parse_document(db: &dyn DocumentDatabase, source: SourceFile) -> ParsedDo
             .expect("Language has been set")
     };
 
-    get_tree_sitter_errors(db, tree.root_node(), contents);
+    let accum = |error| ParseErrorAccumulator(error).accumulate(db);
+
+    get_tree_sitter_errors(&accum, tree.root_node(), contents);
 
     ParsedDocument {
         source,
@@ -379,23 +381,24 @@ pub fn parse_document(db: &dyn DocumentDatabase, source: SourceFile) -> ParsedDo
     }
 }
 
-/// Vendored from https://github.com/adclz/auto-lsp/blob/d133723bfbd9150c0ec944b4e9f9cf96844dc167/crates/default/src/db/lexer.rs#L30
+/// Modified from https://github.com/adclz/auto-lsp/blob/d133723bfbd9150c0ec944b4e9f9cf96844dc167/crates/default/src/db/lexer.rs#L30
 ///
 /// Traverse a tree-sitter syntax tree to collect error nodes.
 ///
 /// This function traverses the syntax tree in a depth-first manner to find error nodes:
 /// - If a node `has_error()` but none of its children have errors, it is collected
 /// - If a node `has_error()` and some children have errors, traverse those children
-fn get_tree_sitter_errors(db: &dyn DocumentDatabase, node: tree_sitter::Node, source_code: &str) {
+fn get_tree_sitter_errors(accum: &impl Fn(ParseError), node: tree_sitter::Node, source_code: &str) {
     let mut cursor = node.walk();
 
     if node.has_error() {
         if node.children(&mut cursor).any(|f| f.has_error()) {
             for child in node.children(&mut cursor) {
-                get_tree_sitter_errors(db, child, source_code);
+                get_tree_sitter_errors(accum, child, source_code);
             }
         } else {
-            ParseErrorAccumulator(format_error(node, source_code)).accumulate(db);
+            let error = format_error(node, source_code);
+            accum(error);
         }
     }
 }
@@ -403,9 +406,18 @@ fn get_tree_sitter_errors(db: &dyn DocumentDatabase, node: tree_sitter::Node, so
 /// Vendored from https://github.com/adclz/auto-lsp/blob/d133723bfbd9150c0ec944b4e9f9cf96844dc167/crates/default/src/db/lexer.rs#L44
 fn format_error(node: tree_sitter::Node, source_code: &str) -> ParseError {
     if node.is_missing() {
+        let error = if UntypedNode::new(node)
+            .downcast::<ast::blade::Expression>()
+            .is_ok()
+        {
+            String::from("Syntax error: Missing expression")
+        } else {
+            format!("Syntax error: Missing '{}'", node.grammar_name())
+        };
+
         ParseError::Missing {
             range: node.range(),
-            error: format!("Syntax error: Missing '{}'", node.grammar_name()),
+            error,
             grammar_name: node.grammar_name(),
         }
     } else {
@@ -420,5 +432,58 @@ fn format_error(node: tree_sitter::Node, source_code: &str) -> ParseError {
             error: format!("Unexpected token(s): '{}'", children_text.join(" ")),
             affected: children_text.join(" "),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use expect_test::{Expect, expect};
+
+    use crate::{
+        analysis::fixture::Fixture,
+        db::{DocumentDatabase, RootDatabase},
+    };
+
+    impl RootDatabase {
+        pub fn set_from_fixtures(&mut self, fixture: Vec<Fixture>) {
+            for Fixture { path, text } in fixture {
+                self.set_source_file(path, &text);
+            }
+        }
+    }
+
+    fn check_errors(fixture: &str, expect: Expect) {
+        let mut db = RootDatabase::default();
+        let fixture = Fixture::parse(fixture);
+        db.set_from_fixtures(fixture.clone());
+
+        let errors = fixture
+            .into_iter()
+            .map(|f| {
+                let errors = db
+                    .parse_errors(&f.path)
+                    .into_iter()
+                    .map(|err| match err {
+                        crate::db::ParseError::Missing { error, .. } => error,
+                        crate::db::ParseError::Syntax { error, .. } => error,
+                    })
+                    .collect::<Vec<_>>();
+                format!("Path: {}\n{:?}\n", f.path, errors)
+            })
+            .collect::<String>();
+        expect.assert_eq(&errors);
+    }
+
+    #[test]
+    fn missing_expression() {
+        check_errors(
+            r#"
+<input @required()>
+        "#,
+            expect![[r#"
+                Path: /index.blade.php
+                ["Syntax error: Missing expression"]
+            "#]],
+        );
     }
 }

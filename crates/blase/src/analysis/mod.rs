@@ -16,7 +16,7 @@ pub struct AnalysisHost {
 }
 
 #[cfg(test)]
-mod fixture;
+pub mod fixture;
 
 pub mod completions;
 mod goto_definition;

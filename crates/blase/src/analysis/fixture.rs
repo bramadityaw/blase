@@ -88,8 +88,8 @@ impl Fixture {
 }
 
 pub struct PositionFixture {
-    fixture: Vec<Fixture>,
-    file_position: Option<FilePosition>,
+    pub fixture: Vec<Fixture>,
+    pub file_position: Option<FilePosition>,
 }
 
 /// Returns the offset of the first occurrence of `$0` marker and the copy of `text`
@@ -104,7 +104,7 @@ fn try_extract_offset(text: &str) -> Option<(TextSize, String)> {
 }
 
 impl PositionFixture {
-    fn parse(fixture: &str) -> Self {
+    pub fn parse(fixture: &str) -> Self {
         let mut fixture = Fixture::parse(fixture);
         let mut file_position = None;
 
