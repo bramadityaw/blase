@@ -8,13 +8,21 @@ use camino::{Utf8Path, Utf8PathBuf};
 use dashmap::DashMap;
 use line_index::LineIndex;
 use salsa::{Accumulator, Database, Setter};
-use type_sitter::{Node, UntypedNode};
+use type_sitter::UntypedNode;
 
 use crate::{line_index::LineEndings, lsp, util::FileType};
 
 pub mod def;
 pub mod documentation;
 pub mod text_edit;
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum Severity {
+    Error,
+    Warning,
+    WeakWarning,
+    Allow,
+}
 
 pub struct FilePosition {
     pub path: Utf8PathBuf,
@@ -338,7 +346,7 @@ impl From<&ParseError> for lsp_types::Diagnostic {
             }
         };
         lsp_types::Diagnostic {
-            range: range.into(),
+            range,
             severity: Some(lsp_types::DiagnosticSeverity::ERROR),
             message,
             code: Some(lsp_types::NumberOrString::String("BLASE".into())),

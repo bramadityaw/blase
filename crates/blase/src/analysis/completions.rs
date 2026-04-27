@@ -5,7 +5,7 @@ use either::Either;
 use itertools::Itertools;
 use line_index::{TextRange, TextSize};
 use smol_str::SmolStr;
-use type_sitter::{HasChildren, Node, UntypedNode};
+use type_sitter::{Node, UntypedNode};
 
 use crate::{
     config::Config,
