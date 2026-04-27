@@ -75,7 +75,7 @@ fn goto_def_for_component(
         class_path = class_path.as_str(),
         resources_path = resources_path.as_str()
     );
-    let paths = vec![class_path, resources_path]
+    let ranges = vec![class_path, resources_path]
         .into_iter()
         .filter_map(|path| {
             if db.parsed_document(&path).is_some() {
@@ -89,5 +89,5 @@ fn goto_def_for_component(
             }
         })
         .collect();
-    Some(paths)
+    Some(ranges)
 }
