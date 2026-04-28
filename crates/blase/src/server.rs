@@ -67,11 +67,25 @@ pub fn run_server(
                     Box::pin(async move { $($path)::+(snap, params) })
                 }
             };
+
+            //TODO: Since some handlers take more than a second to respond,
+            //we should notify the user of their request's progress
+            //(PROGRESS $( $path:ident )::+) => {
+            //    |server, params| {
+            //        let token = stringify!(blase/$($path)::+);
+            //        let progress_sender = server.with_report_progress(token.to_string());
+            //        let snap = server.snapshot();
+            //        Box::pin(async move { $($path)::+(snap, params, progress_sender) })
+            //    }
+            //};
         }
 
         router.event::<handler::Event>(handler::event::handle_event);
 
         router
+            .request::<lsp_types::request::References, _>(wrap_responder!(
+                handler::request::handle_references
+            ))
             .request::<lsp_types::request::Completion, _>(wrap_responder!(
                 handler::request::handle_completion
             ))

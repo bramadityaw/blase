@@ -19,6 +19,7 @@ pub struct AnalysisHost {
 pub mod fixture;
 
 pub mod completions;
+mod references;
 mod diagnostics;
 pub use diagnostics::Diagnostic;
 mod goto_definition;

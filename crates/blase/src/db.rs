@@ -24,11 +24,13 @@ pub enum Severity {
     Allow,
 }
 
+#[derive(Debug, Clone)]
 pub struct FilePosition {
     pub path: Utf8PathBuf,
     pub offset: line_index::TextSize,
 }
 
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct FileRange {
     pub path: Utf8PathBuf,
     pub range: line_index::TextRange,
@@ -76,6 +78,12 @@ pub struct Files {
 }
 
 impl Files {
+    pub fn all(&self) -> impl Iterator<Item = (Utf8PathBuf, SourceFile)> {
+        self.files
+            .iter()
+            .map(|entry| (entry.key().to_owned(), *entry.value()))
+    }
+
     pub fn source_file(&self, path: &Utf8Path) -> Option<SourceFile> {
         self.files.get(path).map(|x| *x)
     }
@@ -162,6 +170,7 @@ impl SourceDatabase for RootDatabase {
 pub trait DocumentDatabase: SourceDatabase + salsa::Database {
     fn parsed_document(&self, path: &Utf8Path) -> Option<ParsedDocument>;
     fn parse_errors(&self, path: &Utf8Path) -> Vec<ParseError>;
+    fn all_documents(&self) -> Arc<[ParsedDocument]>;
 }
 
 #[salsa::db]
@@ -179,6 +188,13 @@ impl DocumentDatabase for RootDatabase {
                 .collect(),
             None => Vec::new(),
         }
+    }
+
+    fn all_documents(&self) -> Arc<[ParsedDocument]> {
+        self.files
+            .all()
+            .map(|(path, _)| self.parsed_document(&path).unwrap())
+            .collect()
     }
 }
 

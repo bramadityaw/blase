@@ -5,16 +5,81 @@ use async_lsp::{
     ErrorCode, ResponseError,
     lsp_types::{
         self, CompletionParams, CompletionResponse, GotoDefinitionParams, GotoDefinitionResponse,
-        Hover, HoverContents, HoverParams, InitializeParams, InitializeResult, MarkupContent,
-        MarkupKind, ServerInfo, SignatureHelp, SignatureHelpParams,
+        Hover, HoverContents, HoverParams, InitializeParams, InitializeResult, Location,
+        MarkupContent, MarkupKind, ReferenceParams, ServerInfo, SignatureHelp, SignatureHelpParams,
     },
 };
 use camino::Utf8PathBuf;
+use itertools::Itertools;
+use line_index::TextRange;
 
 use crate::{
-    config, lsp,
+    config,
+    db::FileRange,
+    lsp,
     server::{ServerState, ServerStateSnapshot},
 };
+
+pub fn handle_references(
+    snap: ServerStateSnapshot,
+    params: ReferenceParams,
+) -> Result<Option<Vec<Location>>, ResponseError> {
+    let _i = tracing::info_span!("handle_references").entered();
+    let config = &snap.config.read().expect("poison");
+    let Some(position) = lsp::into_proto::cancellable(lsp::from_proto::file_position(
+        &snap,
+        &params.text_document_position,
+    ))?
+    else {
+        return Ok(None);
+    };
+
+    let Some(refs) = lsp::into_proto::cancellable(snap.analysis.references(config, position))?
+    else {
+        return Ok(None);
+    };
+
+    let include_declaration = params.context.include_declaration;
+    let locations = refs
+        .into_iter()
+        .flat_map(|refs| {
+            let defs = if include_declaration {
+                refs.defined_files.map(|files| {
+                    files.into_iter().map(|path| FileRange {
+                        path,
+                        range: TextRange::default(),
+                    })
+                })
+            } else {
+                None
+            }
+            .into_iter()
+            .flatten();
+
+            refs.references
+                .into_iter()
+                .flat_map(|(path, ranges)| {
+                    ranges
+                        .into_iter()
+                        .unique_by(|range| range.start())
+                        .map(move |range| {
+                            let path = path.to_owned();
+                            FileRange { path, range }
+                        })
+                })
+                .chain(defs)
+        })
+        .unique()
+        .filter_map(|frange| {
+            match lsp::into_proto::cancellable(lsp::into_proto::location(&snap, frange)).ok() {
+                Some(loc) => loc,
+                None => None,
+            }
+        })
+        .collect::<Vec<_>>();
+
+    Ok(Some(locations))
+}
 
 pub fn handle_completion(
     snap: ServerStateSnapshot,

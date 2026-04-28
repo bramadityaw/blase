@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
 use async_lsp::lsp_types::{
-    self, CompletionOptions, CompletionOptionsCompletionItem, HoverProviderCapability,
+    CompletionOptions, CompletionOptionsCompletionItem, HoverProviderCapability, OneOf,
     PositionEncodingKind, SaveOptions, ServerCapabilities, SignatureHelpOptions,
     TextDocumentSyncCapability, TextDocumentSyncKind, TextDocumentSyncOptions,
     WorkDoneProgressOptions,
@@ -140,7 +140,7 @@ pub fn server_capabilities(config: &Config) -> ServerCapabilities {
             },
         )),
         hover_provider: Some(HoverProviderCapability::Simple(true)),
-        definition_provider: Some(lsp_types::OneOf::Left(true)),
+        definition_provider: Some(OneOf::Left(true)),
         signature_help_provider: Some(SignatureHelpOptions {
             trigger_characters: {
                 let trigger_chars = ['(', '"', '\'', '='];
@@ -169,12 +169,12 @@ pub fn server_capabilities(config: &Config) -> ServerCapabilities {
             },
             completion_item: config.completion_item(),
         }),
-        diagnostic_provider: None,
-        references_provider: None,
+        references_provider: Some(OneOf::Left(true)),
         workspace_symbol_provider: None,
 
         // Methods below this line are unsupported
         document_formatting_provider: None,
+        diagnostic_provider: None,
         rename_provider: None,
         semantic_tokens_provider: None,
         selection_range_provider: None,
