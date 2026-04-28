@@ -69,6 +69,8 @@ pub fn run_server(
             };
         }
 
+        router.event::<handler::Event>(handler::event::handle_event);
+
         router
             .request::<lsp_types::request::Completion, _>(wrap_responder!(
                 handler::request::handle_completion

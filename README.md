@@ -11,6 +11,6 @@ Milestones:
 - [x] Signature Help (Components & Layouts)
 - [ ] Diagnostic
     - [x] Syntax
-    - [ ] Unknown component/layout
+    - [x] Unknown component/layout
 - [ ] Workspace Symbols
 - [ ] Find References

@@ -671,6 +671,10 @@ impl ComponentName {
         let ComponentName(name) = self;
         name.as_str().replace('.', std::path::MAIN_SEPARATOR_STR)
     }
+
+    pub fn tag_name(&self) -> String {
+        format!("x-{}", self.0)
+    }
 }
 
 #[derive(Clone, Copy, Hash, PartialEq, Eq)]

@@ -170,18 +170,18 @@ pub fn server_capabilities(config: &Config) -> ServerCapabilities {
             completion_item: config.completion_item(),
         }),
         diagnostic_provider: None,
+        references_provider: None,
+        workspace_symbol_provider: None,
+
+        // Methods below this line are unsupported
         document_formatting_provider: None,
         rename_provider: None,
         semantic_tokens_provider: None,
-
-        // Methods below this line are unsupported
         selection_range_provider: None,
         type_definition_provider: None,
         implementation_provider: None,
-        references_provider: None,
         document_highlight_provider: None,
         document_symbol_provider: None,
-        workspace_symbol_provider: None,
         code_action_provider: None,
         code_lens_provider: None,
         document_range_formatting_provider: None,

@@ -3,12 +3,12 @@ use std::ops::Not;
 
 use crate::{
     analysis::{
-        Cancellable,
+        self, Cancellable,
         completions::{self, CompletionItemKind, CompletionRelevance},
         signature_help,
     },
     config::Config,
-    db::{FileRange, text_edit::InsertDelete},
+    db::{self, FileRange, text_edit::InsertDelete},
     line_index::{LineEndings, LineIndex, PositionEncoding},
     server::ServerStateSnapshot,
 };
@@ -16,6 +16,29 @@ use async_lsp::lsp_types::{self, CompletionResponse, Position, Range, Url};
 use camino::Utf8Path;
 use line_index::{TextRange, TextSize};
 use tree_sitter::Point;
+
+pub fn diagnostic(line_index: &LineIndex, d: analysis::Diagnostic) -> lsp_types::Diagnostic {
+    lsp_types::Diagnostic {
+        range: range(line_index, d.range.range),
+        severity: Some(severity(d.severity)),
+        message: d.message,
+        code: None,
+        code_description: None,
+        source: Some("blase".to_owned()),
+        related_information: None,
+        tags: None,
+        data: None,
+    }
+}
+
+pub fn severity(s: db::Severity) -> lsp_types::DiagnosticSeverity {
+    match s {
+        db::Severity::Error => lsp_types::DiagnosticSeverity::ERROR,
+        db::Severity::Warning => lsp_types::DiagnosticSeverity::WARNING,
+        db::Severity::WeakWarning => lsp_types::DiagnosticSeverity::HINT,
+        db::Severity::Allow => lsp_types::DiagnosticSeverity::INFORMATION,
+    }
+}
 
 pub fn completion_response(
     config: &Config,

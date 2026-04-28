@@ -24,6 +24,10 @@ pub fn handle_did_save(
         );
     }
 
+    if let Err(e) = server.emit(crate::handler::Event::DiagnosticUpdate(path)) {
+        return ControlFlow::Break(Err(e));
+    }
+
     ControlFlow::Continue(())
 }
 
@@ -61,14 +65,10 @@ pub fn handle_did_change(
         document.contents = new_contents;
     }
 
-    let analysis = server.snapshot().analysis;
-    if let Ok(diagnostics) = analysis.parse_errors(&path) {
-        server.publish_diagnostics(
-            text_document.uri,
-            diagnostics.into_iter().map(Into::into).collect(),
-            None,
-        );
+    if let Err(e) = server.emit(crate::handler::Event::DiagnosticUpdate(path)) {
+        return ControlFlow::Break(Err(e));
     }
+
     ControlFlow::Continue(())
 }
 
@@ -88,14 +88,10 @@ pub fn handle_did_open(
     );
     server.documents.insert(path.clone(), document);
 
-    let analysis = server.snapshot().analysis;
-    if let Ok(diagnostics) = analysis.parse_errors(&path) {
-        server.publish_diagnostics(
-            text_document.uri,
-            diagnostics.into_iter().map(Into::into).collect(),
-            None,
-        );
+    if let Err(e) = server.emit(crate::handler::Event::DiagnosticUpdate(path)) {
+        return ControlFlow::Break(Err(e));
     }
+
     ControlFlow::Continue(())
 }
 

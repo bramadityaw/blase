@@ -1,5 +1,9 @@
+use camino::Utf8Path;
+
 use crate::{
-    analysis::{Analysis, Cancellable, completions, goto_definition, hover, signature_help},
+    analysis::{
+        Analysis, Cancellable, completions, diagnostics, goto_definition, hover, signature_help,
+    },
     config::Config,
     db::{FilePosition, FileRange},
 };
@@ -38,5 +42,21 @@ impl Analysis {
         self.with_db(|db| {
             goto_definition::goto_definition(db, config, position).unwrap_or_default()
         })
+    }
+
+    pub fn semantic_diagnostics(
+        &self,
+        config: &Config,
+        path: &Utf8Path,
+    ) -> Cancellable<Vec<diagnostics::Diagnostic>> {
+        self.with_db(|db| diagnostics::semantic_diagnostics(db, config, path))
+    }
+
+    pub fn full_diagnostics(
+        &self,
+        config: &Config,
+        path: &Utf8Path,
+    ) -> Cancellable<Vec<diagnostics::Diagnostic>> {
+        self.with_db(|db| diagnostics::full_diagnostics(db, config, path))
     }
 }

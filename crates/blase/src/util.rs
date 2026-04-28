@@ -5,6 +5,7 @@ use async_lsp::lsp_types::{self, Position, TextDocumentContentChangeEvent, Url};
 use camino::Utf8Path;
 use line_index::{LineCol, TextRange, TextSize, WideLineCol};
 
+// FIXME: This should be in db::def
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FileType {
     Blade,

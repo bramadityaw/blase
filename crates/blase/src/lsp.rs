@@ -5,7 +5,7 @@ use async_lsp::{
     lsp_types::{Diagnostic, PublishDiagnosticsParams, Url},
 };
 
-use crate::server::ServerState;
+use crate::{handler::Event, server::ServerState};
 
 impl ServerState {
     pub fn publish_diagnostics(
@@ -21,6 +21,10 @@ impl ServerState {
         }) {
             tracing::error!("Failed to publish diagnostics: {e}");
         };
+    }
+
+    pub fn emit(&mut self, event: Event) -> async_lsp::Result<()> {
+        self.client.emit(event)
     }
 }
 
