@@ -9,7 +9,7 @@ Milestones:
         - [x] Element dependent inline attributes (@checked, @selected, etc.)
         - [ ] Component/Layout
 - [x] Signature Help (Components & Layouts)
-- [ ] Diagnostic
+- [x] Diagnostic
     - [x] Syntax
     - [x] Unknown component/layout
 - [ ] Workspace Symbols

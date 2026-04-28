@@ -15,6 +15,8 @@ use crate::{
     util::FileType,
 };
 
+pub mod queries;
+
 #[salsa::db]
 pub trait DefDatabase: DocumentDatabase {
     fn component_signature(&self, id: ComponentId) -> Arc<ComponentSignature>;

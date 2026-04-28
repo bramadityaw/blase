@@ -1,4 +1,3 @@
-use ast::NodeExt;
 use camino::Utf8Path;
 use line_index::{TextRange, TextSize};
 use tree_sitter::{Query, QueryCursor, StreamingIterator};
@@ -8,7 +7,7 @@ use crate::{
     config::Config,
     db::{
         DocumentDatabase, FileRange, ParsedDocument, RootDatabase, Severity,
-        def::{ComponentName, LayoutName},
+        def::{ComponentName, LayoutName, queries},
     },
     resolve_path,
     util::FileType,
@@ -416,14 +415,11 @@ fn no_such_component_or_layout<'tree>(
     config: &Config,
     acc: &mut Vec<Diagnostic>,
 ) {
-    const COMPONENTS_AND_LAYOUTS: &'static str = r#"
-((element [(start_tag (tag_name) @tag) (self_closing_tag (tag_name) @tag)]) (#match? @tag "^x-[a-z\-]+")) @component
-    "#;
     let contents = document.contents(db);
     let root = document.root_node();
     let root = root.raw();
     let mut cursor = QueryCursor::new();
-    let query = Query::new(&root.language(), COMPONENTS_AND_LAYOUTS).unwrap();
+    let query = Query::new(&root.language(), queries::ALL_COMPONENTS_AND_LAYOUTS).unwrap();
     let mut matches = cursor.matches(&query, *root, contents.as_bytes());
     while let Some(m) = matches.next() {
         for m in m.captures {
