@@ -19,8 +19,9 @@ pub struct AnalysisHost {
 pub mod fixture;
 
 pub mod completions;
-mod references;
 mod diagnostics;
+mod references;
+pub mod workspace_symbols;
 pub use diagnostics::Diagnostic;
 mod goto_definition;
 pub mod hover;

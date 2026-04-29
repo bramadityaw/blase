@@ -5,6 +5,7 @@ use std::sync::Arc;
 
 use camino::Utf8Path;
 use convert_case::ccase;
+use itertools::Itertools;
 use smol_str::SmolStr;
 use type_sitter::{HasChild, Node};
 
@@ -52,6 +53,38 @@ impl Name {
 
     pub fn as_str(&self) -> &str {
         &self.str
+    }
+}
+
+pub struct ViewName(Name);
+
+impl ViewName {
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
+    pub fn from_document(
+        db: &dyn DocumentDatabase,
+        doc: &ParsedDocument,
+        ws_path: &Utf8Path,
+    ) -> Option<ViewName> {
+        let path = doc.source.path(db).strip_prefix(ws_path).ok()?;
+
+        match doc.filetype {
+            FileType::Blade => {
+                let path = path
+                    .strip_prefix(resolve_path::views_dir())
+                    .ok()?
+                    .as_str()
+                    .strip_suffix(".blade.php")?;
+                tracing::debug!(path);
+                if path.starts_with("components/") {
+                    return None;
+                }
+                let name = path.replace(['\\', '/'], ".");
+                Some(ViewName(Name::new(&name)))
+            }
+            FileType::PHP => None,
+        }
     }
 }
 
@@ -254,8 +287,8 @@ pub struct Layout {
 }
 
 impl DocumentId for LayoutId {
-    fn file_(&self, db: &dyn DocumentDatabase) -> SourceFile {
-        self.file(db)
+    fn file(&self, db: &dyn DocumentDatabase) -> SourceFile {
+        LayoutId::file(*self, db)
     }
 }
 
@@ -271,18 +304,52 @@ pub struct LayoutId {
     pub kind: LayoutKind,
 }
 
-impl LayoutId {
-    pub fn path<'db>(&self, db: &'db dyn DocumentDatabase) -> &'db Utf8Path {
-        self.file(db).path(db)
-    }
-}
-
 pub enum LayoutName {
     Default,
     Name(Name),
 }
 
 impl LayoutName {
+    pub fn from_document(
+        db: &dyn DocumentDatabase,
+        doc: &ParsedDocument,
+        ws_path: &Utf8Path,
+    ) -> Option<LayoutName> {
+        let path = doc.source.path(db).strip_prefix(ws_path).ok()?;
+        match doc.filetype {
+            FileType::Blade => {
+                let path = path
+                    .strip_prefix(resolve_path::component_views_dir())
+                    .ok()?
+                    .as_str()
+                    .strip_suffix(".blade.php")?;
+                tracing::debug!(path);
+                if let Some(path) = path.strip_suffix("layouts/") {
+                    let name = path.replace(['\\', '/'], ".");
+                    Some(LayoutName::Name(Name::new(&name)))
+                } else if path == "layout" {
+                    Some(LayoutName::Default)
+                } else {
+                    None
+                }
+            }
+            FileType::PHP => {
+                let path = path
+                    .strip_prefix(resolve_path::component_class_dir())
+                    .ok()?
+                    .as_str()
+                    .strip_suffix("Layout.php")?;
+                tracing::debug!(path);
+                if path.is_empty() {
+                    Some(LayoutName::Default)
+                } else {
+                    let name = ccase!(kebab, path);
+                    Some(LayoutName::Name(Name::new(&name)))
+                }
+            }
+        }
+    }
+
     pub fn new(name: &str) -> Option<LayoutName> {
         let name = name.strip_prefix("x-")?.strip_suffix("-layout")?;
         let layout = if name.is_empty() {
@@ -635,21 +702,21 @@ impl Document for Layout {
 }
 
 pub trait DocumentId {
-    fn file_(&self, db: &dyn DocumentDatabase) -> SourceFile;
+    fn file(&self, db: &dyn DocumentDatabase) -> SourceFile;
 
     fn path<'db>(&self, db: &'db dyn DocumentDatabase) -> &'db Utf8Path {
-        self.file_(db).path(db)
+        self.file(db).path(db)
     }
 
     fn document(&self, db: &dyn DocumentDatabase) -> ParsedDocument {
-        let file = self.file_(db);
+        let file = self.file(db);
         db.parsed_document(file.path(db)).unwrap()
     }
 }
 
 impl DocumentId for ComponentId {
-    fn file_(&self, db: &dyn DocumentDatabase) -> SourceFile {
-        self.file(db)
+    fn file(&self, db: &dyn DocumentDatabase) -> SourceFile {
+        ComponentId::file(*self, db)
     }
 }
 
@@ -661,6 +728,39 @@ pub struct Component {
 pub struct ComponentName(Name);
 
 impl ComponentName {
+    pub fn from_document(
+        db: &dyn DocumentDatabase,
+        doc: &ParsedDocument,
+        ws_path: &Utf8Path,
+    ) -> Option<ComponentName> {
+        let path = doc.source.path(db).strip_prefix(ws_path).ok()?;
+        match doc.filetype {
+            FileType::Blade => {
+                let path = path
+                    .strip_prefix(resolve_path::component_views_dir())
+                    .ok()?
+                    .as_str()
+                    .strip_suffix(".blade.php")?;
+                tracing::debug!(path);
+                let name = path.replace(['\\', '/'], ".");
+                Some(ComponentName(Name::new(&name)))
+            }
+            FileType::PHP => {
+                let path = path
+                    .strip_prefix(resolve_path::component_class_dir())
+                    .ok()?
+                    .as_str()
+                    .strip_suffix(".php")?;
+                tracing::debug!(path);
+                let name = path
+                    .split(['\\', '/'])
+                    .map(|comp| ccase!(kebab, comp))
+                    .join(".");
+                Some(ComponentName(Name::new(&name)))
+            }
+        }
+    }
+
     pub fn new(name: &str) -> Option<ComponentName> {
         if name.ends_with("-layout") {
             return None;

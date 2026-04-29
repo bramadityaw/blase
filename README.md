@@ -7,10 +7,13 @@ Milestones:
     = [x] Directives
         - [x] Control flow (@if, @while, ...)
         - [x] Element dependent inline attributes (@checked, @selected, etc.)
-        - [ ] Component/Layout
+    - [ ] Component/Layout
+        - [ ] Name
+        - [ ] Attributes
+    - [ ] Includes
 - [x] Signature Help (Components & Layouts)
 - [x] Diagnostic
     - [x] Syntax
     - [x] Unknown component/layout
-- [ ] Workspace Symbols
-- [ ] Find References
+- [x] Workspace Symbols
+- [x] Find References

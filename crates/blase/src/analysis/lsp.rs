@@ -3,7 +3,7 @@ use camino::Utf8Path;
 use crate::{
     analysis::{
         Analysis, Cancellable, completions, diagnostics, goto_definition, hover, references,
-        signature_help,
+        signature_help, workspace_symbols,
     },
     config::Config,
     db::{FilePosition, FileRange},
@@ -70,5 +70,13 @@ impl Analysis {
         position: FilePosition,
     ) -> Cancellable<Option<Vec<references::ReferenceSearchResult>>> {
         self.with_db(|db| references::references(db, config, position))
+    }
+
+    pub fn workspace_symbols(
+        &self,
+        config: &Config,
+        query: String,
+    ) -> Cancellable<Option<Vec<workspace_symbols::SymbolInformation>>> {
+        self.with_db(|db| workspace_symbols::workspace_symbols(db, query, config))
     }
 }

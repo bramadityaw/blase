@@ -60,12 +60,14 @@ fn layout_resources_path(name: &LayoutName, work_path: &Utf8Path) -> Utf8PathBuf
     path
 }
 
-fn component_views_dir() -> String {
+pub fn component_views_dir() -> String {
     views_dir() + std::path::MAIN_SEPARATOR_STR + "components"
 }
-fn views_dir() -> String {
+
+pub fn views_dir() -> String {
     "resources/views".to_string()
 }
-fn component_class_dir() -> String {
+
+pub fn component_class_dir() -> String {
     "app/View/Components".to_string()
 }

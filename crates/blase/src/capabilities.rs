@@ -170,7 +170,7 @@ pub fn server_capabilities(config: &Config) -> ServerCapabilities {
             completion_item: config.completion_item(),
         }),
         references_provider: Some(OneOf::Left(true)),
-        workspace_symbol_provider: None,
+        workspace_symbol_provider: Some(OneOf::Left(true)),
 
         // Methods below this line are unsupported
         document_formatting_provider: None,

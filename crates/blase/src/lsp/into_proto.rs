@@ -5,7 +5,7 @@ use crate::{
     analysis::{
         self, Cancellable,
         completions::{self, CompletionItemKind, CompletionRelevance},
-        signature_help,
+        signature_help, workspace_symbols,
     },
     config::Config,
     db::{self, FileRange, text_edit::InsertDelete},
@@ -16,6 +16,34 @@ use async_lsp::lsp_types::{self, CompletionResponse, Position, Range, Url};
 use camino::Utf8Path;
 use line_index::{TextRange, TextSize};
 use tree_sitter::Point;
+
+pub fn symbol_info(
+    snap: &ServerStateSnapshot,
+    info: workspace_symbols::SymbolInformation,
+) -> Cancellable<Option<lsp_types::SymbolInformation>> {
+    let workspace_symbols::SymbolInformation { name, range, kind } = info;
+    let Some(location) = location(snap, range)? else {
+        return Ok(None);
+    };
+    #[allow(deprecated)]
+    let info = lsp_types::SymbolInformation {
+        name,
+        kind: symbol_kind(kind),
+        location,
+        tags: None,
+        deprecated: None,
+        container_name: None,
+    };
+    Ok(Some(info))
+}
+
+pub fn symbol_kind(kind: workspace_symbols::SymbolKind) -> lsp_types::SymbolKind {
+    match kind {
+        workspace_symbols::SymbolKind::View => lsp_types::SymbolKind::FILE,
+        workspace_symbols::SymbolKind::Component => lsp_types::SymbolKind::FUNCTION,
+        workspace_symbols::SymbolKind::Layout => lsp_types::SymbolKind::FUNCTION,
+    }
+}
 
 pub fn diagnostic(line_index: &LineIndex, d: analysis::Diagnostic) -> lsp_types::Diagnostic {
     lsp_types::Diagnostic {

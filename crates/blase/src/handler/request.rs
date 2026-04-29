@@ -7,6 +7,7 @@ use async_lsp::{
         self, CompletionParams, CompletionResponse, GotoDefinitionParams, GotoDefinitionResponse,
         Hover, HoverContents, HoverParams, InitializeParams, InitializeResult, Location,
         MarkupContent, MarkupKind, ReferenceParams, ServerInfo, SignatureHelp, SignatureHelpParams,
+        WorkspaceSymbolParams, WorkspaceSymbolResponse,
     },
 };
 use camino::Utf8PathBuf;
@@ -19,6 +20,29 @@ use crate::{
     lsp,
     server::{ServerState, ServerStateSnapshot},
 };
+
+pub fn handle_workspace_symbols(
+    snap: ServerStateSnapshot,
+    params: WorkspaceSymbolParams,
+) -> Result<Option<WorkspaceSymbolResponse>, ResponseError> {
+    let config = &snap.config.read().expect("poison");
+    let query = params.query;
+    let symbols = lsp::into_proto::cancellable(snap.analysis.workspace_symbols(config, query))?;
+    match symbols {
+        Some(symbols) => {
+            let infos = symbols
+                .into_iter()
+                .filter_map(|info| match lsp::into_proto::symbol_info(&snap, info) {
+                    Ok(info) => info,
+                    Err(_) => None,
+                })
+                .collect();
+            let response = WorkspaceSymbolResponse::Flat(infos);
+            Ok(Some(response))
+        }
+        None => Ok(None),
+    }
+}
 
 pub fn handle_references(
     snap: ServerStateSnapshot,

@@ -83,6 +83,9 @@ pub fn run_server(
         router.event::<handler::Event>(handler::event::handle_event);
 
         router
+            .request::<lsp_types::request::WorkspaceSymbolRequest, _>(wrap_responder!(
+                handler::request::handle_workspace_symbols
+            ))
             .request::<lsp_types::request::References, _>(wrap_responder!(
                 handler::request::handle_references
             ))
