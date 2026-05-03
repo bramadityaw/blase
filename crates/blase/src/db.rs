@@ -219,10 +219,10 @@ impl ParsedDocument {
         &'doc self,
         offset: line_index::TextSize,
     ) -> Option<UntypedNode<'doc>> {
-        let offset = offset.into();
+        let offset = usize::from(offset);
         self.tree
             .root_node()
-            .descendant_for_byte_range(offset, offset)
+            .descendant_for_byte_range(offset.checked_sub(1).unwrap_or(offset), offset)
             .map(UntypedNode::new)
     }
 
