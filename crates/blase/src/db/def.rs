@@ -30,7 +30,7 @@ impl DefDatabase for super::RootDatabase {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Name {
     str: SmolStr,
 }
@@ -101,8 +101,8 @@ impl ViewName {
 /// TODO: Determine what slots are available
 #[derive(Clone, PartialEq)]
 pub struct ComponentSignature {
-    name: Name,
-    attrs: Option<Box<[ComponentAttr]>>,
+    pub name: Name,
+    pub attrs: Option<Arc<[ComponentAttr]>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -275,7 +275,7 @@ impl ComponentSignature {
         let attrs = ComponentAttr::query(db, id);
         let attrs = match attrs.len() {
             0 => None,
-            _ => Some(attrs.into_boxed_slice()),
+            _ => Some(Arc::from(attrs)),
         };
         Arc::new(Self { name, attrs })
     }
@@ -584,6 +584,12 @@ impl Directive {
             EndWhile,
             Php,
             EndPhp,
+            Include,
+            IncludeIf,
+            IncludeWhen,
+            IncludeUnless,
+            IncludeFirst,
+            IncludeIsolated,
         ]
     }
 
@@ -785,22 +791,6 @@ pub enum ComponentKind {
     Anon,
 }
 
-pub fn get_tag_name<'tree, Tag: Node<'tree>>(tag: Tag) -> Option<ast::blade::TagName<'tree>> {
-    let tag_name = ast::match_node!(tag, {
-        ast::blade::SelfClosingTag(self_tag) => {
-            self_tag.tag_name()
-        },
-        ast::blade::StartTag(start_tag) => {
-            start_tag.tag_name()
-        },
-        ast::blade::EndTag(end_tag) => {
-            end_tag.tag_name()
-        },
-        _ => return None,
-    });
-    tag_name.ok()
-}
-
 impl Component {
     #[inline]
     pub fn signature(&self, db: &dyn DefDatabase) -> Arc<ComponentSignature> {
@@ -811,7 +801,7 @@ impl Component {
         self.signature(db).name.clone()
     }
 
-    pub fn attrs(&self, db: &dyn DefDatabase) -> Option<Box<[ComponentAttr]>> {
+    pub fn attrs(&self, db: &dyn DefDatabase) -> Option<Arc<[ComponentAttr]>> {
         self.signature(db).attrs.clone()
     }
 
@@ -822,7 +812,18 @@ impl Component {
         config: &Config,
     ) -> Option<Self> {
         let tag = attr.parent()?;
-        let tag_name = get_tag_name(tag)?;
+        let tag_name = ast::match_node!(tag, {
+                ast::blade::SelfClosingTag(self_tag) => {
+                    self_tag.tag_name().ok()
+                },
+                ast::blade::StartTag(start_tag) => {
+                    start_tag.tag_name().ok()
+                },
+                ast::blade::EndTag(end_tag) => {
+                    end_tag.tag_name().ok()
+                },
+                _ => None,
+        })?;
         let component = Self::for_tagname(db, tag_name, doc, config)?;
         Some(component)
     }
