@@ -9,7 +9,9 @@ use async_lsp::lsp_types::{
 use line_index::WideEncoding;
 
 use crate::{
-    analysis::completions::CompletionFieldsToResolve, config::Config, line_index::PositionEncoding,
+    analysis::completions::{self, CompletionFieldsToResolve},
+    config::Config,
+    line_index::PositionEncoding,
 };
 
 impl Config {
@@ -160,8 +162,8 @@ pub fn server_capabilities(config: &Config) -> ServerCapabilities {
                 Some(config.completions_resolve_provider())
             },
             trigger_characters: {
-                let trigger_chars = ['@', '{'];
-                Some(trigger_chars.into_iter().map(String::from).collect())
+                let trigger_chars = completions::TRIGGER_CHARS;
+                Some(trigger_chars.into_iter().copied().map(String::from).collect())
             },
             all_commit_characters: None,
             work_done_progress_options: WorkDoneProgressOptions {
