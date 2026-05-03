@@ -4,6 +4,7 @@ use super::*;
 
 #[test]
 fn completes_in_attr_value() {
+    cov_mark::check!(echo_complete);
     check(
         r#"
 <span id="{$0">
@@ -85,15 +86,12 @@ Some comment {$0
 
 #[test]
 fn no_complete_in_escaped_php_statement() {
-    {
-        cov_mark::check!(inside_echo_error);
-        check(
-            r#"
+    check(
+        r#"
 {{ {$0 }}
 "#,
-            expect![[""]],
-        );
-    }
+        expect![[""]],
+    );
 }
 
 #[test]

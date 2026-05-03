@@ -19,6 +19,7 @@ Hello, World!
 
 #[test]
 fn option_tag_attribute_directive() {
+    cov_mark::check!(attr_completion);
     check(
         r#"
 <select>
@@ -60,6 +61,12 @@ fn option_tag_attribute_directive() {
             @forelse
             @while
             @php
+            @include
+            @includeif
+            @includewhen
+            @includeunless
+            @includefirst
+            @includeisolated
             @class
             @style
             @disabled
@@ -108,6 +115,12 @@ fn input_tag_attribute_directive() {
             @forelse
             @while
             @php
+            @include
+            @includeif
+            @includewhen
+            @includeunless
+            @includefirst
+            @includeisolated
             @class
             @style
             @disabled
@@ -171,7 +184,13 @@ fn completes_after_at() {
             @foreach
             @forelse
             @while
-            @php"#]],
+            @php
+            @include
+            @includeif
+            @includewhen
+            @includeunless
+            @includefirst
+            @includeisolated"#]],
     );
 }
 
@@ -228,6 +247,12 @@ fn after_if() {
             @forelse
             @while
             @php
+            @include
+            @includeif
+            @includewhen
+            @includeunless
+            @includefirst
+            @includeisolated
             @elseif
             @else"#]],
     );
@@ -275,6 +300,12 @@ fn after_forelse() {
             @forelse
             @while
             @php
+            @include
+            @includeif
+            @includewhen
+            @includeunless
+            @includefirst
+            @includeisolated
             @break
             @continue"#]],
     );
@@ -322,6 +353,12 @@ fn after_foreach() {
             @forelse
             @while
             @php
+            @include
+            @includeif
+            @includewhen
+            @includeunless
+            @includefirst
+            @includeisolated
             @break
             @continue"#]],
     );
@@ -369,6 +406,12 @@ fn after_for() {
             @forelse
             @while
             @php
+            @include
+            @includeif
+            @includewhen
+            @includeunless
+            @includefirst
+            @includeisolated
             @break
             @continue"#]],
     );
@@ -416,6 +459,12 @@ fn after_while() {
             @forelse
             @while
             @php
+            @include
+            @includeif
+            @includewhen
+            @includeunless
+            @includefirst
+            @includeisolated
             @break
             @continue"#]],
     );
@@ -463,6 +512,12 @@ fn after_switch() {
             @forelse
             @while
             @php
+            @include
+            @includeif
+            @includewhen
+            @includeunless
+            @includefirst
+            @includeisolated
             @break
             @case
             @default"#]],

@@ -27,7 +27,8 @@ fn get_completion_items(blade_fixture: &str) -> Vec<CompletionItem> {
     let offset = position.offset.into();
     let trigger = contents
         .get(offset - 1..offset)
-        .and_then(|s| s.chars().next());
+        .and_then(|s| s.chars().next())
+        .filter(|c| super::TRIGGER_CHARS.contains(c));
     let result = analysis
         .completion(&TEST_CONFIG, position, trigger)
         .unwrap()
