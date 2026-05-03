@@ -103,10 +103,14 @@ pub fn hover(
                 .expect("Component is not in the workspace folder. This is a bug");
             let mut label = format!("<x-{}", component.name(db));
             if let Some(attrs) = component.attrs(db) {
-                for attr in attrs {
+                for attr in attrs.as_ref() {
                     label.push(' ');
                     label.push_str(attr.name.as_str());
-                    format_to!(label, "=\"{}\"", attr.default_value.unwrap_or_default());
+                    format_to!(
+                        label,
+                        "=\"{}\"",
+                        attr.default_value.clone().unwrap_or_default()
+                    );
                 }
             }
             label.push('>');

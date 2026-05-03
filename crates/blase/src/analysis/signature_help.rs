@@ -104,7 +104,7 @@ fn signature_help_for_attr(
     };
     format_to!(res.signature, "<x-{}", component.name(db));
     if let Some(attrs) = component.attrs(db) {
-        for attr in attrs {
+        for attr in attrs.as_ref() {
             res.push_attr(attr.name.as_str(), attr.default_value.as_deref());
         }
     }
