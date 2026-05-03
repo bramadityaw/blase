@@ -1,4 +1,4 @@
-use type_sitter::{Node, TreeCursor, UntypedNode};
+use type_sitter::{HasChildren, Node, TreeCursor, UntypedNode};
 
 pub mod blade;
 pub mod php;
@@ -47,4 +47,42 @@ macro_rules! node_is {
         let __node = $node;
         $( ::type_sitter::UntypedNode::downcast::<$($type)::+>(&__node).is_ok() )||+
     }};
+}
+
+impl<'tree> blade::Element<'tree> {
+    pub fn tag(self) -> Option<UntypedNode<'tree>> {
+        let element = self;
+        let mut cursor = element.walk();
+        let children = element.children(&mut cursor);
+        for child in children.filter_map(Result::ok) {
+            let tag = match child {
+                blade::anon_unions::Anon213946333235361205431304157586062365302::SelfClosingTag(
+                    self_closing_tag,
+                ) => self_closing_tag.upcast(),
+                blade::anon_unions::Anon213946333235361205431304157586062365302::StartTag(
+                    start_tag,
+                ) => start_tag.upcast(),
+                _ => continue,
+            };
+            return Some(tag);
+        }
+        None
+    }
+
+    pub fn tag_name(self) -> Option<blade::TagName<'tree>> {
+        let tag = self.tag()?;
+        let tag_name = match_node!(tag, {
+            blade::SelfClosingTag(self_tag) => {
+                self_tag.tag_name()
+            },
+            blade::StartTag(start_tag) => {
+                start_tag.tag_name()
+            },
+            blade::EndTag(end_tag) => {
+                end_tag.tag_name()
+            },
+            _ => return None,
+        });
+        tag_name.ok()
+    }
 }
