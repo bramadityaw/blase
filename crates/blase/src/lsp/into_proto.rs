@@ -145,6 +145,7 @@ fn completion_item(
                 self::completion_text_edit(line_index, insert_replace_support, indel2)
             })
         } else {
+            tracing::debug!(?source_range, delete=?indel.delete);
             assert!(source_range.intersect(indel.delete).is_none());
             let text_edit = self::text_edit(line_index, indel.clone());
             additional_text_edits.push(text_edit);
