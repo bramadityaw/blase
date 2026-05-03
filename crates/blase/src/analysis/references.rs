@@ -126,10 +126,16 @@ mod tests {
 
     fn check(fixture: &str, expect: Expect) {
         let (analysis, position) = fixture::position(fixture);
-        let refs = analysis
+        let mut refs = analysis
             .references(&TEST_CONFIG, position)
             .unwrap()
             .unwrap();
+
+        refs.sort_by_key(|refs| {
+            refs.defined_files
+                .clone()
+                .and_then(|path| path.first().cloned())
+        });
 
         let mut actual = String::new();
         for refs in refs {
@@ -175,7 +181,17 @@ It's so nice to see you
 <x-hello/>
 Welcome to Laravel!
 "#,
-            expect![[""]],
+            //FIXME: Sometimes, the test outputs change every run. However, the only
+            //thing changing is the ordering of the references list (sometimes ascending or descending).
+            //
+            // I've sorted the references list by the defined_files field, but I'll leave the comment above
+            // just in case this comes up again.
+            expect![[r#"
+                /resources/views\components\hello.blade.php
+
+                "/resources/views/two.blade.php" 0..10 <x-hello/>
+                "/resources/views/one.blade.php" 32..42 <x-hello/>
+            "#]],
         )
     }
 }
