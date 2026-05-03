@@ -9,8 +9,7 @@ Milestones:
         - [x] Element dependent inline attributes (@checked, @selected, etc.)
     - [ ] Component/Layout
         - [ ] Name
-        - [ ] Attributes
-    - [ ] Includes
+        - [x] Attributes
 - [x] Signature Help (Components & Layouts)
 - [x] Diagnostic
     - [x] Syntax
