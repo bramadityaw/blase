@@ -11,7 +11,7 @@ use crate::{
     config::Config,
     db::{
         DocumentDatabase, FilePosition, ParsedDocument, RootDatabase, SourceDatabase,
-        def::{self, Component, ComponentAttr, DefDatabase, Directive, Name},
+        def::{self, Component, ComponentAttr, DefDatabase, Directive, Layout, Name},
         text_edit::TextEdit,
     },
 };
@@ -50,10 +50,64 @@ pub fn completions(
                 let (start, name) = name.as_ref()?;
                 let start_offset = TextSize::from(*start);
                 component_completion(acc, ctx, start_offset, name, config, analysis);
+                layout_completion(acc, ctx, start_offset, name, config, analysis);
             }
         }
     }
     Some(items)
+}
+
+fn layout_completion(
+    items: &mut Vec<CompletionItem>,
+    ctx: &CompletionContext,
+    start_offset: TextSize,
+    name: &Name,
+    config: &Config,
+    analysis: &ContextAnalysis,
+) {
+    let name_range = TextRange::at(start_offset, TextSize::of(name.as_str()));
+    let db = ctx.db;
+    let all_docs = db.all_documents();
+    let layouts = all_docs.into_iter().filter_map(|doc| {
+        let layout = Layout::from_document(db, doc, config)?;
+        let lname = layout.name(db);
+        if lname.starts_with(name) {
+            Some(layout)
+        } else {
+            None
+        }
+    });
+    let completions =
+        layouts.map(|layout| layout_completion_item(ctx, db, name_range, &layout, analysis));
+    items.extend(completions);
+}
+
+fn layout_completion_item(
+    ctx: &CompletionContext,
+    db: &dyn DefDatabase,
+    name_range: TextRange,
+    layout: &Layout,
+    analysis: &ContextAnalysis,
+) -> CompletionItem {
+    let name = layout.name(db);
+    let tag_name = &name.tag_name();
+
+    let mut builder = TextEdit::builder();
+    builder.delete(name_range);
+    let mut buf = format!("<{}>\n", dbg!(tag_name));
+    buf.push_str("    $0\n");
+    macros::format_to!(buf, "</{}>", tag_name);
+    builder.insert(name_range.start(), buf);
+    let edit = builder.finish();
+
+    CompletionItem {
+        label: tag_name.to_owned(),
+        kind: CompletionItemKind::Snippet,
+        edit,
+        source_range: ctx.source_range(analysis),
+        lookup: name.label().to_smolstr(),
+        relevance: CompletionRelevance::default(),
+    }
 }
 
 fn component_completion(
@@ -67,7 +121,7 @@ fn component_completion(
     let name_range = TextRange::at(start_offset, TextSize::of(name.as_str()));
     let db = ctx.db;
     let all_docs = db.all_documents();
-    let all_components = all_docs.into_iter().filter_map(|doc| {
+    let components = all_docs.into_iter().filter_map(|doc| {
         let component = Component::for_document(db, doc, config)?;
         let cname = component.name(db);
         if cname.inner().starts_with(name) {
@@ -76,7 +130,7 @@ fn component_completion(
             None
         }
     });
-    let completions = all_components
+    let completions = components
         .map(|component| component_completion_item(ctx, db, name_range, &component, analysis));
     items.extend(completions);
 }

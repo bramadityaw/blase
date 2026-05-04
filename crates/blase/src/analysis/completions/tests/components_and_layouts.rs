@@ -3,9 +3,11 @@ use expect_test::expect;
 use super::*;
 
 #[test]
-fn component_completion() {
+fn component_and_layout_completion() {
     check(
         r#"
+//- /resources/views/layouts/foo.blade.php
+Boo!
 //- /resources/views/components/foo.blade.php
 @props(['w', 'x'])
 //- /resources/views/components/bar.blade.php
@@ -14,7 +16,32 @@ fn component_completion() {
 //- /resources/views/index.blade.php
 f$0
 "#,
-        expect!["x-foo"],
+        expect![[r#"
+            x-foo
+            x-foo-layout"#]],
+    );
+}
+
+#[test]
+fn layout_completion_edit() {
+    check_edit(
+        "x-foo-layout",
+        r#"
+//- /resources/views/layouts/foo.blade.php
+Boo!
+//- /resources/views/components/foo.blade.php
+@props(['w', 'x'])
+//- /resources/views/components/bar.blade.php
+@props(['y', 'z'])
+
+//- /resources/views/index.blade.php
+f$0
+"#,
+        expect![[r#"
+            <x-foo-layout>
+                $0
+            </x-foo-layout>
+        "#]],
     );
 }
 
@@ -23,6 +50,8 @@ fn component_completion_edit() {
     check_edit(
         "x-foo",
         r#"
+//- /resources/views/layouts/foo.blade.php
+Boo!
 //- /resources/views/components/foo.blade.php
 @props(['w', 'x'])
 //- /resources/views/components/bar.blade.php

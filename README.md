@@ -3,12 +3,13 @@
 Milestones:
 - [x] Go To Definition (Components & Layouts)
 - [x] Hover (Components & Layouts w/ documentation)
-- [ ] Completion
+- [x] Completion
     = [x] Directives
         - [x] Control flow (@if, @while, ...)
         - [x] Element dependent inline attributes (@checked, @selected, etc.)
-    - [ ] Component/Layout
-        - [ ] Name
+    - [x] Component/Layout
+        - [x] Component Name
+        - [x] Layout Name
         - [x] Attributes
 - [x] Signature Help (Components & Layouts)
 - [x] Diagnostic

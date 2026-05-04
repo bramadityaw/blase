@@ -30,7 +30,7 @@ impl DefDatabase for super::RootDatabase {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Name {
     str: SmolStr,
 }
@@ -280,7 +280,7 @@ impl ComponentSignature {
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Layout {
     pub id: LayoutId,
 }
@@ -298,17 +298,34 @@ pub enum LayoutKind {
 }
 
 #[salsa::interned(no_lifetime)]
+#[derive(Debug)]
 pub struct LayoutId {
     pub file: SourceFile,
     pub kind: LayoutKind,
+    pub name: LayoutName,
 }
 
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum LayoutName {
     Default,
     Name(Name),
 }
 
 impl LayoutName {
+    pub fn label(&self) -> impl std::fmt::Display {
+        match self {
+            LayoutName::Default => "layout".to_string(),
+            LayoutName::Name(name) => format!("{}-layout", name.as_str()),
+        }
+    }
+
+    pub fn starts_with(&self, name: &Name) -> bool {
+        match self {
+            LayoutName::Default => "layout".starts_with(name.as_str()),
+            LayoutName::Name(name) => name.starts_with(name),
+        }
+    }
+
     pub fn from_document(
         db: &dyn DocumentDatabase,
         doc: &ParsedDocument,
@@ -318,12 +335,12 @@ impl LayoutName {
         match doc.filetype {
             FileType::Blade => {
                 let path = path
-                    .strip_prefix(resolve_path::component_views_dir())
+                    .strip_prefix(resolve_path::views_dir())
                     .ok()?
                     .as_str()
                     .strip_suffix(".blade.php")?;
                 tracing::debug!(path);
-                if let Some(path) = path.strip_suffix("layouts/") {
+                if let Some(path) = path.strip_prefix("layouts/") {
                     let name = path.replace(['\\', '/'], ".");
                     Some(LayoutName::Name(Name::new(&name)))
                 } else if path == "layout" {
@@ -374,13 +391,29 @@ impl LayoutName {
 }
 
 impl Layout {
-    pub fn name(&self, db: &dyn DocumentDatabase) -> Name {
-        let file = self.id.file(db);
-        let kind = self.id.kind(db);
-        let filename = file.path(db).file_name().unwrap();
-        match kind {
-            LayoutKind::Class => Name::new(&ccase!(kebab, filename.strip_suffix(".php").unwrap())),
-            LayoutKind::Anon => Name::new(filename.strip_suffix(".blade.php").unwrap()),
+    pub fn name(&self, db: &dyn DocumentDatabase) -> LayoutName {
+        self.id.name(db)
+    }
+
+    pub fn from_document(
+        db: &dyn DocumentDatabase,
+        doc: &ParsedDocument,
+        config: &Config,
+    ) -> Option<Self> {
+        let name = LayoutName::from_document(db, doc, &config.workspace_folder())?;
+        Self::from_name(db, name, config)
+    }
+
+    pub fn from_name(db: &dyn DocumentDatabase, name: LayoutName, config: &Config) -> Option<Self> {
+        let (class_path, resources_path) = resolve_path::layout_paths(&name, config);
+        if let Some(class_doc) = db.parsed_document(&class_path) {
+            let id = LayoutId::new(db, class_doc.source, LayoutKind::Class, name);
+            Some(Self { id })
+        } else if let Some(res_doc) = db.parsed_document(&resources_path) {
+            let id = LayoutId::new(db, res_doc.source, LayoutKind::Anon, name);
+            Some(Self { id })
+        } else {
+            None
         }
     }
 
@@ -390,18 +423,8 @@ impl Layout {
         doc: &ParsedDocument,
         config: &Config,
     ) -> Option<Self> {
-        let name = doc.text_for_node(db, tag)?;
-        let (class_path, resources_path) =
-            resolve_path::layout_paths(LayoutName::new(name)?, config);
-        if let Some(class_doc) = db.parsed_document(&class_path) {
-            let id = LayoutId::new(db, class_doc.source, LayoutKind::Class);
-            Some(Self { id })
-        } else if let Some(res_doc) = db.parsed_document(&resources_path) {
-            let id = LayoutId::new(db, res_doc.source, LayoutKind::Anon);
-            Some(Self { id })
-        } else {
-            None
-        }
+        let name = LayoutName::new(doc.text_for_node(db, tag)?)?;
+        Self::from_name(db, name, config)
     }
 }
 
