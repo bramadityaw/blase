@@ -34,3 +34,18 @@ fn attribute_completion() {
             y"#]],
     );
 }
+
+#[test]
+fn no_attribute_completion_in_end_tag() {
+    check(
+        r#"
+//- /resources/views/components/foo.blade.php
+@props(['x', 'y'])
+
+//- /resources/views/index.blade.php
+<x-foo>
+</x-foo $0>
+"#,
+        expect![[""]],
+    );
+}

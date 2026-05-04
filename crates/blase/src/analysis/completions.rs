@@ -54,6 +54,10 @@ pub fn completions(
 }
 
 fn attribute_completion(items: &mut Vec<CompletionItem>, ctx: &CompletionContext, tag: &Tag<'_>) {
+    if ctx.node.is::<ast::blade::EndTag>() {
+        return;
+    }
+
     let analysis = &ContextAnalysis::Tag { kind: *tag };
     let db = ctx.db;
     match tag {
@@ -104,7 +108,7 @@ fn component_attribute_completion(
     let mut insert_text = String::new();
     let mut builder = TextEdit::builder();
     'delete: {
-        if ast::node_is!(node, ast::blade::AttributeName) {
+        if node.is::<ast::blade::AttributeName>() {
             let Ok((start, end)) =
                 (|| -> Result<(TextSize, TextSize), std::num::TryFromIntError> {
                     let start = TextSize::try_from(node.start_byte())?;
@@ -165,13 +169,13 @@ fn directive_completion(
 
     let ancestors = ctx.node.ancestors();
     for ancestor in ancestors {
-        if ast::node_is!(ancestor, ast::blade::Conditional) {
+        if ancestor.is::<ast::blade::Conditional>() {
             directives.extend([Directive::ElseIf, Directive::Else]);
         }
-        if ast::node_is!(ancestor, ast::blade::Loops) {
+        if ancestor.is::<ast::blade::Loops>() {
             directives.extend([Directive::Break, Directive::Continue]);
         }
-        if !switched && ast::node_is!(ancestor, ast::blade::Switch) {
+        if !switched && ancestor.is::<ast::blade::Switch>() {
             directives.extend([Directive::Break, Directive::Case, Directive::Default]);
             switched = true;
         }
@@ -243,13 +247,13 @@ fn complete_echo(
     let node = ctx.node;
 
     for ancestor in node.ancestors() {
-        if ast::node_is!(ancestor, ast::blade::PhpStatement) {
+        if ancestor.is::<ast::blade::PhpStatement>() {
             let mut cursor = ancestor.walk();
             let mut children = ancestor.untyped_children(&mut cursor);
             let br = children.next();
             if children.count() != 0
                 && let Some(br) = br
-                && !ast::node_is!(br, ast::blade::symbols::LBraceLBrace)
+                && !br.is::<ast::blade::symbols::LBraceLBrace>()
             {
                 return None;
             }
@@ -288,7 +292,7 @@ fn complete_echo(
                     if ast::node_is!(
                         last,
                         ast::blade::symbols::RBraceRBrace | ast::blade::symbols::NotNotRBrace
-                    ) || (ast::node_is!(last, ast::blade::symbols::RBrace)
+                    ) || (last.is::<ast::blade::symbols::RBrace>()
                         && ast::node_is!(
                             snd_last,
                             ast::blade::symbols::RBrace | ast::blade::symbols::Not
@@ -546,10 +550,10 @@ impl<'db> CompletionContext<'db> {
         config: &Config,
     ) -> Option<(Self, ContextAnalysis<'db>)> {
         let mut node = doc.get_node_at(offset)?;
-        if ast::node_is!(node, ast::blade::Comment) {
+        if node.is::<ast::blade::Comment>() {
             return None;
         }
-        if ast::node_is!(node, ast::blade::Document) {
+        if node.is::<ast::blade::Document>() {
             let src = &doc.contents(db);
             let range = offset.into()..=offset.into();
             if let Some(c) = src.get(range).and_then(|s| s.chars().next())

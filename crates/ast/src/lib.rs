@@ -23,6 +23,14 @@ pub trait NodeExt<'tree>: Node<'tree> {
     fn ancestors(&self) -> impl Iterator<Item = UntypedNode<'tree>> {
         std::iter::successors(Some(self.upcast()), Node::parent)
     }
+
+    /// Checks if the node is a certain implementor of Node
+    ///
+    /// This is perhaps only useful for UntypedNode, and
+    /// should be a method on that type instead of this trait
+    fn is<N: Node<'tree>>(&self) -> bool {
+        self.upcast().downcast::<N>().is_ok()
+    }
 }
 
 impl<'tree> NodeExt<'tree> for UntypedNode<'tree> {}
@@ -45,7 +53,7 @@ macro_rules! match_node {
 macro_rules! node_is {
     ($node:expr, $($( $type:ident )::+)|+ ) => {{
         let __node = $node;
-        $( ::type_sitter::UntypedNode::downcast::<$($type)::+>(&__node).is_ok() )||+
+        $( $crate::NodeExt::is::<$($type)::+>(&__node) )||+
     }};
 }
 
