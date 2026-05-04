@@ -69,7 +69,7 @@ fn goto_def_for_component(
     let (class_path, resources_path) = if let Some(layout) = LayoutName::new(name) {
         resolve_path::layout_paths(layout, config)
     } else {
-        resolve_path::component_paths(ComponentName::new(name)?, config)
+        resolve_path::component_paths(&ComponentName::new(name)?, config)
     };
     tracing::debug!(
         class_path = class_path.as_str(),

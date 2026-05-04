@@ -101,7 +101,7 @@ pub fn hover(
                 .path(db)
                 .strip_prefix(config.workspace_folder())
                 .expect("Component is not in the workspace folder. This is a bug");
-            let mut label = format!("<x-{}", component.name(db));
+            let mut label = format!("<{}", component.name(db).tag_name());
             if let Some(attrs) = component.attrs(db) {
                 for attr in attrs.as_ref() {
                     label.push(' ');

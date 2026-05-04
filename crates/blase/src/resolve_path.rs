@@ -5,7 +5,7 @@ use crate::{
     db::def::{ComponentName, LayoutName},
 };
 
-pub(crate) fn component_paths(name: ComponentName, config: &Config) -> (Utf8PathBuf, Utf8PathBuf) {
+pub(crate) fn component_paths(name: &ComponentName, config: &Config) -> (Utf8PathBuf, Utf8PathBuf) {
     let work_path = &config.workspace_folder();
     let path = name.path();
     let class_path = component_class_path(path.clone(), work_path);

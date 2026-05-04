@@ -440,7 +440,7 @@ fn no_such_component_or_layout<'tree>(
                 ),
             };
             let severity = Severity::Error;
-            if let Some(component_name) = name.and_then(ComponentName::new) {
+            if let Some(ref component_name) = name.and_then(ComponentName::new) {
                 let message = format!(
                     "cannot find component `{}` in the current workspace",
                     component_name.tag_name()

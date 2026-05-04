@@ -49,7 +49,7 @@ pub fn handle_component_or_layout_references(
     let (name, (class_path, resources_path)) = match ComponentName::new(name) {
         Some(name) => (
             &name.tag_name(),
-            resolve_path::component_paths(name, config),
+            resolve_path::component_paths(&name, config),
         ),
         None => {
             let name = LayoutName::new(name)?;

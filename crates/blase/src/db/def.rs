@@ -54,6 +54,10 @@ impl Name {
     pub fn as_str(&self) -> &str {
         &self.str
     }
+
+    pub fn starts_with(&self, name: &Name) -> bool {
+        self.as_str().starts_with(name.as_str())
+    }
 }
 
 pub struct ViewName(Name);
@@ -101,7 +105,7 @@ impl ViewName {
 /// TODO: Determine what slots are available
 #[derive(Clone, PartialEq)]
 pub struct ComponentSignature {
-    pub name: Name,
+    pub name: ComponentName,
     pub attrs: Option<Arc<[ComponentAttr]>>,
 }
 
@@ -266,12 +270,7 @@ impl ComponentSignature {
         let kind = id.kind(db);
         let file = id.file(db);
         let filename = file.path(db).file_name().unwrap();
-        let name = match kind {
-            ComponentKind::Class => {
-                Name::new(&ccase!(kebab, filename.strip_suffix(".php").unwrap()))
-            }
-            ComponentKind::Anon => Name::new(filename.strip_suffix(".blade.php").unwrap()),
-        };
+        let name = ComponentName::from_filename(kind, filename);
         let attrs = ComponentAttr::query(db, id);
         let attrs = match attrs.len() {
             0 => None,
@@ -731,9 +730,30 @@ pub struct Component {
     pub(crate) id: ComponentId,
 }
 
+#[derive(Clone, PartialEq, Eq)]
 pub struct ComponentName(Name);
 
+impl std::fmt::Display for ComponentName {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
 impl ComponentName {
+    pub fn inner(&self) -> &Name {
+        &self.0
+    }
+
+    pub fn from_filename(kind: ComponentKind, filename: &str) -> Self {
+        let name = match kind {
+            ComponentKind::Class => {
+                Name::new(&ccase!(kebab, filename.strip_suffix(".php").unwrap()))
+            }
+            ComponentKind::Anon => Name::new(filename.strip_suffix(".blade.php").unwrap()),
+        };
+        ComponentName(name)
+    }
+
     pub fn from_document(
         db: &dyn DocumentDatabase,
         doc: &ParsedDocument,
@@ -797,12 +817,25 @@ impl Component {
         db.component_signature(self.id)
     }
 
-    pub fn name(&self, db: &dyn DefDatabase) -> Name {
+    pub fn name(&self, db: &dyn DefDatabase) -> ComponentName {
         self.signature(db).name.clone()
     }
 
     pub fn attrs(&self, db: &dyn DefDatabase) -> Option<Arc<[ComponentAttr]>> {
         self.signature(db).attrs.clone()
+    }
+
+    pub fn for_name(db: &dyn DefDatabase, name: &ComponentName, config: &Config) -> Option<Self> {
+        let (class_path, resources_path) = resolve_path::component_paths(name, config);
+        if let Some(class_doc) = db.parsed_document(&class_path) {
+            let id = ComponentId::new(db, class_doc.source, ComponentKind::Class);
+            Some(Self { id })
+        } else if let Some(res_doc) = db.parsed_document(&resources_path) {
+            let id = ComponentId::new(db, res_doc.source, ComponentKind::Anon);
+            Some(Self { id })
+        } else {
+            None
+        }
     }
 
     pub fn for_attr(
@@ -829,22 +862,21 @@ impl Component {
     }
 
     pub fn for_tagname(
-        db: &dyn DocumentDatabase,
+        db: &dyn DefDatabase,
         tag: ast::blade::TagName<'_>,
         doc: &ParsedDocument,
         config: &Config,
     ) -> Option<Self> {
-        let name = doc.text_for_node(db, tag)?;
-        let (class_path, resources_path) =
-            resolve_path::component_paths(ComponentName::new(name)?, config);
-        if let Some(class_doc) = db.parsed_document(&class_path) {
-            let id = ComponentId::new(db, class_doc.source, ComponentKind::Class);
-            Some(Self { id })
-        } else if let Some(res_doc) = db.parsed_document(&resources_path) {
-            let id = ComponentId::new(db, res_doc.source, ComponentKind::Anon);
-            Some(Self { id })
-        } else {
-            None
-        }
+        let name = ComponentName::new(doc.text_for_node(db, tag)?)?;
+        Self::for_name(db, &name, config)
+    }
+
+    pub fn for_document(
+        db: &dyn DefDatabase,
+        doc: &ParsedDocument,
+        config: &Config,
+    ) -> Option<Self> {
+        let name = ComponentName::from_document(db, doc, &config.workspace_folder())?;
+        Self::for_name(db, &name, config)
     }
 }
