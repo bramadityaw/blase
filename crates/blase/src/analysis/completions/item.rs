@@ -3,6 +3,7 @@ use smol_str::SmolStr;
 
 use crate::{analysis::completions::CompletionRelevance, db::text_edit::TextEdit};
 
+#[derive(Clone)]
 pub struct CompletionItem {
     /// Label in the completion pop up which identifies completion.
     pub label: String,
@@ -43,7 +44,7 @@ impl std::fmt::Debug for CompletionItem {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum CompletionItemKind {
     Snippet,
 }

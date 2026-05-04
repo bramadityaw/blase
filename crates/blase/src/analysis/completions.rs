@@ -4,14 +4,14 @@ use ast::NodeExt;
 use either::Either;
 use itertools::Itertools;
 use line_index::{TextRange, TextSize};
-use smol_str::SmolStr;
+use smol_str::{SmolStr, ToSmolStr};
 use type_sitter::{Node, UntypedNode};
 
 use crate::{
     config::Config,
     db::{
         DocumentDatabase, FilePosition, ParsedDocument, RootDatabase, SourceDatabase,
-        def::{self, ComponentAttr, Directive, Name},
+        def::{self, Component, ComponentAttr, DefDatabase, Directive, Name},
         text_edit::TextEdit,
     },
 };
@@ -47,10 +47,87 @@ pub fn completions(
             ContextAnalysis::Tag { kind } => attribute_completion(&mut items, ctx, kind),
             ContextAnalysis::Document { name } => {
                 directive_completion(acc, ctx, analysis);
+                let (start, name) = name.as_ref()?;
+                let start_offset = TextSize::from(*start);
+                component_completion(acc, ctx, start_offset, name, config, analysis);
             }
         }
     }
     Some(items)
+}
+
+fn component_completion(
+    items: &mut Vec<CompletionItem>,
+    ctx: &CompletionContext,
+    start_offset: TextSize,
+    name: &Name,
+    config: &Config,
+    analysis: &ContextAnalysis,
+) {
+    let name_range = TextRange::at(start_offset, TextSize::of(name.as_str()));
+    let db = ctx.db;
+    let all_docs = db.all_documents();
+    let all_components = all_docs.into_iter().filter_map(|doc| {
+        let component = Component::for_document(db, doc, config)?;
+        let cname = component.name(db);
+        if cname.inner().starts_with(name) {
+            Some(component)
+        } else {
+            None
+        }
+    });
+    let completions = all_components
+        .map(|component| component_completion_item(ctx, db, name_range, &component, analysis));
+    items.extend(completions);
+}
+
+fn component_completion_item(
+    ctx: &CompletionContext,
+    db: &dyn DefDatabase,
+    name_range: TextRange,
+    component: &Component,
+    analysis: &ContextAnalysis,
+) -> CompletionItem {
+    let signature = &component.signature(db);
+    let attributes = &signature.attrs;
+    let component_name = &signature.name;
+    let label = component_name.tag_name();
+
+    let mut builder = TextEdit::builder();
+    builder.delete(name_range);
+
+    let mut buf = String::new();
+    macros::format_to!(buf, "<x-{}", component_name);
+
+    if let Some(attributes) = attributes {
+        let len = attributes.len();
+        let mut i = 1;
+        for ComponentAttr {
+            name,
+            default_value: _,
+        } in attributes.iter()
+        {
+            macros::format_to!(buf, " {}=\"{}\"", name, i);
+            i += 1;
+            if i == len {
+                i = 0;
+            }
+        }
+    }
+
+    buf.push('>');
+
+    builder.insert(name_range.start(), buf);
+
+    let edit = builder.finish();
+    CompletionItem {
+        label,
+        kind: CompletionItemKind::Snippet,
+        edit,
+        source_range: ctx.source_range(analysis),
+        lookup: component_name.inner().to_smolstr(),
+        relevance: CompletionRelevance::default(),
+    }
 }
 
 fn attribute_completion(items: &mut Vec<CompletionItem>, ctx: &CompletionContext, tag: &Tag<'_>) {
@@ -437,9 +514,10 @@ impl<'a> std::fmt::Debug for Tag<'a> {
     }
 }
 
+#[salsa::tracked]
 impl<'a> Tag<'a> {
     fn determine(
-        db: &dyn DocumentDatabase,
+        db: &dyn DefDatabase,
         node: UntypedNode<'a>,
         doc: &ParsedDocument,
         config: &Config,

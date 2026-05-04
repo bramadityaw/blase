@@ -3,6 +3,41 @@ use expect_test::expect;
 use super::*;
 
 #[test]
+fn component_completion() {
+    check(
+        r#"
+//- /resources/views/components/foo.blade.php
+@props(['w', 'x'])
+//- /resources/views/components/bar.blade.php
+@props(['y', 'z'])
+
+//- /resources/views/index.blade.php
+f$0
+"#,
+        expect!["x-foo"],
+    );
+}
+
+#[test]
+fn component_completion_edit() {
+    check_edit(
+        "x-foo",
+        r#"
+//- /resources/views/components/foo.blade.php
+@props(['w', 'x'])
+//- /resources/views/components/bar.blade.php
+@props(['y', 'z'])
+
+//- /resources/views/index.blade.php
+f$0
+"#,
+        expect![[r#"
+            <x-foo w="1" x="0">
+        "#]],
+    );
+}
+
+#[test]
 fn attribute_completion_edit() {
     check_edit(
         "bar",
