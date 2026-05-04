@@ -461,7 +461,8 @@ fn no_such_component_or_layout<'tree>(
                 }
                 continue;
             }
-            if let Some(layout_name) = name.and_then(LayoutName::new) {
+
+            if let Some(ref layout_name) = name.and_then(LayoutName::new) {
                 let message = format!(
                     "cannot find layout `{}` in the current workspace",
                     layout_name.tag_name()

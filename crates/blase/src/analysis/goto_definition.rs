@@ -67,7 +67,7 @@ fn goto_def_for_component(
 ) -> Option<Vec<FileRange>> {
     let name = contents.get(tag_name.byte_range())?;
     let (class_path, resources_path) = if let Some(layout) = LayoutName::new(name) {
-        resolve_path::layout_paths(layout, config)
+        resolve_path::layout_paths(&layout, config)
     } else {
         resolve_path::component_paths(&ComponentName::new(name)?, config)
     };

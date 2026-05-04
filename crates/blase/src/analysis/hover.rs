@@ -128,9 +128,10 @@ pub fn hover(
                 .path(db)
                 .strip_prefix(config.workspace_folder())
                 .expect("Layout is not in the workspace folder. This is a bug");
-            let mut label = format!("<x-{}>\n", layout.name(db));
+            let tag_name = &layout.name(db).tag_name();
+            let mut label = format!("<{}>\n", tag_name);
             label.push_str("  {{ $slot }}\n");
-            format_to!(label, "</x-{}>", layout.name(db));
+            format_to!(label, "</{}>", tag_name);
             let range = TextRange::new(
                 TextSize::new(node.byte_range().start as u32),
                 TextSize::new(node.byte_range().end as u32),

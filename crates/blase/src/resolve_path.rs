@@ -30,10 +30,10 @@ fn component_class_path(path: String, work_path: &Utf8Path) -> Utf8PathBuf {
         .join(class_path + ".php")
 }
 
-pub(crate) fn layout_paths(name: LayoutName, config: &Config) -> (Utf8PathBuf, Utf8PathBuf) {
+pub(crate) fn layout_paths(name: &LayoutName, config: &Config) -> (Utf8PathBuf, Utf8PathBuf) {
     let work_path = &config.workspace_folder();
-    let class_path = layout_class_path(&name, work_path);
-    let resources_path = layout_resources_path(&name, work_path);
+    let class_path = layout_class_path(name, work_path);
+    let resources_path = layout_resources_path(name, work_path);
     (class_path, resources_path)
 }
 
