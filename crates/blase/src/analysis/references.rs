@@ -53,7 +53,7 @@ pub fn handle_component_or_layout_references(
         ),
         None => {
             let name = LayoutName::new(name)?;
-            (&name.tag_name(), resolve_path::layout_paths(name, config))
+            (&name.tag_name(), resolve_path::layout_paths(&name, config))
         }
     };
     let doc_paths = [class_path, resources_path]
