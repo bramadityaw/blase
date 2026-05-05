@@ -135,7 +135,7 @@ impl ComponentAttr {
             .ok()
             .and_then(|doc| {
                 walk_children!(doc, |e| {
-                    use ast::blade::anon_unions::Anon84799576569979127075025455267281272019::Props;
+                    use ast::blade::anon_unions::Anon122367149080002252186915888317997925741::Props;
                     let element = e.ok()?;
                     match element {
                         Props(props) => {

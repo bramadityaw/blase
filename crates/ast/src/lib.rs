@@ -64,10 +64,10 @@ impl<'tree> blade::Element<'tree> {
         let children = element.children(&mut cursor);
         for child in children.filter_map(Result::ok) {
             let tag = match child {
-                blade::anon_unions::Anon213946333235361205431304157586062365302::SelfClosingTag(
+                blade::anon_unions::Anon261678758207218650704219939059354909483::SelfClosingTag(
                     self_closing_tag,
                 ) => self_closing_tag.upcast(),
-                blade::anon_unions::Anon213946333235361205431304157586062365302::StartTag(
+                blade::anon_unions::Anon261678758207218650704219939059354909483::StartTag(
                     start_tag,
                 ) => start_tag.upcast(),
                 _ => continue,

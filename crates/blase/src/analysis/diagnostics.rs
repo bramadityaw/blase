@@ -396,14 +396,14 @@ impl<'tree> Element<'tree> {
             .filter_map(|child| {
                 let child = child.ok()?;
                 match child {
-                ast::blade::anon_unions::Anon213946333235361205431304157586062365302::SelfClosingTag(
-                    self_closing,
-                ) => self_closing.tag_name().ok(),
-                ast::blade::anon_unions::Anon213946333235361205431304157586062365302::StartTag(
-                    start,
-                ) => start.tag_name().ok(),
-                _ => None,
-            }
+                    ast::blade::anon_unions::Anon261678758207218650704219939059354909483::SelfClosingTag(
+                        self_closing,
+                    ) => self_closing.tag_name().ok(),
+                    ast::blade::anon_unions::Anon261678758207218650704219939059354909483::StartTag(
+                        start,
+                    ) => start.tag_name().ok(),
+                    _ => None,
+                }
             })
             .next()
     }
