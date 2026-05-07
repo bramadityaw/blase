@@ -29,7 +29,7 @@ impl Config {
             .collect()
     }
 
-    fn completions_resolve_provider(&self) -> bool {
+    pub fn completions_resolve_provider(&self) -> bool {
         let client_capabilities = self.completion_resolve_support_properties();
         let fields_to_resolve =
             CompletionFieldsToResolve::from_client_capabilities(&client_capabilities);
@@ -154,16 +154,23 @@ pub fn server_capabilities(config: &Config) -> ServerCapabilities {
             },
         }),
         completion_provider: Some(CompletionOptions {
-            resolve_provider: if config.client_is_neovim() {
-                config
-                    .has_completion_item_resolve_additionalTextEdits()
-                    .then_some(true)
-            } else {
-                Some(config.completions_resolve_provider())
-            },
+            resolve_provider: None,
+            //if config.client_is_neovim() {
+            //    config
+            //        .has_completion_item_resolve_additionalTextEdits()
+            //        .then_some(true)
+            //} else {
+            //    Some(config.completions_resolve_provider())
+            //},
             trigger_characters: {
                 let trigger_chars = completions::TRIGGER_CHARS;
-                Some(trigger_chars.into_iter().copied().map(String::from).collect())
+                Some(
+                    trigger_chars
+                        .into_iter()
+                        .copied()
+                        .map(String::from)
+                        .collect(),
+                )
             },
             all_commit_characters: None,
             work_done_progress_options: WorkDoneProgressOptions {
