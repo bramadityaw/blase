@@ -1,19 +1,66 @@
 # (B)lade (LA)nguage (SE)rver
 
-Milestones:
-- [x] Go To Definition (Components & Layouts)
-- [x] Hover (Components & Layouts w/ documentation)
-- [x] Completion
-    = [x] Directives
-        - [x] Control flow (@if, @while, ...)
-        - [x] Element dependent inline attributes (@checked, @selected, etc.)
-    - [x] Component/Layout
-        - [x] Component Name
-        - [x] Layout Name
-        - [x] Attributes
-- [x] Signature Help (Components & Layouts)
-- [x] Diagnostic
-    - [x] Syntax
-    - [x] Unknown component/layout
-- [x] Workspace Symbols
-- [x] Find References
+Language server for Laravel's Blade templating language.
+
+🚨 WARNING: As of right now, Blase does NOT provide services for components and directives from packages.
+
+## Table of Contents
+
+- [Installation](#installation)
+  - [VS Code](#vs-code)
+  - [Neovim](#neovim)
+- [Features](#features)
+
+# Installation
+
+Download the binary from the latest release and add it to your PATH.
+
+## VS Code
+
+- Download the extension (`.vsix`) from the latest release.
+
+From the Extensions view in VS Code:
+- Go to the Extensions view.
+- Select Views and More Actions...
+- Select Install from VSIX...
+
+Or from the command line:
+
+```bash 
+# if you use VS Code
+code --install-extension blase.vsix
+
+# if you use VS Code Insiders
+code-insiders --install-extension blase.vsix
+```
+
+## Neovim
+
+- Neovim >= 0.11
+
+```lua
+vim.lsp.config.blase = {
+    cmd = { 'blase' },
+    filetypes = { 'blade' },
+    root_markers = { 'artisan', 'composer.json', '.git' },
+}
+vim.lsp.enable 'blase'
+```
+
+# Features
+-  **Go To Definition**: Jump to the file where a component or layout is defined
+-  **Find References**: Find all usages of a component or layout
+-  **Hover**: View available attributes and documentation of components & layouts
+-  **Completion**:
+    =  Directives
+        -  Control flow (@if, @while, ...)
+        -  Element dependent inline attributes (@checked, @selected, etc.)
+    -  Component/Layout
+        -  Component Name
+        -  Layout Name
+        -  Attributes
+-  **Signature Help **(Components & Layouts)
+-  **Diagnostic**:
+    -  Syntax errors
+    -  Unknown component/layout
+-  **Workspace Symbols**: Search all available
