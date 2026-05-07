@@ -634,7 +634,7 @@ impl Directive {
 
     pub fn lookup(&self) -> String {
         let label = self.label();
-        label.replace('@', "")
+        label.into()
     }
 
     pub fn label(&self) -> &'static str {
