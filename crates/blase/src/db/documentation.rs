@@ -50,8 +50,13 @@ fn extract_docs(comment: &str) -> Option<Documentation> {
     let documentation = text
         .split_inclusive('\n')
         .map(|s| {
-            let text = s.strip_prefix("--").unwrap_or(s);
-            text_procs::trim_indent(text)
+            let text = s.strip_prefix("---").or(s.strip_prefix("--")).unwrap_or(s);
+            let trimmed = text_procs::trim_indent(text);
+            if trimmed.starts_with("\n") {
+                trimmed + "<br/>"
+            } else {
+                trimmed
+            }
         })
         .collect::<String>();
     Some(Documentation::new(documentation))
