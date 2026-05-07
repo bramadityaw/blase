@@ -25,7 +25,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
-      - run: cargo build --release --package blase --target ${{ matrix.target }}
+      - run: cargo build --release --package blase --manifest-path ./crates/blase/Cargo.toml --target ${{ matrix.target }}
       - name: Upload binary artifact
         uses: actions/upload-artifact@v4
         with:
