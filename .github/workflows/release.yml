@@ -15,10 +15,10 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            artifact_name: blase-linux
+            artifact_name: blase
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            artifact_name: blase-windows.exe
+            artifact_name: blase.exe
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
