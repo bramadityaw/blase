@@ -264,6 +264,7 @@ pub fn handle_initialize(
                     .map(|async_lsp::lsp_types::ClientInfo { name, version: _ }| {
                         config::ClientInfo { name }
                     });
+            tracing::info!(client=?config.client_info);
             config.capabilities = params.capabilities;
             let workspace_folder = folders[0].clone();
             tracing::debug!(url = workspace_folder.uri.path());
