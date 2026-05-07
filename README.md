@@ -59,8 +59,8 @@ vim.lsp.enable 'blase'
         -  Component Name
         -  Layout Name
         -  Attributes
--  **Signature Help **(Components & Layouts)
+-  **Signature Help**: Component attribute assistance
 -  **Diagnostic**:
     -  Syntax errors
     -  Unknown component/layout
--  **Workspace Symbols**: Search all available
+-  **Workspace Symbols**: Search all available components and layouts in the project
