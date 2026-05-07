@@ -1,0 +1,79 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+#    tags:
+#      - "*.*.*"
+
+jobs:
+  build-binary:
+    name: Build blase binary (${{ matrix.os }})
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact_name: blase-linux
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact_name: blase-windows.exe
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - run: cargo build --release --package blase --target ${{ matrix.target }}
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: blase-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
+
+  package-vsix:
+    name: Package VS Code extension
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: editors/vscode
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: editors/vscode/package-lock.json
+      - run: npm ci
+      - run: npx --no-install vsce package --out blase.vsix
+      - name: Upload VSIX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vsix
+          path: editors/vscode/blase.vsix
+
+  release:
+    name: Upload to GitHub Release
+    needs: [build-binary, package-vsix]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: blase-x86_64-unknown-linux-gnu
+      - uses: actions/download-artifact@v4
+        with:
+          name: blase-x86_64-pc-windows-msvc
+      - uses: actions/download-artifact@v4
+        with:
+          name: vsix
+      - name: Upload artifacts to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            blase-linux
+            blase-windows.exe
+            blase.vsix
+          generate_release_notes: true
