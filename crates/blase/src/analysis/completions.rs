@@ -161,7 +161,7 @@ fn component_completion_item(
             default_value: _,
         } in attributes.iter()
         {
-            macros::format_to!(buf, " {}=\"{}\"", name, i);
+            macros::format_to!(buf, " {}=\"${}\"", name, i);
             i += 1;
             if i == len {
                 i = 0;
@@ -169,7 +169,7 @@ fn component_completion_item(
         }
     }
 
-    buf.push('>');
+    buf.push_str("/>");
 
     builder.insert(name_range.start(), buf);
 
