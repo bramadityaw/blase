@@ -4,6 +4,7 @@ use camino::Utf8PathBuf;
 
 use crate::{lsp, server::ServerState};
 
+#[derive(Debug)]
 pub enum Event {
     DiagnosticUpdate(Utf8PathBuf),
 }
@@ -14,6 +15,7 @@ fn event_is_send() {
     is_send::<Event>();
 }
 
+#[tracing::instrument(skip(server))]
 pub fn handle_event(
     server: &mut ServerState,
     event: Event,
@@ -33,9 +35,7 @@ pub fn handle_event(
                 .map(|d| lsp::into_proto::diagnostic(line_index, d))
                 .collect::<Vec<_>>();
 
-            if !diags.is_empty() {
                 server.publish_diagnostics(lsp::into_proto::url(path), diags, None);
-            }
             Ok(())
         }
     })();
