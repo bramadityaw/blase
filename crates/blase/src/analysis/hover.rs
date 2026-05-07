@@ -21,7 +21,9 @@ mod tests;
 pub struct Markup(String);
 
 impl Markup {
-    pub const HORIZONTAL_RULE: &'static str = "\n---\n";
+    pub fn horizontal_rule(is_neovim: bool) -> &'static str {
+        if is_neovim { "\n---\n" } else { "\n___\n" }
+    }
 }
 
 impl From<Markup> for String {
@@ -36,20 +38,26 @@ impl std::fmt::Display for Markup {
     }
 }
 
-fn markup(rel_path: String, source_code: String, doc: Option<Documentation>) -> Markup {
+fn markup(
+    rel_path: String,
+    source_code: String,
+    doc: Option<Documentation>,
+    is_neovim: bool,
+) -> Markup {
     let mut buf = String::new();
+    let horizontal_rule = Markup::horizontal_rule(is_neovim);
 
-    #[cfg(not(windows))]
-    let path = rel_path.replace('\\', "/");
-    #[cfg(windows)]
-    let path = rel_path.replace('/', "\\");
+    let path = if cfg!(windows) {
+        rel_path.replace('/', "\\")
+    } else {
+        rel_path.replace('\\', "/")
+    };
 
-    format_to!(buf, "```blade\n{}\n```", source_code);
-    buf.push_str(Markup::HORIZONTAL_RULE);
     format_to!(buf, "*Project Path*: {}", path);
+    buf.push_str(horizontal_rule);
+    format_to!(buf, "```blade\n{}\n```", source_code);
     if let Some(doc) = doc {
         let doc = String::from(doc);
-        buf.push_str(Markup::HORIZONTAL_RULE);
         format_to!(buf, "\n{}", doc.trim());
     }
     Markup(buf)
@@ -94,6 +102,8 @@ pub fn hover(
     let node = doc.get_node_at(offset)?;
     let hoverable = Hoverable::from_node(db, node, doc, config)?;
 
+    let is_neovim = config.client_is_neovim();
+
     match hoverable {
         Hoverable::Component(component) => {
             let rel_path = component
@@ -119,7 +129,7 @@ pub fn hover(
                 TextSize::new(node.byte_range().end as u32),
             );
             let docs = component.docs(db);
-            let markup = markup(rel_path.to_string(), label, docs);
+            let markup = markup(rel_path.to_string(), label, docs, is_neovim);
             Some(HoverResult { markup, range })
         }
         Hoverable::Layout(layout) => {
@@ -136,7 +146,7 @@ pub fn hover(
                 TextSize::new(node.byte_range().start as u32),
                 TextSize::new(node.byte_range().end as u32),
             );
-            let markup = markup(rel_path.to_string(), label, None);
+            let markup = markup(rel_path.to_string(), label, None, is_neovim);
             Some(HoverResult { markup, range })
         }
     }
