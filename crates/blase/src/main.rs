@@ -1,4 +1,6 @@
 use tracing::Level;
+#[cfg(unix)]
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
 #[tokio::main]
 async fn main() {
