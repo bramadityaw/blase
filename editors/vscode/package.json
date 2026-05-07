@@ -1,0 +1,88 @@
+{
+  "name": "blase",
+  "displayName": "Blase",
+  "description": "Language services for Laravel's Blade templating language",
+  "repository": "https://github.com/bramadityaw/blase",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.118.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onLanguage:blade"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "blase.restartServer",
+        "title": "Restart Blase"
+      }
+    ],
+    "languages": [
+      {
+        "id": "blade",
+        "aliases": [
+          "Blade",
+          "blade"
+        ],
+        "extensions": [
+          ".blade.php"
+        ],
+        "configuration": "./languages/config.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "blade",
+        "scopeName": "text.html.php.blade",
+        "path": "./languages/blade.tmLanguage.json",
+        "embeddedLanguages": {
+          "source.php": "php",
+          "source.css": "css",
+          "source.js": "javascript"
+        }
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "blase",
+      "properties": {
+        "blase.executablePath": {
+          "scope": "machine",
+          "type": "string",
+          "default": "",
+          "description": "Specifies an absolute path to the blase executable. If empty blase is expected to be in $PATH variable. (example: /home/user/me/env/bin/blase)"
+        }
+      }
+    }
+  },
+  "main": "./out/extension.js",
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test",
+    "package": "vsce package"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "22.x",
+    "@types/vscode": "^1.118.0",
+    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-electron": "^2.5.2",
+    "@vscode/vsce": "^3.9.1",
+    "eslint": "^9.39.3",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.56.1"
+  },
+  "overrides": {
+    "ajv": "^8.17.1"
+  }
+}
