@@ -68,8 +68,8 @@ impl Component {
             ast::blade::Attribute::ExpressionAttribute(expression_attribute) => expression_attribute.children(&mut expression_attribute.walk()).filter_map(|ch| {
                 let ch = ch.ok()?;
                 match ch {
-                    ast::blade::anon_unions::AttributeName_QuotedAttributeValue::AttributeName(attribute_name) => Some(attribute_name.upcast()),
-                    ast::blade::anon_unions::AttributeName_QuotedAttributeValue::QuotedAttributeValue(_) => None,
+                    ast::blade::anon_unions::ExpressionAttributeName_QuotedExpression::ExpressionAttributeName(attribute_name) => Some(attribute_name.upcast()),
+                    ast::blade::anon_unions::ExpressionAttributeName_QuotedExpression::QuotedExpression(_) => None,
                 }
             }).last(),
             ast::blade::Attribute::HtmlAttribute(html_attribute) => html_attribute.children(&mut html_attribute.walk()).filter_map(|ch| {
