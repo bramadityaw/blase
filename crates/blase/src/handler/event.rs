@@ -35,7 +35,7 @@ pub fn handle_event(
                 .map(|d| lsp::into_proto::diagnostic(line_index, d))
                 .collect::<Vec<_>>();
 
-                server.publish_diagnostics(lsp::into_proto::url(path), diags, None);
+            server.publish_diagnostics(lsp::into_proto::url(path), diags, None);
             Ok(())
         }
     })();
