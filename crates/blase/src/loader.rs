@@ -18,7 +18,10 @@ fn walk_files<P: AsRef<Path>>(path: P) -> impl Iterator<Item = DirEntry> {
 }
 
 impl ServerState {
-    pub fn load_workspace(&mut self, progress_sender: Sender<ProgressParamsValue>) {
+    pub fn load_workspace(
+        &mut self,
+        progress_sender: Sender<ProgressParamsValue>,
+    ) -> async_lsp::Result<()> {
         let _p = tracing::info_span!("load_workspace").entered();
         let workspace = self.config.read().expect("poison").workspace_folder.clone();
 
@@ -66,7 +69,9 @@ impl ServerState {
         });
         while let Ok((path, contents)) = rx.recv() {
             tracing::trace!(%path, len = contents.len());
-            self.analysis_host.set_source_file(path, &contents);
+            self.analysis_host.set_source_file(path.clone(), &contents);
+            self.emit(crate::handler::Event::DiagnosticUpdate(path))?;
         }
+        Ok(())
     }
 }

@@ -102,7 +102,9 @@ pub fn handle_initialized(
     let token = "blase/load_workspace".to_string();
     let progress_sender = server.with_report_progress(token);
 
-    server.load_workspace(progress_sender);
+    if let Err(e) = server.load_workspace(progress_sender) {
+        return ControlFlow::Break(Err(e));
+    };
     tracing::info!("finished initialized");
 
     ControlFlow::Continue(())
