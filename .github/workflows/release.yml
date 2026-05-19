@@ -2,7 +2,6 @@ name: Release
 
 on:
   push:
-    branches:
     tags:
       - "*.*.*"
 
@@ -74,7 +73,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            blase-linux
-            blase-windows.exe
+            blase
+            blase.exe
             blase.vsix
           generate_release_notes: true
