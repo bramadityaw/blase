@@ -203,6 +203,9 @@ fn attribute_completion(items: &mut Vec<CompletionItem>, ctx: &CompletionContext
         }
         Tag::Layout(_) => return,
         Tag::Html(tag) => {
+            if ctx.trigger_char != Some('@') {
+                return;
+            }
             cov_mark::hit!(attr_completion);
             let mut directives = Directive::globally_available();
             directives.extend([Directive::Class, Directive::Style, Directive::Disabled]);
