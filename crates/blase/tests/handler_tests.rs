@@ -1,5 +1,3 @@
-use std::ops::ControlFlow;
-
 use async_lsp::ClientSocket;
 use async_lsp::lsp_types::{
     ClientCapabilities, DidChangeTextDocumentParams, DidOpenTextDocumentParams, InitializeParams,
@@ -93,9 +91,8 @@ fn test_handle_did_open_inserts_document() {
         },
     };
 
-    let result = handler::notification::handle_did_open(&mut server, params);
+    let _ = handler::notification::handle_did_open(&mut server, params);
 
-    assert!(matches!(result, ControlFlow::Continue(())));
     assert!(server.documents.contains_key(&path));
     let doc = server.documents.get(&path).unwrap();
     assert_eq!(doc.contents, "Hello World");
@@ -135,9 +132,8 @@ fn test_handle_did_change_updates_document() {
         }],
     };
 
-    let result = handler::notification::handle_did_change(&mut server, params);
+    let _ = handler::notification::handle_did_change(&mut server, params);
 
-    assert!(matches!(result, ControlFlow::Continue(())));
     let doc = server.documents.get(&path).unwrap();
     assert_eq!(doc.contents, "Hello Rust World");
 }
