@@ -57,7 +57,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: ${{ matrix.download_name }}
-          path: dist
+          path: editors/vscode/dist
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
