@@ -114,6 +114,7 @@ mod tests {
     use std::sync::LazyLock;
 
     use expect_test::{Expect, expect};
+    use itertools::Itertools;
 
     use crate::{analysis::fixture, config::Config};
 
@@ -153,9 +154,10 @@ mod tests {
                 actual += "\n\n";
             }
 
-            for (path, mut ranges) in refs.references {
+            let refs = refs.references;
+
+            for (path, ranges) in refs.into_iter().sorted_by_key(|(path, _)| path.to_owned()) {
                 let contents = analysis.contents(&path).unwrap();
-                ranges.sort_by_key(|range| range.start());
                 for range in ranges {
                     macros::format_to!(actual, "{:?} {:?} {}\n", path, range, &contents[range]);
                 }
@@ -189,8 +191,8 @@ Welcome to Laravel!
             expect![[r#"
                 /resources/views\components\hello.blade.php
 
-                "/resources/views/two.blade.php" 0..10 <x-hello/>
                 "/resources/views/one.blade.php" 32..42 <x-hello/>
+                "/resources/views/two.blade.php" 0..10 <x-hello/>
             "#]],
         )
     }
