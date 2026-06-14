@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import path from 'node:path';
 
 import {
 	Executable,
@@ -7,22 +8,18 @@ import {
 } from 'vscode-languageclient/node';
 
 let client: LanguageClient;
+let extensionPath: string;
+
 let log = vscode.window.createOutputChannel('Blase');
 
 async function startClient() {
 	console.debug('Blase started');
-	const config = vscode.workspace.getConfiguration("blase");
-	log.appendLine(`Client configuration for blase: ${config}`);
+	const execPath = path.join(extensionPath, 'dist', 'blase');
 
-	let execString: string = config.get("executablePath") || "blase";
-
-	const [execPath, ...execArgs] = execString.trim().split(/\s+/);
 	log.appendLine(`Blase executable path: ${execPath}`);
-	log.appendLine(`Blase command line args: ${execArgs}`);
 
 	const serverExecutable: Executable = {
 		command: execPath,
-		args: execArgs,
 	};
 
 	const clientOptions: LanguageClientOptions = {
@@ -37,11 +34,7 @@ async function startClient() {
 export async function activate(context: vscode.ExtensionContext) {
 	log.appendLine('Blase activation event');
 
-	vscode.workspace.onDidChangeConfiguration((event) => {
-		if (event.affectsConfiguration('blase.executablePath')) {
-			restartClient();
-		}
-	});
+        extensionPath = context.extensionPath;
 
 	for (const [command, handler] of Object.entries(commands())) {
 		context.subscriptions.push(vscode.commands.registerCommand(command, handler));

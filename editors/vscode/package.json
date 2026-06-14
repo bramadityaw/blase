@@ -44,19 +44,7 @@
           "source.js": "javascript"
         }
       }
-    ],
-    "configuration": {
-      "type": "object",
-      "title": "blase",
-      "properties": {
-        "blase.executablePath": {
-          "scope": "machine",
-          "type": "string",
-          "default": "",
-          "description": "Specifies an absolute path to the blase executable. If empty blase is expected to be in $PATH variable. (example: /home/user/me/env/bin/blase)"
-        }
-      }
-    }
+    ]
   },
   "main": "./out/extension.js",
   "scripts": {
