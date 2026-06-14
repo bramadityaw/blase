@@ -43,11 +43,11 @@ Hello {{ $world }}
 "#,
         expect![[r#"
             *x-foo*
+            *Project Path*: app\View\Components\Foo.php
+            ___
             ```blade
             <x-foo world="">
             ```
-            ---
-            *Project Path*: app\View\Components\Foo.php
         "#]],
     );
 }
@@ -68,11 +68,11 @@ $x
 "#,
         expect![[r#"
             *x-foo*
+            *Project Path*: resources\views\components\foo.blade.php
+            ___
             ```blade
             <x-foo x="" y="[]">
             ```
-            ---
-            *Project Path*: resources\views\components\foo.blade.php
         "#]],
     );
 }
@@ -93,13 +93,11 @@ $x
 "#,
         expect![[r#"
             *x-foo*
+            *Project Path*: resources\views\components\foo.blade.php
+            ___
             ```blade
             <x-foo x="" y="[]">
             ```
-            ---
-            *Project Path*: resources\views\components\foo.blade.php
-            ---
-
             This is a comment
         "#]],
     );
@@ -118,11 +116,11 @@ $x
 "#,
         expect![[r#"
             *x-foo*
+            *Project Path*: resources\views\components\foo.blade.php
+            ___
             ```blade
             <x-foo x="" y="[]">
             ```
-            ---
-            *Project Path*: resources\views\components\foo.blade.php
         "#]],
     );
 }
@@ -139,11 +137,11 @@ test
 "#,
         expect![[r#"
             *x-foo*
+            *Project Path*: resources\views\components\foo.blade.php
+            ___
             ```blade
             <x-foo>
             ```
-            ---
-            *Project Path*: resources\views\components\foo.blade.php
         "#]],
     );
 }

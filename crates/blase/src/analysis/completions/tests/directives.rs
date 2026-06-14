@@ -27,40 +27,40 @@ fn option_tag_attribute_directive() {
 </select>
 "#,
         expect![[r#"
-            @endif
-            @endunless
-            @endisset
-            @endempty
-            @endauth
-            @endguest
-            @endproduction
-            @endenv
-            @endsession
-            @endcontext
-            @endswitch
-            @endfor
-            @endforeach
-            @endforelse
-            @endwhile
-            @endphp
             @if
+            @endif
             @unless
+            @endunless
             @isset
+            @endisset
             @empty
+            @endempty
             @auth
+            @endauth
             @guest
+            @endguest
             @production
+            @endproduction
             @env
+            @endenv
             @session
+            @endsession
             @context
+            @endcontext
             @hassection
             @sectionmissing
             @switch
+            @endswitch
             @for
+            @endfor
             @foreach
+            @endforeach
             @forelse
+            @endforelse
             @while
+            @endwhile
             @php
+            @endphp
             @include
             @includeif
             @includewhen
@@ -81,40 +81,40 @@ fn input_tag_attribute_directive() {
 <input @$0
 "#,
         expect![[r#"
-            @endif
-            @endunless
-            @endisset
-            @endempty
-            @endauth
-            @endguest
-            @endproduction
-            @endenv
-            @endsession
-            @endcontext
-            @endswitch
-            @endfor
-            @endforeach
-            @endforelse
-            @endwhile
-            @endphp
             @if
+            @endif
             @unless
+            @endunless
             @isset
+            @endisset
             @empty
+            @endempty
             @auth
+            @endauth
             @guest
+            @endguest
             @production
+            @endproduction
             @env
+            @endenv
             @session
+            @endsession
             @context
+            @endcontext
             @hassection
             @sectionmissing
             @switch
+            @endswitch
             @for
+            @endfor
             @foreach
+            @endforeach
             @forelse
+            @endforelse
             @while
+            @endwhile
             @php
+            @endphp
             @include
             @includeif
             @includewhen
@@ -151,40 +151,40 @@ fn completes_after_at() {
 @$0
         "#,
         expect![[r#"
-            @endif
-            @endunless
-            @endisset
-            @endempty
-            @endauth
-            @endguest
-            @endproduction
-            @endenv
-            @endsession
-            @endcontext
-            @endswitch
-            @endfor
-            @endforeach
-            @endforelse
-            @endwhile
-            @endphp
             @if
+            @endif
             @unless
+            @endunless
             @isset
+            @endisset
             @empty
+            @endempty
             @auth
+            @endauth
             @guest
+            @endguest
             @production
+            @endproduction
             @env
+            @endenv
             @session
+            @endsession
             @context
+            @endcontext
             @hassection
             @sectionmissing
             @switch
+            @endswitch
             @for
+            @endfor
             @foreach
+            @endforeach
             @forelse
+            @endforelse
             @while
+            @endwhile
             @php
+            @endphp
             @include
             @includeif
             @includewhen
@@ -213,40 +213,40 @@ fn after_if() {
 @$0
         "#,
         expect![[r#"
-            @endif
-            @endunless
-            @endisset
-            @endempty
-            @endauth
-            @endguest
-            @endproduction
-            @endenv
-            @endsession
-            @endcontext
-            @endswitch
-            @endfor
-            @endforeach
-            @endforelse
-            @endwhile
-            @endphp
             @if
+            @endif
             @unless
+            @endunless
             @isset
+            @endisset
             @empty
+            @endempty
             @auth
+            @endauth
             @guest
+            @endguest
             @production
+            @endproduction
             @env
+            @endenv
             @session
+            @endsession
             @context
+            @endcontext
             @hassection
             @sectionmissing
             @switch
+            @endswitch
             @for
+            @endfor
             @foreach
+            @endforeach
             @forelse
+            @endforelse
             @while
+            @endwhile
             @php
+            @endphp
             @include
             @includeif
             @includewhen
@@ -266,40 +266,40 @@ fn after_forelse() {
 @$0
 "#,
         expect![[r#"
-            @endif
-            @endunless
-            @endisset
-            @endempty
-            @endauth
-            @endguest
-            @endproduction
-            @endenv
-            @endsession
-            @endcontext
-            @endswitch
-            @endfor
-            @endforeach
-            @endforelse
-            @endwhile
-            @endphp
             @if
+            @endif
             @unless
+            @endunless
             @isset
+            @endisset
             @empty
+            @endempty
             @auth
+            @endauth
             @guest
+            @endguest
             @production
+            @endproduction
             @env
+            @endenv
             @session
+            @endsession
             @context
+            @endcontext
             @hassection
             @sectionmissing
             @switch
+            @endswitch
             @for
+            @endfor
             @foreach
+            @endforeach
             @forelse
+            @endforelse
             @while
+            @endwhile
             @php
+            @endphp
             @include
             @includeif
             @includewhen
@@ -319,40 +319,40 @@ fn after_foreach() {
 @$0
 "#,
         expect![[r#"
-            @endif
-            @endunless
-            @endisset
-            @endempty
-            @endauth
-            @endguest
-            @endproduction
-            @endenv
-            @endsession
-            @endcontext
-            @endswitch
-            @endfor
-            @endforeach
-            @endforelse
-            @endwhile
-            @endphp
             @if
+            @endif
             @unless
+            @endunless
             @isset
+            @endisset
             @empty
+            @endempty
             @auth
+            @endauth
             @guest
+            @endguest
             @production
+            @endproduction
             @env
+            @endenv
             @session
+            @endsession
             @context
+            @endcontext
             @hassection
             @sectionmissing
             @switch
+            @endswitch
             @for
+            @endfor
             @foreach
+            @endforeach
             @forelse
+            @endforelse
             @while
+            @endwhile
             @php
+            @endphp
             @include
             @includeif
             @includewhen
@@ -372,40 +372,40 @@ fn after_for() {
 @$0
 "#,
         expect![[r#"
-            @endif
-            @endunless
-            @endisset
-            @endempty
-            @endauth
-            @endguest
-            @endproduction
-            @endenv
-            @endsession
-            @endcontext
-            @endswitch
-            @endfor
-            @endforeach
-            @endforelse
-            @endwhile
-            @endphp
             @if
+            @endif
             @unless
+            @endunless
             @isset
+            @endisset
             @empty
+            @endempty
             @auth
+            @endauth
             @guest
+            @endguest
             @production
+            @endproduction
             @env
+            @endenv
             @session
+            @endsession
             @context
+            @endcontext
             @hassection
             @sectionmissing
             @switch
+            @endswitch
             @for
+            @endfor
             @foreach
+            @endforeach
             @forelse
+            @endforelse
             @while
+            @endwhile
             @php
+            @endphp
             @include
             @includeif
             @includewhen
@@ -425,40 +425,40 @@ fn after_while() {
 @$0
 "#,
         expect![[r#"
-            @endif
-            @endunless
-            @endisset
-            @endempty
-            @endauth
-            @endguest
-            @endproduction
-            @endenv
-            @endsession
-            @endcontext
-            @endswitch
-            @endfor
-            @endforeach
-            @endforelse
-            @endwhile
-            @endphp
             @if
+            @endif
             @unless
+            @endunless
             @isset
+            @endisset
             @empty
+            @endempty
             @auth
+            @endauth
             @guest
+            @endguest
             @production
+            @endproduction
             @env
+            @endenv
             @session
+            @endsession
             @context
+            @endcontext
             @hassection
             @sectionmissing
             @switch
+            @endswitch
             @for
+            @endfor
             @foreach
+            @endforeach
             @forelse
+            @endforelse
             @while
+            @endwhile
             @php
+            @endphp
             @include
             @includeif
             @includewhen
@@ -471,55 +471,54 @@ fn after_while() {
 }
 
 #[test]
-fn after_switch() {
+fn inside_switch() {
     check(
         r#"
 @switch($val)
 @$0
+@endswitch
 "#,
         expect![[r#"
-            @endif
-            @endunless
-            @endisset
-            @endempty
-            @endauth
-            @endguest
-            @endproduction
-            @endenv
-            @endsession
-            @endcontext
-            @endswitch
-            @endfor
-            @endforeach
-            @endforelse
-            @endwhile
-            @endphp
             @if
+            @endif
             @unless
+            @endunless
             @isset
+            @endisset
             @empty
+            @endempty
             @auth
+            @endauth
             @guest
+            @endguest
             @production
+            @endproduction
             @env
+            @endenv
             @session
+            @endsession
             @context
+            @endcontext
             @hassection
             @sectionmissing
             @switch
+            @endswitch
             @for
+            @endfor
             @foreach
+            @endforeach
             @forelse
+            @endforelse
             @while
+            @endwhile
             @php
+            @endphp
             @include
             @includeif
             @includewhen
             @includeunless
             @includefirst
-            @includeisolated
-            @break
-            @case
-            @default"#]],
+            @includeisolated"#]],
     );
+    panic!();
 }
