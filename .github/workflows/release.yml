@@ -36,6 +36,7 @@ jobs:
 
   package-vsix:
     name: Package VS Code extension
+    needs: build-binary
     strategy:
       matrix:
         include:
