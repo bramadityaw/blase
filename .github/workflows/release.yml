@@ -2,8 +2,10 @@ name: Release
 
 on:
   push:
-    tags:
-      - "*.*.*"
+    branches:
+      - main
+#    tags:
+#      - "*.*.*"
 
 jobs:
   build-binary:
@@ -34,19 +36,36 @@ jobs:
 
   package-vsix:
     name: Package VS Code extension
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: linux-x64
+            download_name: blase-x86_64-unknown-linux-gnu
+          - os: windows-latest
+            target: win32-x64
+            download_name: blase-x86_64-pc-windows-msvc
+    runs-on: ${{ matrix.os }}
     defaults:
       run:
         working-directory: editors/vscode
     steps:
       - uses: actions/checkout@v4
+      - name: Create dist/ folder
+        run: mkdir dist
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.download_name }}
+          path: dist
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: "npm"
           cache-dependency-path: editors/vscode/package-lock.json
-      - run: npm ci
-      - run: npx --no-install vsce package --out blase.vsix
+      - name: Package extension into VSIX file
+        run: |
+          npm ci
+          npx --no-install vsce package --target ${{ matrix.target }} --out blase.vsix
       - name: Upload VSIX artifact
         uses: actions/upload-artifact@v4
         with:
