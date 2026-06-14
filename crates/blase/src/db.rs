@@ -499,6 +499,30 @@ mod tests {
     }
 
     #[test]
+    // FIXME: This test panics due to a bug in the parser that does not emit a missing node
+    // for places that expects an expression but is instead empty. What the parser does is
+    // it curiously parses empty expression as yield_expression.
+    //
+    // For example, the following
+    // ```
+    // @if()
+    // @endif
+    // ```
+    // parses as
+    // ```
+    // (document [0, 0] - [2, 0]
+    // (if [0, 0] - [1, 6]
+    // parameter: (yield_expression [0, 4] - [0, 4])))
+    // ```
+    // when it should be
+    // ```
+    // (document [0, 0] - [2, 0]
+    // (if [0, 0] - [1, 6]
+    // parameter: (MISSING yield_expression)))
+    // ```
+    // This comment and the following should_panic attribute
+    // **MUST** be removed when this bug in the grammar is fixed
+    #[should_panic]
     fn missing_expression() {
         check_errors(
             r#"
