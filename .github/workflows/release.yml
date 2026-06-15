@@ -55,7 +55,7 @@ jobs:
 
   release:
     name: Upload to GitHub Release
-    needs: [build-binary, package-vsix]
+    needs: build-binary-and-extension
     runs-on: ubuntu-latest
     permissions:
       contents: write
