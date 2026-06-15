@@ -8,16 +8,18 @@ on:
 #      - "*.*.*"
 
 jobs:
-  build-binary:
+  build-binary-and-extension:
     name: Build blase binary (${{ matrix.os }})
     strategy:
       matrix:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
+            code_target: linux-x64
             artifact_name: blase
           - os: windows-latest
             target: x86_64-pc-windows-msvc
+            code_target: win32-x64
             artifact_name: blase.exe
     runs-on: ${{ matrix.os }}
     steps:
@@ -27,46 +29,24 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
-      - run: cargo build --release --package blase --manifest-path ./crates/blase/Cargo.toml --target ${{ matrix.target }}
-      - name: Upload binary artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: blase-${{ matrix.target }}
-          path: target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
-
-  package-vsix:
-    name: Package VS Code extension
-    needs: build-binary
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            target: linux-x64
-            download_name: blase-x86_64-unknown-linux-gnu
-          - os: windows-latest
-            target: win32-x64
-            download_name: blase-x86_64-pc-windows-msvc
-    runs-on: ${{ matrix.os }}
-    defaults:
-      run:
-        working-directory: editors/vscode
-    steps:
-      - uses: actions/checkout@v4
-      - name: Create dist/ folder
-        run: mkdir dist
-      - uses: actions/download-artifact@v4
-        with:
-          name: ${{ matrix.download_name }}
-          path: editors/vscode/dist
+      - name: Build executable
+        run: cargo build --release --package blase --manifest-path ./crates/blase/Cargo.toml --target ${{ matrix.target }}
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: "npm"
           cache-dependency-path: editors/vscode/package-lock.json
+      - name: Move binary executable into VS Code extension
+        run: node dist.js target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
       - name: Package extension into VSIX file
         run: |
           npm ci
-          npx --no-install vsce package --target ${{ matrix.target }} --out blase.vsix
+          npx --no-install vsce package --target ${{ matrix.code_target }} --out blase.vsix
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: blase-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
       - name: Upload VSIX artifact
         uses: actions/upload-artifact@v4
         with:
