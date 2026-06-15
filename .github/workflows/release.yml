@@ -42,7 +42,7 @@ jobs:
         run: |
           cd editors/vscode
           npm ci
-          npx --no-install vsce package --target ${{ matrix.code_target }} --out blase.vsix
+          npx --no-install vsce package --target ${{ matrix.code_target }} --out blase-${{ matrix.code_target }}.vsix
       - name: Upload binary artifact
         uses: actions/upload-artifact@v4
         with:
@@ -51,8 +51,8 @@ jobs:
       - name: Upload VSIX artifact
         uses: actions/upload-artifact@v4
         with:
-          name: vsix
-          path: editors/vscode/blase.vsix
+          name: vsix-${{ matrix.code_target }}
+          path: editors/vscode/blase-${{ matrix.code_target }}.vsix
 
   release:
     name: Upload to GitHub Release
@@ -69,12 +69,16 @@ jobs:
           name: blase-x86_64-pc-windows-msvc
       - uses: actions/download-artifact@v4
         with:
-          name: vsix
+          name: vsix-linux-x64
+      - uses: actions/download-artifact@v4
+        with:
+          name: vsix-win32-x64
       - name: Upload artifacts to release
         uses: softprops/action-gh-release@v2
         with:
           files: |
             blase
             blase.exe
-            blase.vsix
+            blase-linux-x64.vsix
+            blase-win32-x64.vsix
           generate_release_notes: true
