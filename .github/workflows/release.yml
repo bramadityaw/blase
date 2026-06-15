@@ -40,6 +40,7 @@ jobs:
         run: node dist.js target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
       - name: Package extension into VSIX file
         run: |
+          cd editors/vscode
           npm ci
           npx --no-install vsce package --target ${{ matrix.code_target }} --out blase.vsix
       - name: Upload binary artifact
