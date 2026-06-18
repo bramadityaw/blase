@@ -74,3 +74,19 @@ $x
     ]
     "#);
 }
+
+#[test]
+fn layout_component() {
+    let ranges = fixture(
+        r#"
+//- /resources/views/components/layout.blade.php
+{{--
+--  This is a comment
+--}}
+
+//- /resources/views/index.blade.php
+<x-la$0yout>
+        "#,
+    );
+    expect_test::expect![[r#"[FileRange { path: "/resources/views\\components\\layout.blade.php", range: 0..0 }]"#]].assert_eq(&format!("{:?}", ranges));
+}

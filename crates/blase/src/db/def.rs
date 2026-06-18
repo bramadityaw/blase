@@ -367,11 +367,11 @@ impl LayoutName {
     }
 
     pub fn new(name: &str) -> Option<LayoutName> {
-        let name = name.strip_prefix("x-")?.strip_suffix("-layout")?;
+        let name = name.strip_prefix("x-")?.strip_suffix("layout")?;
         let layout = if name.is_empty() {
             LayoutName::Default
         } else {
-            LayoutName::Name(Name::new(name))
+            LayoutName::Name(Name::new(name.strip_suffix('-')?))
         };
         Some(layout)
     }
