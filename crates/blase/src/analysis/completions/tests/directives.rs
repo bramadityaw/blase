@@ -520,5 +520,4 @@ fn inside_switch() {
             @includefirst
             @includeisolated"#]],
     );
-    panic!();
 }
