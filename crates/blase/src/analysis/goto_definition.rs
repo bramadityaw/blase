@@ -24,38 +24,29 @@ pub fn goto_definition(
     goto_def(db, contents, config, node)
 }
 
-fn goto_def<'tree, N: Node<'tree>>(
+fn goto_def<'tree>(
     db: &dyn DocumentDatabase,
     contents: &str,
-    work_path: &Config,
-    node: N,
+    config: &Config,
+    node: UntypedNode,
 ) -> Option<Vec<FileRange>> {
-    fn inner(
-        db: &dyn DocumentDatabase,
-        contents: &str,
-        config: &Config,
-        node: UntypedNode,
-    ) -> Option<Vec<FileRange>> {
-        ast::match_node!(node, {
-            ast::blade::TagName(tag_name) => goto_def_for_component(db, config, tag_name, contents),
-            ast::blade::StartTag(start_tag) => {
-                goto_def_for_component(db, config, start_tag.tag_name().ok()?, contents)
-            },
-            ast::blade::EndTag(end_tag) => {
-                let tag_name = end_tag.child().ok()?;
-                goto_def_for_component(db, config, tag_name, contents)
-            },
-            ast::blade::SelfClosingTag(self_tag) => {
-                goto_def_for_component(db, config, self_tag.tag_name().ok()?, contents)
-            },
-            _ => {
-                tracing::error!(node=node.kind(), "No component found");
-                None
-            },
-        })
-    }
-    let node = node.upcast();
-    inner(db, contents, work_path, node)
+    ast::match_node!(node, {
+        ast::blade::TagName(tag_name) => goto_def_for_component(db, config, tag_name, contents),
+        ast::blade::StartTag(start_tag) => {
+            goto_def_for_component(db, config, start_tag.tag_name().ok()?, contents)
+        },
+        ast::blade::EndTag(end_tag) => {
+            let tag_name = end_tag.child().ok()?;
+            goto_def_for_component(db, config, tag_name, contents)
+        },
+        ast::blade::SelfClosingTag(self_tag) => {
+            goto_def_for_component(db, config, self_tag.tag_name().ok()?, contents)
+        },
+        _ => {
+            tracing::error!(node=node.kind(), "No component found");
+            None
+        },
+    })
 }
 
 #[tracing::instrument(skip(db, config))]
