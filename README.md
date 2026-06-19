@@ -13,7 +13,7 @@ Language server for Laravel's Blade templating language.
 
 # Installation
 
-Download the binary from [the latest release](https://github.com/bramadityaw/blase/releases/tag/0.1.1) and add it to your PATH.
+Download [the latest release](https://github.com/bramadityaw/blase/releases/tag/0.1.5).
 
 ## VS Code
 
@@ -35,12 +35,13 @@ code-insiders --install-extension blase.vsix
 ```
 
 ## Neovim
+Download the binary executable for your platform and use the following config to enable the LSP client.
 
 - Neovim >= 0.11
 
 ```lua
 vim.lsp.config.blase = {
-    cmd = { 'blase' },
+    cmd = { 'path/to/blase' },
     filetypes = { 'blade' },
     root_markers = { 'artisan', 'composer.json', '.git' },
 }
