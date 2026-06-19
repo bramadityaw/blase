@@ -35,11 +35,7 @@ jobs:
           cache: "npm"
           cache-dependency-path: editors/vscode/package-lock.json
       - name: Build binary executable and VS Code extension
-        run: node dist.js \
-          ${{ matrix.target }} \
-          ${{ matrix.code_target }} \
-          ${{ matrix.artifact_name }} \
-          ${{ github.ref_name }}
+        run: node dist.js ${{ matrix.target }} ${{ matrix.code_target }} ${{ matrix.artifact_name }} ${{ github.ref_name }}
       - name: Upload binary artifact
         uses: actions/upload-artifact@v4
         with:
