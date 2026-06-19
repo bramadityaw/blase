@@ -45,7 +45,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: vsix-${{ matrix.code_target }}
-          path: editors/vscode/blase-${{ matrix.code_target }}.vsix
+          path: editors/vscode/blase-${{ github.ref_name }}-${{ matrix.code_target }}.vsix
 
   release:
     name: Upload to GitHub Release
