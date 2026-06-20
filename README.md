@@ -13,7 +13,7 @@ Language server for Laravel's Blade templating language.
 
 # Installation
 
-Download [the latest release](https://github.com/bramadityaw/blase/releases/tag/0.1.5).
+Download [the latest release](https://github.com/bramadityaw/blase/releases/tag/0.1.6).
 
 ## VS Code
 
