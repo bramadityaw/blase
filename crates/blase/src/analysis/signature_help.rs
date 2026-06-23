@@ -93,7 +93,10 @@ impl Component {
             ast::blade::Attribute::WireUi(_) => None,
         }?;
         let attr_name = doc.text_for_node(db, attr_name)?;
-        let attr_name = attr_name.strip_prefix(':').unwrap_or(attr_name);
+        let attr_name = attr_name
+            .strip_prefix(':') // expression attribute name
+            .or_else(|| attr_name.strip_prefix('$')) // short variable attribute
+            .unwrap_or(attr_name);
         self.attrs(db)?
             .iter()
             .position(|attr| attr.name.as_str() == attr_name)
@@ -140,14 +143,16 @@ mod test {
         client_info: None,
     });
 
-    fn check(blase_fixture: &str, expect: Expect) {
+    fn check(blase_fixture: &str, expected_render: Expect, expected_labels: Expect) {
         let config = &TEST_CONFIG;
         let (analysis, position) = fixture::position(blase_fixture);
         let help = analysis.signature_help(config, dbg!(position)).unwrap();
-        let actual = match dbg!(help) {
+        let (rendered, labels) = match help {
             Some(help) => match help.active_parameter {
                 Some(active_param) => {
                     let mut rendered = String::new();
+                    let mut labels = String::new();
+                    labels.push_str("[\n");
                     macros::format_to!(rendered, "{}\n", help.signature);
                     let active_range = help.parameter_ranges()[active_param];
                     for i in 0..help.signature.len() {
@@ -158,17 +163,47 @@ mod test {
                         };
                         rendered.push(marker);
                     }
-                    rendered
+                    for label in help.parameter_labels() {
+                        macros::format_to!(labels, "    {}\n", label);
+                    }
+                    labels.push(']');
+                    (rendered, labels)
                 }
-                None => String::new(),
+                None => (String::new(), String::new()),
             },
-            None => String::new(),
+            None => (String::new(), String::new()),
         };
-        expect.assert_eq(&actual);
+        expected_render.assert_eq(&rendered);
+        expected_labels.assert_eq(&labels);
     }
 
     #[test]
-    fn named_attribute_signature_help() {
+    fn short_attribute_signature_help() {
+        check(
+            r#"
+//- /resources/views/components/index-table.blade.php
+@props(['subject', 'rows' => [], 'columns' => []])
+
+//- /resources/views/index.blade.php
+<x-index-table $ro$0ws subject="unit" :columns="[
+    'name',
+]">
+</x-index-table>
+            "#,
+            expect![[r#"
+                <x-index-table subject="" rows="[]" columns="[]">
+                --------------------------^^^^^^^^^^-------------"#]],
+            expect![[r#"
+                [
+                    subject=""
+                    rows="[]"
+                    columns="[]"
+                ]"#]],
+        );
+    }
+
+    #[test]
+    fn expression_attribute_signature_help() {
         check(
             r#"
 //- /resources/views/components/index-table.blade.php
@@ -183,6 +218,65 @@ mod test {
             expect![[r#"
                 <x-index-table subject="" rows="[]" columns="[]">
                 --------------------------^^^^^^^^^^-------------"#]],
+            expect![[r#"
+                [
+                    subject=""
+                    rows="[]"
+                    columns="[]"
+                ]"#]],
+        );
+    }
+
+    #[test]
+    fn html_attribute_signature_help() {
+        check(
+            r#"
+//- /resources/views/components/greeting.blade.php
+@props(['name'])
+
+//- /resources/views/index.blade.php
+<x-greeting nam$0e=""/>
+            "#,
+            expect![[r#"
+                <x-greeting name="">
+                ------------^^^^^^^^"#]],
+            expect![[r#"
+                [
+                    name=""
+                ]"#]],
+        );
+    }
+
+    #[test]
+    fn no_signature_help() {
+        check(
+            r#"
+//- /resources/views/components/index-table.blade.php
+@props(['subject', 'rows' => [], 'columns' => []])
+
+//- /resources/views/index.blade.php
+<x-index-table {{-- $0 --}} :rows="$units" subject="unit" :columns="[
+    'name',
+]">
+</x-index-table>
+            "#,
+            expect![[""]],
+            expect![[""]],
+        );
+
+        check(
+            r#"
+//- /resources/views/components/index-table.blade.php
+@props(['subject', 'rows' => [], 'columns' => []])
+
+//- /resources/views/index.blade.php
+<x-index$0-table :rows="$units" subject="unit" :columns="[
+    'name',
+]">
+</x-index-table>
+            "#,
+            expect![[""]],
+            expect![[""]],
         );
     }
 }

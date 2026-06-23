@@ -42,3 +42,5 @@ cov-mark = "2.2.0"
 either = "1.15.0"
 serde = "1.0.228"
 insta = { version = "1.46.1", features = ["json"] }
+proptest = "1.11.0"
+test-strategy = "0.4.5"

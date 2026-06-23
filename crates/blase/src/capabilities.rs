@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 use async_lsp::lsp_types::{
     CompletionOptions, CompletionOptionsCompletionItem, HoverProviderCapability, OneOf,
     PositionEncodingKind, SaveOptions, ServerCapabilities, SignatureHelpOptions,
@@ -9,32 +7,32 @@ use async_lsp::lsp_types::{
 use line_index::WideEncoding;
 
 use crate::{
-    analysis::completions::{self, CompletionFieldsToResolve},
+    analysis::completions::{self /*CompletionFieldsToResolve*/},
     config::Config,
     line_index::PositionEncoding,
 };
 
 impl Config {
-    pub fn completion_resolve_support_properties(&self) -> HashSet<&str> {
-        self.capabilities
-            .text_document
-            .as_ref()
-            .and_then(|text| text.completion.as_ref())
-            .and_then(|completion_caps| completion_caps.completion_item.as_ref())
-            .and_then(|completion_item_caps| completion_item_caps.resolve_support.as_ref())
-            .map(|resolve_support| resolve_support.properties.iter())
-            .into_iter()
-            .flatten()
-            .map(|s| s.as_str())
-            .collect()
-    }
+    //pub fn completion_resolve_support_properties(&self) -> HashSet<&str> {
+    //    self.capabilities
+    //        .text_document
+    //        .as_ref()
+    //        .and_then(|text| text.completion.as_ref())
+    //        .and_then(|completion_caps| completion_caps.completion_item.as_ref())
+    //        .and_then(|completion_item_caps| completion_item_caps.resolve_support.as_ref())
+    //        .map(|resolve_support| resolve_support.properties.iter())
+    //        .into_iter()
+    //        .flatten()
+    //        .map(|s| s.as_str())
+    //        .collect()
+    //}
 
-    pub fn completions_resolve_provider(&self) -> bool {
-        let client_capabilities = self.completion_resolve_support_properties();
-        let fields_to_resolve =
-            CompletionFieldsToResolve::from_client_capabilities(&client_capabilities);
-        fields_to_resolve != CompletionFieldsToResolve::empty()
-    }
+    //pub fn completions_resolve_provider(&self) -> bool {
+    //    let client_capabilities = self.completion_resolve_support_properties();
+    //    let fields_to_resolve =
+    //        CompletionFieldsToResolve::from_client_capabilities(&client_capabilities);
+    //    fields_to_resolve != CompletionFieldsToResolve::empty()
+    //}
 
     #[allow(non_snake_case)]
     pub fn has_completion_item_resolve_additionalTextEdits(&self) -> bool {

@@ -62,7 +62,7 @@ fn anon_component() {
 $x
 
 //- /resources/views/index.blade.php
-<x-f$0oo>
+<x-foo $0/>
 "#,
     );
     insta::assert_json_snapshot!(ranges, @r#"
@@ -88,5 +88,60 @@ fn layout_component() {
 <x-la$0yout>
         "#,
     );
-    expect_test::expect![[r#"[FileRange { path: "/resources/views\\components\\layout.blade.php", range: 0..0 }]"#]].assert_eq(&format!("{:?}", ranges));
+    expect_test::expect![[
+        r#"[FileRange { path: "/resources/views\\components\\layout.blade.php", range: 0..0 }]"#
+    ]]
+    .assert_eq(&format!("{:?}", ranges));
+
+    let ranges = fixture(
+        r#"
+//- /resources/views/components/layout.blade.php
+{{--
+--  This is a comment
+--}}
+
+//- /resources/views/index.blade.php
+<x-layout $0>
+</x-layout>
+        "#,
+    );
+    expect_test::expect![[
+        r#"[FileRange { path: "/resources/views\\components\\layout.blade.php", range: 0..0 }]"#
+    ]]
+    .assert_eq(&format!("{:?}", ranges));
+
+    let ranges = fixture(
+        r#"
+//- /resources/views/components/layout.blade.php
+{{--
+--  This is a comment
+--}}
+
+//- /resources/views/index.blade.php
+<x-layout>
+</x-layout $0>
+            "#,
+    );
+    expect_test::expect![[
+        r#"[FileRange { path: "/resources/views\\components\\layout.blade.php", range: 0..0 }]"#
+    ]]
+    .assert_eq(&format!("{:?}", ranges));
+}
+
+#[test]
+fn no_response() {
+    let ranges = fixture(
+        r#"
+//- /resources/views/components/layout.blade.php
+{{--
+--  This is a comment
+--}}
+
+//- /resources/views/index.blade.php
+<x-layout>
+$0
+</x-layout>
+            "#,
+    );
+    expect_test::expect![[r#"[]"#]].assert_eq(&format!("{:?}", ranges));
 }

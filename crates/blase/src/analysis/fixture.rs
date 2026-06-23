@@ -132,7 +132,19 @@ impl PositionFixture {
     }
 }
 
+pub fn analysis(fixture: &str) -> Analysis {
+    optional_position(fixture).0
+}
+
 pub fn position(fixture: &str) -> (Analysis, FilePosition) {
+    let (analysis, position) = optional_position(fixture);
+    (
+        analysis,
+        position.expect("text should contain cursor marker"),
+    )
+}
+
+pub fn optional_position(fixture: &str) -> (Analysis, Option<FilePosition>) {
     let mut host = AnalysisHost::default();
     let PositionFixture {
         fixture,
@@ -140,8 +152,5 @@ pub fn position(fixture: &str) -> (Analysis, FilePosition) {
     } = PositionFixture::parse(fixture);
     host.set_from_fixtures(fixture);
 
-    (
-        host.analysis(),
-        file_position.expect("text should contain cursor marker"),
-    )
+    (host.analysis(), file_position)
 }
