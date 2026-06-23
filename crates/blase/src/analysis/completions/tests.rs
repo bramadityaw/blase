@@ -1,6 +1,6 @@
 use std::{ops::Not, sync::LazyLock};
 
-use expect_test::Expect;
+use expect_test::{Expect, expect};
 use line_index::TextSize;
 
 use crate::{
@@ -24,9 +24,14 @@ const TEST_CONFIG: LazyLock<Config> = LazyLock::new(|| Config {
 fn get_completion_items(blade_fixture: &str) -> Vec<CompletionItem> {
     let (analysis, position) = fixture::position(blade_fixture);
     let contents = analysis.contents(&position.path).unwrap();
-    let offset = position.offset.into();
+    let offset: usize = position.offset.into();
+    let range = if offset == 0 {
+        offset..offset + 1
+    } else {
+        offset - 1..offset
+    };
     let trigger = contents
-        .get(offset - 1..offset)
+        .get(range)
         .and_then(|s| s.chars().next())
         .filter(|c| super::TRIGGER_CHARS.contains(c));
     let result = analysis
@@ -90,5 +95,18 @@ Some multi-line comment $0
 "#,
         ),
         String::new(),
+    );
+}
+
+#[test]
+fn empty_environment() {
+    check(
+        r#"
+//- /index.blade.php
+@if(true)
+$0
+@endif
+        "#,
+        expect![[""]],
     );
 }

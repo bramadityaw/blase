@@ -62,10 +62,6 @@ fn goto_def_for_component(
     } else {
         resolve_path::component_paths(&ComponentName::new(name)?, config)
     };
-    tracing::debug!(
-        class_path = class_path.as_str(),
-        resources_path = resources_path.as_str()
-    );
     let ranges = vec![class_path, resources_path]
         .into_iter()
         .filter_map(|path| {

@@ -46,15 +46,6 @@ impl Analysis {
     }
 
     #[tracing::instrument(skip(self, config))]
-    pub fn semantic_diagnostics(
-        &self,
-        config: &Config,
-        path: &Utf8Path,
-    ) -> Cancellable<Vec<diagnostics::Diagnostic>> {
-        self.with_db(|db| diagnostics::semantic_diagnostics(db, config, path))
-    }
-
-    #[tracing::instrument(skip(self, config))]
     pub fn full_diagnostics(
         &self,
         config: &Config,

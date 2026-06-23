@@ -88,3 +88,6 @@ fn filter_document(
 
     None
 }
+
+#[cfg(test)]
+mod tests;

@@ -43,11 +43,7 @@ impl std::fmt::Display for Name {
 
 impl Name {
     pub fn new(str: &str) -> Self {
-        let str = if str.len() <= 23 {
-            SmolStr::new_inline(str)
-        } else {
-            SmolStr::new(str)
-        };
+        let str = SmolStr::new(str);
         Self { str }
     }
 
@@ -544,6 +540,10 @@ impl Directive {
 
     pub fn is_end(&self) -> bool {
         self.lookup().starts_with("end")
+    }
+
+    pub fn is_start(&self) -> bool {
+        self.ender().is_some()
     }
 
     pub fn ender(&self) -> Option<Self> {

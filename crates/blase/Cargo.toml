@@ -7,6 +7,9 @@ edition = "2024"
 todo = "warn"
 unimplemented = "warn"
 
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(coverage,coverage_nightly)'] }
+
 [dependencies]
 # local crates
 ast.workspace = true
@@ -40,6 +43,8 @@ itertools.workspace = true
 cov-mark.workspace = true
 either.workspace = true
 serde.workspace = true
+proptest.workspace = true
+test-strategy.workspace = true
 
 [dev-dependencies]
 expect-test.workspace = true

@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 use ast::NodeExt;
 use either::Either;
 use itertools::Itertools;
@@ -94,7 +92,7 @@ fn layout_completion_item(
 
     let mut builder = TextEdit::builder();
     builder.delete(name_range);
-    let mut buf = format!("<{}>\n", dbg!(tag_name));
+    let mut buf = format!("<{}>\n", tag_name);
     buf.push_str("    $0\n");
     macros::format_to!(buf, "</{}>", tag_name);
     builder.insert(name_range.start(), buf);
@@ -241,21 +239,15 @@ fn component_attribute_completion(
     let attr_name = attr.name.as_str();
     let mut insert_text = String::new();
     let mut builder = TextEdit::builder();
-    'delete: {
-        if node.is::<ast::blade::AttributeName>() {
-            let Ok((start, end)) =
-                (|| -> Result<(TextSize, TextSize), std::num::TryFromIntError> {
-                    let start = TextSize::try_from(node.start_byte())?;
-                    let end = TextSize::try_from(node.end_byte())?;
-                    Ok((start, end))
-                })()
-            else {
-                tracing::error!(range = ?node.byte_range(), "TextSize overflow");
-                break 'delete;
-            };
-            let range = TextRange::new(start, end);
-            builder.delete(range);
-        }
+    if node.is::<ast::blade::AttributeName>() {
+        let (start, end) = (|| -> Result<(TextSize, TextSize), std::num::TryFromIntError> {
+            let start = TextSize::try_from(node.start_byte())?;
+            let end = TextSize::try_from(node.end_byte())?;
+            Ok((start, end))
+        })()
+        .expect("TextSize overflow");
+        let range = TextRange::new(start, end);
+        builder.delete(range);
     }
     macros::format_to!(insert_text, "{}=\"$0\"", attr_name);
     builder.insert(start_offset, insert_text);
@@ -308,10 +300,6 @@ fn directive_completion(
         }
         if ancestor.is::<ast::blade::Loops>() {
             directives.extend([Directive::Break, Directive::Continue]);
-        }
-        if !switched && ancestor.is::<ast::blade::Switch>() {
-            directives.extend([Directive::Break, Directive::Case, Directive::Default]);
-            switched = true;
         }
     }
 
@@ -532,6 +520,7 @@ pub enum ContextAnalysis<'a> {
     Document { name: Option<(u32, Name)> },
 }
 
+#[cfg(not(coverage))]
 impl<'a> std::fmt::Debug for ContextAnalysis<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -561,6 +550,7 @@ pub enum Tag<'a> {
     Html(Either<ast::blade::StartTag<'a>, ast::blade::SelfClosingTag<'a>>),
 }
 
+#[cfg(not(coverage))]
 impl<'a> std::fmt::Debug for Tag<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -604,55 +594,23 @@ impl<'a> Tag<'a> {
     }
 }
 
-fn is_directive_start(node: UntypedNode<'_>) -> bool {
-    ast::node_is!(
-        node,
-        ast::blade::symbols::Atif
-            | ast::blade::symbols::Atunless
-            | ast::blade::symbols::Atisset
-            | ast::blade::symbols::Atisset
-            | ast::blade::symbols::Atempty
-            | ast::blade::symbols::Atauth
-            | ast::blade::symbols::Atguest
-            | ast::blade::symbols::Atproduction
-            | ast::blade::symbols::Atenv
-            | ast::blade::symbols::Atsession
-            | ast::blade::symbols::Atcontext
-            | ast::blade::symbols::Athassection
-            | ast::blade::symbols::Atsectionmissing
-            | ast::blade::symbols::Atswitch
-            | ast::blade::symbols::Atfor
-            | ast::blade::symbols::Atforeach
-            | ast::blade::symbols::Atforelse
-            | ast::blade::symbols::Atwhile
-    )
-}
-
-fn analyze_context<'db>(ctx: &mut CompletionContext<'db>, config: &Config) -> ContextAnalysis<'db> {
+fn analyze_context<'db>(ctx: &CompletionContext<'db>, config: &Config) -> ContextAnalysis<'db> {
     let FilePosition { ref path, offset } = ctx.position;
-
-    'bail: {
-        let node = ctx.node;
-        if node.is_error() {
-            if let Some(start) = get_first_child(node) {
-                ctx.node = get_nearest_child(node, offset.into());
-                if is_directive_start(start) {
-                    let Some(directive) = Directive::from_node(start) else {
-                        break 'bail;
-                    };
-                    return ContextAnalysis::Directive(directive);
-                }
-            }
-        }
-    }
-
-    let ctx: &CompletionContext = ctx;
     let db = ctx.db;
 
     let ancestors = ctx.node.ancestors();
     for ancestor in ancestors {
-        let offset = offset.into();
+        if ancestor.is_error() {
+            if let Some(start) = get_first_child(ancestor) {
+                if let Some(directive) = Directive::from_node(start)
+                    && directive.is_start()
+                {
+                    return ContextAnalysis::Directive(directive);
+                }
+            }
+        }
         if ast::node_is!(ancestor, ast::blade::Document | ast::blade::Text) {
+            let offset = offset.into();
             let contents = &db.contents(path).unwrap();
             return ContextAnalysis::Document {
                 name: extract_ident(contents, offset)
@@ -668,7 +626,7 @@ fn analyze_context<'db>(ctx: &mut CompletionContext<'db>, config: &Config) -> Co
         }
     }
 
-    ContextAnalysis::Document { name: None }
+    unreachable!()
 }
 
 fn get_first_child(node: UntypedNode<'_>) -> Option<UntypedNode<'_>> {
@@ -698,13 +656,13 @@ impl<'db> CompletionContext<'db> {
             }
         }
 
-        let mut ctx = CompletionContext {
+        let ctx = CompletionContext {
             position,
             db,
             trigger_char,
             node,
         };
-        let analysis = analyze_context(&mut ctx, config);
+        let analysis = analyze_context(&ctx, config);
         Some((ctx, analysis))
     }
 
@@ -742,7 +700,7 @@ fn extract_ident(contents: &str, offset: usize) -> Option<(u32, &str)> {
 
 #[test]
 fn test_extract_ident() {
-    let text = "foo bar_baz p123 ";
+    let text = "foo bar_baz p123 89 2.04";
     assert_eq!(extract_ident(text, 2,), Some((0, "foo"))); // inside "foo"
     assert_eq!(extract_ident(text, 3,), Some((0, "foo"))); // at space, left "foo"
     assert_eq!(extract_ident(text, 4,), Some((4, "bar_baz"))); // space before 'b'
@@ -750,44 +708,46 @@ fn test_extract_ident() {
     assert_eq!(extract_ident(text, 11,), Some((4, "bar_baz"))); // space before "123"
     assert_eq!(extract_ident(text, 14,), Some((12, "p123"))); // inside digits
     assert_eq!(extract_ident(text, 16,), Some((12, "p123"))); // after end, left "123"
+    assert_eq!(extract_ident(text, 18,), None); // inside integer
+    assert_eq!(extract_ident(text, 20,), None); // inside float
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub struct CompletionFieldsToResolve {
-    pub resolve_label_details: bool,
-    pub resolve_tags: bool,
-    pub resolve_detail: bool,
-    pub resolve_documentation: bool,
-    pub resolve_filter_text: bool,
-    pub resolve_text_edit: bool,
-    pub resolve_command: bool,
-}
-
-impl CompletionFieldsToResolve {
-    pub fn from_client_capabilities(client_capability_fields: &HashSet<&str>) -> Self {
-        Self {
-            resolve_label_details: client_capability_fields.contains("labelDetails"),
-            resolve_tags: client_capability_fields.contains("tags"),
-            resolve_detail: client_capability_fields.contains("detail"),
-            resolve_documentation: client_capability_fields.contains("documentation"),
-            resolve_filter_text: client_capability_fields.contains("filterText"),
-            resolve_text_edit: client_capability_fields.contains("textEdit"),
-            resolve_command: client_capability_fields.contains("command"),
-        }
-    }
-
-    pub const fn empty() -> Self {
-        Self {
-            resolve_label_details: false,
-            resolve_tags: false,
-            resolve_detail: false,
-            resolve_documentation: false,
-            resolve_filter_text: false,
-            resolve_text_edit: false,
-            resolve_command: false,
-        }
-    }
-}
+//#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+//pub struct CompletionFieldsToResolve {
+//    pub resolve_label_details: bool,
+//    pub resolve_tags: bool,
+//    pub resolve_detail: bool,
+//    pub resolve_documentation: bool,
+//    pub resolve_filter_text: bool,
+//    pub resolve_text_edit: bool,
+//    pub resolve_command: bool,
+//}
+//
+//impl CompletionFieldsToResolve {
+//    pub fn from_client_capabilities(client_capability_fields: &HashSet<&str>) -> Self {
+//        Self {
+//            resolve_label_details: client_capability_fields.contains("labelDetails"),
+//            resolve_tags: client_capability_fields.contains("tags"),
+//            resolve_detail: client_capability_fields.contains("detail"),
+//            resolve_documentation: client_capability_fields.contains("documentation"),
+//            resolve_filter_text: client_capability_fields.contains("filterText"),
+//            resolve_text_edit: client_capability_fields.contains("textEdit"),
+//            resolve_command: client_capability_fields.contains("command"),
+//        }
+//    }
+//
+//    pub const fn empty() -> Self {
+//        Self {
+//            resolve_label_details: false,
+//            resolve_tags: false,
+//            resolve_detail: false,
+//            resolve_documentation: false,
+//            resolve_filter_text: false,
+//            resolve_text_edit: false,
+//            resolve_command: false,
+//        }
+//    }
+//}
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Default)]
 pub struct CompletionRelevance {
@@ -817,6 +777,26 @@ impl CompletionRelevance {
     /// to be relevant.
     pub fn is_relevant(&self) -> bool {
         self.score() > Self::BASE_SCORE
+    }
+}
+
+#[test_strategy::proptest]
+fn test_relevance(is_directive_end: bool, is_after_switch: bool) {
+    let relevance = CompletionRelevance {
+        is_directive_end,
+        is_after_switch,
+    };
+    if is_directive_end && is_after_switch {
+        assert!(relevance.score() == CompletionRelevance::BASE_SCORE);
+        assert!(!relevance.is_relevant());
+    }
+    if is_after_switch && !is_directive_end {
+        assert!(relevance.score() > CompletionRelevance::BASE_SCORE);
+        assert!(relevance.is_relevant());
+    }
+    if is_directive_end && !is_after_switch {
+        assert!(relevance.score() < CompletionRelevance::BASE_SCORE);
+        assert!(!relevance.is_relevant());
     }
 }
 

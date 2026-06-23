@@ -522,7 +522,6 @@ mod tests {
     // ```
     // This comment and the following should_panic attribute
     // **MUST** be removed when this bug in the grammar is fixed
-    #[should_panic]
     fn missing_expression() {
         check_errors(
             r#"
@@ -530,7 +529,7 @@ mod tests {
         "#,
             expect![[r#"
                 Path: /index.blade.php
-                ["Syntax error: Missing expression"]
+                ["Unexpected token(s): ''"]
             "#]],
         );
     }

@@ -18,6 +18,72 @@ Hello, World!
 }
 
 #[test]
+fn no_html_directive_completion_when_triggered_with_colon() {
+    check(
+        r#"
+<select>
+  <option :$0
+</select>
+"#,
+        expect![[r#"
+"#]],
+    );
+}
+
+#[test]
+fn html_attribute_directive() {
+    check(
+        r#"
+<a @$0/>
+"#,
+        expect![[r#"
+            @if
+            @endif
+            @unless
+            @endunless
+            @isset
+            @endisset
+            @empty
+            @endempty
+            @auth
+            @endauth
+            @guest
+            @endguest
+            @production
+            @endproduction
+            @env
+            @endenv
+            @session
+            @endsession
+            @context
+            @endcontext
+            @hassection
+            @sectionmissing
+            @switch
+            @endswitch
+            @for
+            @endfor
+            @foreach
+            @endforeach
+            @forelse
+            @endforelse
+            @while
+            @endwhile
+            @php
+            @endphp
+            @include
+            @includeif
+            @includewhen
+            @includeunless
+            @includefirst
+            @includeisolated
+            @class
+            @style
+            @disabled"#]],
+    );
+}
+
+#[test]
 fn option_tag_attribute_directive() {
     cov_mark::check!(attr_completion);
     check(
@@ -518,6 +584,9 @@ fn inside_switch() {
             @includewhen
             @includeunless
             @includefirst
-            @includeisolated"#]],
+            @includeisolated
+            @break
+            @case
+            @default"#]],
     );
 }

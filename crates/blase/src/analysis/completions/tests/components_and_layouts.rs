@@ -20,6 +20,21 @@ f$0
             x-foo
             x-foo-layout"#]],
     );
+
+    check(
+        r#"
+//- /resources/views/layouts/foo.blade.php
+Boo!
+//- /resources/views/components/foo.blade.php
+@props(['w', 'x'])
+//- /resources/views/components/bar.blade.php
+@props(['y', 'z'])
+
+//- /resources/views/index.blade.php
+p$0
+"#,
+        expect!["x-foo-layout"],
+    );
 }
 
 #[test]

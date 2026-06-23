@@ -32,6 +32,13 @@ impl From<Markup> for String {
     }
 }
 
+#[test_strategy::proptest]
+fn markup_reflexive(s: String) {
+    let mark = Markup(s.clone());
+
+    assert!(s == String::from(mark));
+}
+
 impl std::fmt::Display for Markup {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.0.fmt(f)

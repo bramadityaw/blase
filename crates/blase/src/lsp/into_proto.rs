@@ -278,7 +278,7 @@ pub(crate) fn location(
 }
 
 pub fn url(path: &Utf8Path) -> Url {
-    Url::from_file_path(dbg!(path.as_std_path())).unwrap()
+    Url::from_file_path(path.as_std_path()).unwrap()
 }
 
 pub(crate) fn position(line_index: &LineIndex, offset: TextSize) -> lsp_types::Position {
