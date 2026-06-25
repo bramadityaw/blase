@@ -17,7 +17,9 @@ fn check(blase_fixture: &str, expect: Expect) {
     let ranges = analysis
         .goto_def(&TEST_CONFIG, position)
         .expect("salsa cancelled");
+
     let mut actual = String::new();
+
     for FileRange { path, range } in ranges {
         macros::format_to!(actual, "{}", path);
         if !range.is_empty() {
@@ -26,14 +28,6 @@ fn check(blase_fixture: &str, expect: Expect) {
         actual.push('\n');
     }
     expect.assert_eq(&actual);
-}
-
-fn fixture(blase_fixture: &str) -> Vec<crate::db::FileRange> {
-    let (analysis, position) = fixture::position(blase_fixture);
-    let ranges = analysis
-        .goto_def(&TEST_CONFIG, position)
-        .expect("salsa cancelled");
-    ranges
 }
 
 #[test]
@@ -56,7 +50,7 @@ fn component_in_nested_directory() {
 
 #[test]
 fn class_component() {
-    let ranges = fixture(
+    check(
         r#"
 //- /app/View/Components/Foo.php
 <?php
@@ -73,24 +67,16 @@ Hello {{ $world }}
 //- /resources/views/index.blade.php
 <x-f$0oo/>
 "#,
+        expect![[r#"
+            /app/View/Components\Foo.php
+            /resources/views\components\foo.blade.php
+        "#]],
     );
-    insta::assert_json_snapshot!(ranges, @r#"
-    [
-      {
-        "path": "/app/View/Components\\Foo.php",
-        "range": "0..0"
-      },
-      {
-        "path": "/resources/views\\components\\foo.blade.php",
-        "range": "0..0"
-      }
-    ]
-    "#);
 }
 
 #[test]
 fn anon_component() {
-    let ranges = fixture(
+    check(
         r#"
 //- /resources/views/components/foo.blade.php
 @props(['x', 'y' => []])
@@ -102,20 +88,15 @@ $x
 //- /resources/views/index.blade.php
 <x-foo $0/>
 "#,
+        expect![[r#"
+            /resources/views\components\foo.blade.php
+        "#]],
     );
-    insta::assert_json_snapshot!(ranges, @r#"
-    [
-      {
-        "path": "/resources/views\\components\\foo.blade.php",
-        "range": "0..0"
-      }
-    ]
-    "#);
 }
 
 #[test]
 fn layout_component() {
-    let ranges = fixture(
+    check(
         r#"
 //- /resources/views/components/layout.blade.php
 {{--
@@ -125,13 +106,12 @@ fn layout_component() {
 //- /resources/views/index.blade.php
 <x-la$0yout>
         "#,
+        expect_test::expect![[r#"
+            /resources/views\components\layout.blade.php
+        "#]],
     );
-    expect_test::expect![[
-        r#"[FileRange { path: "/resources/views\\components\\layout.blade.php", range: 0..0 }]"#
-    ]]
-    .assert_eq(&format!("{:?}", ranges));
 
-    let ranges = fixture(
+    check(
         r#"
 //- /resources/views/components/layout.blade.php
 {{--
@@ -142,13 +122,12 @@ fn layout_component() {
 <x-layout $0>
 </x-layout>
         "#,
+        expect_test::expect![[r#"
+            /resources/views\components\layout.blade.php
+        "#]],
     );
-    expect_test::expect![[
-        r#"[FileRange { path: "/resources/views\\components\\layout.blade.php", range: 0..0 }]"#
-    ]]
-    .assert_eq(&format!("{:?}", ranges));
 
-    let ranges = fixture(
+    check(
         r#"
 //- /resources/views/components/layout.blade.php
 {{--
@@ -159,16 +138,15 @@ fn layout_component() {
 <x-layout>
 </x-layout $0>
             "#,
+        expect_test::expect![[r#"
+            /resources/views\components\layout.blade.php
+        "#]],
     );
-    expect_test::expect![[
-        r#"[FileRange { path: "/resources/views\\components\\layout.blade.php", range: 0..0 }]"#
-    ]]
-    .assert_eq(&format!("{:?}", ranges));
 }
 
 #[test]
 fn no_response() {
-    let ranges = fixture(
+    check(
         r#"
 //- /resources/views/components/layout.blade.php
 {{--
@@ -180,6 +158,6 @@ fn no_response() {
 $0
 </x-layout>
             "#,
+        expect_test::expect![""],
     );
-    expect_test::expect![[r#"[]"#]].assert_eq(&format!("{:?}", ranges));
 }
