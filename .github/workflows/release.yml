@@ -79,6 +79,8 @@ jobs:
   update-readme:
     name: Update release URL in README.md
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - name: Search and replace with latest tag
