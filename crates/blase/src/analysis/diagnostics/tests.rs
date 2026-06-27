@@ -56,6 +56,39 @@ fn check_diagnostic(fixture: &str, expect: Expect) {
 
     expect.assert_eq(&actual);
 }
+
+fn check_no_diagnostic(fixture: &str) {
+    let (analysis, position) = fixture::optional_position(fixture);
+    let fixture = PositionFixture::parse(fixture);
+    assert!(position.is_none());
+
+    let paths = fixture
+        .fixture
+        .into_iter()
+        .map(|f| f.path)
+        .collect::<Vec<_>>();
+
+    for path in paths {
+        let ds = analysis.full_diagnostics(&TEST_CONFIG, &path).unwrap();
+        assert!(ds.is_empty(), "{}", path);
+    }
+}
+
+#[test]
+fn slots() {
+    check_no_diagnostic(
+        r#"
+//- /resources/views/components/greeting.blade.php
+Hi {{ $name }}
+
+//- /resources/views/foo.blade.php
+<x-greeting>
+    <x-slot name="name">Brandon</x-slot>
+</x-greeting>
+        "#,
+    );
+}
+
 #[test]
 fn no_such_component() {
     check_diagnostic(

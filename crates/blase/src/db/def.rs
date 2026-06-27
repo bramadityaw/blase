@@ -815,6 +815,10 @@ impl ComponentName {
             return None;
         }
         let name = name.strip_prefix("x-")?;
+        // slots are not components
+        if name == "slot" {
+            return None;
+        }
         Some(ComponentName(Name::new(name)))
     }
 
