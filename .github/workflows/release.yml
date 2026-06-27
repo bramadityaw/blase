@@ -76,24 +76,24 @@ jobs:
             blase-win32-x64.vsix
           generate_release_notes: true
 
- update-readme:
-   name: Update release URL in README.md
-   runs-on: ubuntu-latest
-   steps:
-     - uses: actions/checkout@v4
-     - name: Search and replace with latest tag
-       run: |
-         update_tag ()
-         {
-             local path=$1
-             local tag=$2
-             local e="s/[0-9]\.[0-9]\.[0-9]/$tag/g"
-             sed -i -e $e $path
-         }
+  update-readme:
+    name: Update release URL in README.md
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Search and replace with latest tag
+        run: |
+          update_tag ()
+          {
+              local path=$1
+              local tag=$2
+              local e="s/[0-9]\.[0-9]\.[0-9]/$tag/g"
+              sed -i -e $e $path
+          }
 
-         update_tag ./README.md ${{ github.ref_name }}
+          update_tag ./README.md ${{ github.ref_name }}
 
-     - uses: peter-evans/create-pull-request@v8
-       with:
-         commit-message: |
-           chore: Update release tag in README.md to ${{ github.ref_name }}
+      - uses: peter-evans/create-pull-request@v8
+        with:
+          commit-message: |
+            chore: Update release tag in README.md to ${{ github.ref_name }}
