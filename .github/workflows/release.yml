@@ -93,7 +93,9 @@ jobs:
 
           update_tag ./README.md ${{ github.ref_name }}
 
-      - uses: peter-evans/create-pull-request@v8
+      - uses: EndBug/add-and-commit@v10
         with:
-          commit-message: |
+          default_author: github_actions
+          add: '*.md'
+          message: |
             chore: Update release tag in README.md to ${{ github.ref_name }}
