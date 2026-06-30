@@ -3,7 +3,7 @@
 
 use std::sync::Arc;
 
-use camino::Utf8Path;
+use camino::{Utf8Path, Utf8PathBuf};
 use convert_case::ccase;
 use itertools::Itertools;
 use smol_str::SmolStr;
@@ -58,10 +58,26 @@ impl Name {
 
 pub struct ViewName(Name);
 
+pub struct DirectoryTraversalError;
+
 impl ViewName {
+    pub fn new(s: &str) -> Result<Self, DirectoryTraversalError> {
+        if memchr::memmem::find(s.as_bytes(), "..".as_bytes()).is_some() {
+            return Err(DirectoryTraversalError);
+        }
+        Ok(Self(Name::new(s)))
+    }
+
+    pub fn path(&self, workspace_folder: &Utf8Path) -> Utf8PathBuf {
+        let mut path = self.as_str().replace('.', std::path::MAIN_SEPARATOR_STR);
+        path += ".blade.php";
+        workspace_folder.join(resolve_path::views_dir()).join(path)
+    }
+
     pub fn as_str(&self) -> &str {
         self.0.as_str()
     }
+
     pub fn from_document(
         db: &dyn DocumentDatabase,
         doc: &ParsedDocument,
