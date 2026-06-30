@@ -2,10 +2,10 @@ name: Release
 
 on:
   push:
-   branches:
-     - main
-#   tags:
-#     - "*.*.*"
+#  branches:
+#    - main
+   tags:
+     - "*.*.*"
 
 jobs:
   build-binary-and-extension:
@@ -75,29 +75,3 @@ jobs:
             blase-linux-x64.vsix
             blase-win32-x64.vsix
           generate_release_notes: true
-
-  update-readme:
-    name: Update release URL in README.md
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-      - name: Search and replace with latest tag
-        run: |
-          update_tag ()
-          {
-              local path=$1
-              local tag=$2
-              local e="s/[0-9]\.[0-9]\.[0-9]/$tag/g"
-              sed -i -e $e $path
-          }
-
-          update_tag ./README.md ${{ github.ref_name }}
-
-      - uses: EndBug/add-and-commit@v10
-        with:
-          push: origin main
-          add: '*.md'
-          message: |
-            chore: Update release tag in README.md to ${{ github.ref_name }}
