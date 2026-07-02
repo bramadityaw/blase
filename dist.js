@@ -20,6 +20,8 @@ const runCmd = (cmd, ...args) => {
     });
 }
 
+const isGithubActions = () => process.env.GITHUB_ACTIONS === 'true';
+
 let [_node, _script, rust_target, code_target, bin_name, tag, ..._] = process.argv;
 
 tag = tag ?? (() => {
@@ -55,7 +57,7 @@ const bin_dir = path.join('target', rust_target, 'release');
 fs.copyFileSync(path.join(bin_dir, bin_name), path.join(EXT_BIN_DIR, bin_name));
 
 withDir(EXT_DIR, () => {
-    runCmd('npm ci');
+    if (isGithubActions()) runCmd('npm ci');
     runCmd(
         'npx --no-install',
         'vsce package',
