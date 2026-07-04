@@ -10,8 +10,8 @@ fn completes_in_attr_value() {
 <span id="{$0">
 "#,
         expect![[r#"
-            {{  }}
-            {!!  !!}"#]],
+            {!!  !!}
+            {{  }}"#]],
     );
     check_edit(
         "{{  }}",
@@ -31,8 +31,8 @@ fn completes_after_lbrace() {
 Hello {$0
 "#,
         expect![[r#"
-            {{  }}
-            {!!  !!}"#]],
+            {!!  !!}
+            {{  }}"#]],
     );
     {
         cov_mark::check!(source_range_ctx_empty);
