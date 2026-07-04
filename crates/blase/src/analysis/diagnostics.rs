@@ -1,4 +1,5 @@
 use camino::Utf8Path;
+use either::Either;
 use line_index::{TextRange, TextSize};
 use tree_sitter::{Query, QueryCursor, StreamingIterator};
 use type_sitter::{HasChildren, Node, UntypedNode};
@@ -7,7 +8,7 @@ use crate::{
     config::Config,
     db::{
         DocumentDatabase, FileRange, ParsedDocument, RootDatabase, Severity,
-        def::{ComponentName, DirectoryTraversalError, LayoutName, ViewName, queries},
+        def::{ComponentName, LayoutName, ViewName, ViewNameError, queries},
     },
     resolve_path,
     util::FileType,
@@ -149,11 +150,25 @@ fn no_such_view(
                         acc.push(diagnostic);
                     }
                 }
-                Err(DirectoryTraversalError) => {
+                Err(ViewNameError::DirectoryTraversal) => {
                     let message = format!(
                         "view name `{}` contains `..`, which is not allowed",
                         view_name
                     );
+                    let diagnostic = Diagnostic {
+                        message,
+                        range,
+                        severity,
+                    };
+                    acc.push(diagnostic);
+                }
+                Err(ViewNameError::NotAView(kind)) => {
+                    let severity = Severity::Warning;
+                    let mut message = format!("`{}` is not a view, but a ", view_name);
+                    message += match kind {
+                        Either::Left(_component) => "component",
+                        Either::Right(_layout) => "layout",
+                    };
                     let diagnostic = Diagnostic {
                         message,
                         range,

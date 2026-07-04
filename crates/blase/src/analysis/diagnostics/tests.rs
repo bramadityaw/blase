@@ -91,6 +91,23 @@ Hi {{ $name }}
 }
 
 #[test]
+fn not_a_view() {
+    check_diagnostic(
+        r#"
+//- /resources/views/components/greeting.blade.php
+Hi {{ $name }}
+
+//- /resources/views/index.blade.php
+@include('components.greeting')
+        "#,
+        expect![[r#"
+            [
+              /resources/views/index.blade.php (9..30): warning: `components.greeting` is not a view, but a component,
+            ]"#]],
+    );
+}
+
+#[test]
 fn include_path_traversal() {
     check_diagnostic(
         "@include('../../../etc.passwd')",

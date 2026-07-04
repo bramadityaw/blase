@@ -5,6 +5,7 @@ use std::sync::Arc;
 
 use camino::{Utf8Path, Utf8PathBuf};
 use convert_case::ccase;
+use either::Either;
 use itertools::Itertools;
 use smol_str::SmolStr;
 use type_sitter::{HasChild, Node};
@@ -56,15 +57,30 @@ impl Name {
     }
 }
 
+#[derive(Debug)]
 pub struct ViewName(Name);
 
-pub struct DirectoryTraversalError;
+pub enum ViewNameError {
+    DirectoryTraversal,
+    NotAView(Either<ComponentName, LayoutName>),
+}
 
 impl ViewName {
-    pub fn new(s: &str) -> Result<Self, DirectoryTraversalError> {
+    pub fn name(&self) -> &Name {
+        &self.0
+    }
+    pub fn new(s: &str) -> Result<Self, ViewNameError> {
         if memchr::memmem::find(s.as_bytes(), "..".as_bytes()).is_some() {
-            return Err(DirectoryTraversalError);
+            return Err(ViewNameError::DirectoryTraversal);
         }
+
+        if let Some(doc) = LayoutName::new(s)
+            .map(Either::Right)
+            .or_else(|| ComponentName::new(s).map(Either::Left))
+        {
+            return Err(ViewNameError::NotAView(doc));
+        }
+
         Ok(Self(Name::new(s)))
     }
 
@@ -379,6 +395,15 @@ impl LayoutName {
     }
 
     pub fn new(name: &str) -> Option<LayoutName> {
+        // @include
+        if name.starts_with("components.") {
+            return None;
+        }
+        if let Some(name) = name.strip_prefix("layouts.") {
+            return Some(LayoutName::Name(Name::new(name)));
+        }
+
+        // Tags
         let name = name.strip_prefix("x-")?.strip_suffix("layout")?;
         let layout = if name.is_empty() {
             LayoutName::Default
@@ -827,6 +852,15 @@ impl ComponentName {
     }
 
     pub fn new(name: &str) -> Option<ComponentName> {
+        // @include
+        if name.starts_with("layouts.") {
+            return None;
+        }
+        if let Some(name) = name.strip_prefix("components.") {
+            return Some(ComponentName(Name::new(name)));
+        }
+
+        // Tags
         if name.ends_with("-layout") {
             return None;
         }
