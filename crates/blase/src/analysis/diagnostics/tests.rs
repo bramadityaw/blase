@@ -68,9 +68,10 @@ fn check_no_diagnostic(fixture: &str) {
         .map(|f| f.path)
         .collect::<Vec<_>>();
 
-    for path in paths {
-        let ds = analysis.full_diagnostics(&TEST_CONFIG, &path).unwrap();
-        assert!(ds.is_empty(), "{}", path);
+    for path in paths.iter() {
+        let ds = analysis.full_diagnostics(&TEST_CONFIG, path).unwrap();
+        dbg!(path, &ds);
+        assert!(ds.is_empty());
     }
 }
 
@@ -86,6 +87,84 @@ Hi {{ $name }}
     <x-slot name="name">Brandon</x-slot>
 </x-greeting>
         "#,
+    );
+}
+
+#[test]
+fn not_a_view() {
+    check_diagnostic(
+        r#"
+//- /resources/views/components/greeting.blade.php
+Hi {{ $name }}
+
+//- /resources/views/index.blade.php
+@include('components.greeting')
+        "#,
+        expect![[r#"
+            [
+              /resources/views/index.blade.php (9..30): warning: `components.greeting` is not a view, but a component,
+            ]"#]],
+    );
+}
+
+#[test]
+fn include_path_traversal() {
+    check_diagnostic(
+        "@include('../../../etc.passwd')",
+        expect![[r#"
+        [
+          /index.blade.php (9..30): error: view name `../../../etc.passwd` contains `..`, which is not allowed,
+        ]"#]],
+    );
+}
+
+#[test]
+fn has_such_view() {
+    check_no_diagnostic(
+        r#"
+//- /resources/views/view/name.blade.php
+Foo
+
+//- /resources/views/custom/admin.blade.php
+Bar
+
+//- /resources/views/admin.blade.php
+Baz
+
+//- /resources/views/index.blade.php
+@include('view.name', ['status' => 'complete'])
+@includeIf('view.name', ['status' => 'complete'])
+@includeWhen($boolean, 'view.name', ['status' => 'complete'])
+
+@includeUnless($boolean, 'view.name', ['status' => 'complete'])
+@includeFirst(['custom.admin', 'admin'], ['status' => 'complete'])
+@includeIsolated('view.name', ['user' => $user])
+        "#,
+    );
+}
+
+#[test]
+fn no_such_view() {
+    check_diagnostic(
+        r#"
+@include('view.name', ['status' => 'complete'])
+@includeIf('view.name', ['status' => 'complete'])
+@includeWhen($boolean, 'view.name', ['status' => 'complete'])
+
+@includeUnless($boolean, 'view.name', ['status' => 'complete'])
+@includeFirst(['custom.admin', 'admin'], ['status' => 'complete'])
+@includeIsolated('view.name', ['user' => $user])
+        "#,
+        expect![[r#"
+            [
+              /index.blade.php (9..20): error: cannot find view `view.name` in the current workspace,
+              /index.blade.php (59..70): error: cannot find view `view.name` in the current workspace,
+              /index.blade.php (121..132): error: cannot find view `view.name` in the current workspace,
+              /index.blade.php (186..197): error: cannot find view `view.name` in the current workspace,
+              /index.blade.php (240..254): error: cannot find view `custom.admin` in the current workspace,
+              /index.blade.php (256..263): error: cannot find view `admin` in the current workspace,
+              /index.blade.php (309..320): error: cannot find view `view.name` in the current workspace,
+            ]"#]],
     );
 }
 

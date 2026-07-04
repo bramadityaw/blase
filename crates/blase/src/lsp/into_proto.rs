@@ -131,6 +131,7 @@ fn completion_item(
     let mut text_edit = None;
     let source_range = item.source_range;
     for indel in &item.edit {
+        tracing::info!(?source_range, delete=?indel.delete);
         if indel.delete.contains_range(source_range) {
             // Extract this indel as the main edit
             text_edit = Some(if indel.delete == source_range {
@@ -145,7 +146,6 @@ fn completion_item(
                 self::completion_text_edit(line_index, insert_replace_support, indel2)
             })
         } else {
-            tracing::debug!(?source_range, delete=?indel.delete);
             assert!(source_range.intersect(indel.delete).is_none());
             let text_edit = self::text_edit(line_index, indel.clone());
             additional_text_edits.push(text_edit);
@@ -195,6 +195,7 @@ fn completion_item(
 fn completion_item_kind(kind: CompletionItemKind) -> lsp_types::CompletionItemKind {
     match kind {
         CompletionItemKind::Snippet => lsp_types::CompletionItemKind::SNIPPET,
+        CompletionItemKind::View => lsp_types::CompletionItemKind::FILE,
     }
 }
 

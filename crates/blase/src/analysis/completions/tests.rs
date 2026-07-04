@@ -53,10 +53,9 @@ fn get_completion_items(blade_fixture: &str) -> Vec<CompletionItem> {
 }
 
 pub fn completion_list(blade_fixture: &str) -> String {
-    let items = get_completion_items(blade_fixture)
-        .into_iter()
-        .map(|i| i.label)
-        .collect::<Vec<_>>();
+    let mut items = get_completion_items(blade_fixture);
+    items.sort_by_key(|i| i.label.clone());
+    let items = items.into_iter().map(|i| i.label).collect::<Vec<_>>();
     items.join("\n")
 }
 
@@ -108,5 +107,49 @@ $0
 @endif
         "#,
         expect![[""]],
+    );
+}
+
+#[test]
+fn view_includes() {
+    check(
+        r#"
+//- /resources/views/foo.blade.php
+Foo
+//- /resources/views/bar.blade.php
+Bar
+//- /resources/views/baz.blade.php
+Baz
+//- /resources/views/baz/jazz.blade.php
+Jazz
+//- /resources/views/index.blade.php
+@include('b$0')
+    "#,
+        expect![[r#"
+            bar
+            baz
+            baz.jazz"#]],
+    );
+}
+
+#[test]
+fn view_includes_edit() {
+    check_edit(
+        "baz.jazz",
+        r#"
+//- /resources/views/foo.blade.php
+Foo
+//- /resources/views/bar.blade.php
+Bar
+//- /resources/views/baz.blade.php
+Baz
+//- /resources/views/baz/jazz.blade.php
+Jazz
+//- /resources/views/index.blade.php
+@include('b$0')
+    "#,
+        expect![[r#"
+            @include('baz.jazz')
+    "#]],
     );
 }

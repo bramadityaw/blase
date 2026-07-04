@@ -1,4 +1,5 @@
 use camino::Utf8Path;
+use either::Either;
 use line_index::{TextRange, TextSize};
 use tree_sitter::{Query, QueryCursor, StreamingIterator};
 use type_sitter::{HasChildren, Node, UntypedNode};
@@ -7,7 +8,7 @@ use crate::{
     config::Config,
     db::{
         DocumentDatabase, FileRange, ParsedDocument, RootDatabase, Severity,
-        def::{ComponentName, LayoutName, queries},
+        def::{ComponentName, LayoutName, ViewName, ViewNameError, queries},
     },
     resolve_path,
     util::FileType,
@@ -16,6 +17,7 @@ use crate::{
 #[cfg(test)]
 mod tests;
 
+#[derive(Debug)]
 pub struct Diagnostic {
     pub message: String,
     pub range: FileRange,
@@ -74,6 +76,7 @@ pub fn semantic_diagnostics(
     };
     if document.filetype == FileType::Blade {
         no_such_component_or_layout(db, &document, config, &mut acc);
+        no_such_view(db, &document, config, &mut acc);
     }
     acc
 }
@@ -98,6 +101,83 @@ impl<'tree> Element<'tree> {
                 }
             })
             .next()
+    }
+}
+
+fn no_such_view(
+    db: &RootDatabase,
+    document: &ParsedDocument,
+    config: &Config,
+    acc: &mut Vec<Diagnostic>,
+) {
+    let contents = document.contents(db);
+    let root = document.root_node();
+    let root = root.raw();
+    let mut cursor = QueryCursor::new();
+    let query = Query::new(&root.language(), queries::VIEW_INCLUDE_STRING).unwrap();
+    let mut matches = cursor.matches(&query, *root, contents.as_bytes());
+    while let Some(m) = matches.next() {
+        for capture in m.captures {
+            let node = capture.node;
+            let Ok(string) = UntypedNode::new(node).downcast::<ast::blade::String>() else {
+                continue;
+            };
+            let view_name = contents
+                .get(string.byte_range())
+                .map(|s| s.trim_matches('\''))
+                .unwrap();
+            let severity = Severity::Error;
+            let range = FileRange {
+                path: document.source.path(db).to_owned(),
+                range: TextRange::new(
+                    TextSize::new(string.byte_range().start as u32),
+                    TextSize::new(string.byte_range().end as u32),
+                ),
+            };
+            match ViewName::new(view_name) {
+                Ok(name) => {
+                    let path = &name.path(&config.workspace_folder());
+                    if db.parsed_document(path).is_none() {
+                        let message = format!(
+                            "cannot find view `{}` in the current workspace",
+                            name.as_str()
+                        );
+                        let diagnostic = Diagnostic {
+                            message,
+                            range,
+                            severity,
+                        };
+                        acc.push(diagnostic);
+                    }
+                }
+                Err(ViewNameError::DirectoryTraversal) => {
+                    let message = format!(
+                        "view name `{}` contains `..`, which is not allowed",
+                        view_name
+                    );
+                    let diagnostic = Diagnostic {
+                        message,
+                        range,
+                        severity,
+                    };
+                    acc.push(diagnostic);
+                }
+                Err(ViewNameError::NotAView(kind)) => {
+                    let severity = Severity::Warning;
+                    let mut message = format!("`{}` is not a view, but a ", view_name);
+                    message += match kind {
+                        Either::Left(_component) => "component",
+                        Either::Right(_layout) => "layout",
+                    };
+                    let diagnostic = Diagnostic {
+                        message,
+                        range,
+                        severity,
+                    };
+                    acc.push(diagnostic);
+                }
+            };
+        }
     }
 }
 

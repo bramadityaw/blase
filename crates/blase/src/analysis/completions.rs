@@ -1,3 +1,5 @@
+use std::ops::Not;
+
 use ast::NodeExt;
 use either::Either;
 use itertools::Itertools;
@@ -9,7 +11,7 @@ use crate::{
     config::Config,
     db::{
         DocumentDatabase, FilePosition, ParsedDocument, RootDatabase, SourceDatabase,
-        def::{self, Component, ComponentAttr, DefDatabase, Directive, Layout, Name},
+        def::{self, Component, ComponentAttr, DefDatabase, Directive, Layout, Name, ViewName},
         text_edit::TextEdit,
     },
 };
@@ -27,9 +29,16 @@ pub fn completions(
     position: FilePosition,
     trigger_char: Option<char>,
 ) -> Option<Vec<CompletionItem>> {
-    let document = db.parsed_document(&position.path)?;
+    let path = &position.path;
+    let document = db.parsed_document(path)?;
+
+    tracing::info!(?path, ?trigger_char);
+
     let (ctx, analysis) = &CompletionContext::new(db, position, &document, trigger_char, config)?;
     let mut items: Vec<CompletionItem> = Vec::new();
+
+    tracing::info!(?ctx, ?analysis);
+
     if let Some('{') = trigger_char {
         return complete_echo(ctx, analysis);
     }
@@ -38,6 +47,7 @@ pub fn completions(
         let acc = &mut items;
 
         match analysis {
+            ContextAnalysis::String(string) => include_completion(&mut items, ctx, config, *string),
             ContextAnalysis::Directive(_directive) => {
                 directive_completion(acc, ctx, analysis);
                 //TODO: collect data on what kind of completions are helpful in a directive parameter.
@@ -52,7 +62,68 @@ pub fn completions(
             }
         }
     }
+
+    tracing::info!(completion_items=?&items);
+
     Some(items)
+}
+
+fn include_completion(
+    items: &mut Vec<CompletionItem>,
+    ctx: &CompletionContext,
+    config: &Config,
+    string: ast::blade::String,
+) {
+    let ws_path = &config.workspace_folder();
+    let db = ctx.db;
+    let path = &ctx.position.path;
+    let contents = &db.contents(path);
+    let string_contents = contents
+        .as_ref()
+        .and_then(|contents| contents.get(string.byte_range()))
+        .map(|s| s.trim_matches('\''));
+
+    tracing::info!(?string_contents);
+
+    if let Some(search) = string_contents
+        && search.is_empty().not()
+    {
+        tracing::info!(search, ?path);
+        let all_docs = db.all_documents();
+        let views = all_docs.into_iter().filter_map(|doc| {
+            let view = ViewName::from_document(db, doc, ws_path)?;
+            if view.as_str().contains(search) {
+                Some(view)
+            } else {
+                None
+            }
+        });
+
+        let cmps = views.map(|view| include_completion_item(view, string));
+        items.extend(cmps);
+    }
+}
+
+fn include_completion_item(view: ViewName, string: ast::blade::String) -> CompletionItem {
+    let mut builder = TextEdit::builder();
+    let start = string.start_byte() as u32 + 1;
+    let end = (string.end_byte() as u32)
+        .checked_sub(1)
+        .unwrap_or_default();
+    let range_between_quotes = TextRange::new(start.into(), end.into());
+
+    builder.delete(range_between_quotes);
+    let insert = view.as_str().to_owned();
+    builder.insert(start.into(), insert.clone());
+    let edit = builder.finish();
+    CompletionItem {
+        label: insert.clone(),
+        kind: CompletionItemKind::View,
+        edit,
+        source_range: range_between_quotes,
+        lookup: insert.into(),
+        relevance: CompletionRelevance::default(),
+    }
 }
 
 fn layout_completion(
@@ -329,7 +400,7 @@ fn directive_to_completion(
         insert += match directive {
             Directive::Foreach | Directive::Forelse => "($1 as $2)",
             Directive::For => "($1; $2; $3)",
-            Directive::IncludeWhen | Directive::IncludeUnless => "($1, '$2')",
+            Directive::IncludeWhen | Directive::IncludeUnless => "($1, $2)",
             _ => "($1)",
         };
     }
@@ -487,6 +558,16 @@ pub struct CompletionContext<'a> {
     node: type_sitter::UntypedNode<'a>,
 }
 
+impl<'a> std::fmt::Debug for CompletionContext<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("CompletionContext")
+            .field("position", &self.position)
+            .field("trigger_char", &self.trigger_char)
+            .field("node", &self.node)
+            .finish()
+    }
+}
+
 /// Get the nearest child of this node from the offset. Returns the node itself if it is a leaf node.
 fn get_nearest_child<'a, N: Node<'a>>(node: N, offset: usize) -> UntypedNode<'a> {
     let node = node.upcast();
@@ -518,6 +599,7 @@ pub enum ContextAnalysis<'a> {
     // If ident is Some, then the cursor is after an identifier and records the beginning offset of
     // that identifier and the identifier itself
     Document { name: Option<(u32, Name)> },
+    String(ast::blade::String<'a>),
 }
 
 #[cfg(not(coverage))]
@@ -539,6 +621,7 @@ impl<'a> std::fmt::Debug for ContextAnalysis<'a> {
                 }
                 f.finish()
             }
+            Self::String(s) => f.debug_tuple("String").field(s).finish(),
         }
     }
 }
@@ -609,6 +692,19 @@ fn analyze_context<'db>(ctx: &CompletionContext<'db>, config: &Config) -> Contex
                 }
             }
         }
+
+        if let Ok(string) = ancestor.downcast::<ast::blade::String>() {
+            let contents = &db.contents(path).unwrap();
+            if let Some(s) = contents
+                .get(string.byte_range())
+                .and_then(|s| s.strip_suffix('\''))
+                .and_then(|s| s.strip_prefix('\''))
+                && s.is_empty().not()
+            {
+                return ContextAnalysis::String(string);
+            }
+        }
+
         if ast::node_is!(ancestor, ast::blade::Document | ast::blade::Text) {
             let offset = offset.into();
             let contents = &db.contents(path).unwrap();
@@ -626,7 +722,7 @@ fn analyze_context<'db>(ctx: &CompletionContext<'db>, config: &Config) -> Contex
         }
     }
 
-    unreachable!()
+    ContextAnalysis::Document { name: None }
 }
 
 fn get_first_child(node: UntypedNode<'_>) -> Option<UntypedNode<'_>> {
@@ -678,6 +774,7 @@ impl<'db> CompletionContext<'db> {
             let (start, ident) = ident;
             return TextRange::at((*start).into(), (ident.as_str().len() as u32).into());
         }
+
         cov_mark::hit!(source_range_ctx_empty);
         TextRange::empty(self.position.offset)
     }

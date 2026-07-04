@@ -39,6 +39,7 @@ impl std::fmt::Debug for CompletionItem {
         } else {
             s.field("text_edit", &self.edit);
         }
+        s.field("source_range", &self.source_range);
         s.field("kind", &self.kind);
         s.finish()
     }
@@ -47,4 +48,5 @@ impl std::fmt::Debug for CompletionItem {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum CompletionItemKind {
     Snippet,
+    View,
 }
