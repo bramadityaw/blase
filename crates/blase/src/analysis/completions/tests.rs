@@ -13,7 +13,6 @@ use crate::{
 
 mod components_and_layouts;
 mod directives;
-mod echo;
 
 const TEST_CONFIG: LazyLock<Config> = LazyLock::new(|| Config {
     capabilities: async_lsp::lsp_types::ClientCapabilities::default(),

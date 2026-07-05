@@ -39,10 +39,6 @@ pub fn completions(
 
     tracing::info!(?ctx, ?analysis);
 
-    if let Some('{') = trigger_char {
-        return complete_echo(ctx, analysis);
-    }
-
     {
         let acc = &mut items;
 
@@ -433,123 +429,6 @@ fn directive_to_completion(
     }
 }
 
-fn complete_echo(
-    ctx: &CompletionContext,
-    analysis: &ContextAnalysis,
-) -> Option<Vec<CompletionItem>> {
-    let node = ctx.node;
-
-    for ancestor in node.ancestors() {
-        if ancestor.is::<ast::blade::PhpStatement>() {
-            let mut cursor = ancestor.walk();
-            let mut children = ancestor.untyped_children(&mut cursor);
-            let br = children.next();
-            if children.count() != 0
-                && let Some(br) = br
-                && !br.is::<ast::blade::symbols::LBraceLBrace>()
-            {
-                return None;
-            }
-            let offset = ctx.position.offset;
-            let cmp = "{{ $0 }}";
-            let range = TextRange::at(offset.checked_sub(2.into()).unwrap_or(offset), 2.into());
-            let item = {
-                let mut builder = TextEdit::builder();
-                builder.delete(range);
-                builder.insert(ctx.position.offset, cmp.to_owned());
-                let label = cmp.replace("$0", "");
-                let edit = builder.finish();
-                CompletionItem {
-                    lookup: SmolStr::new(&label),
-                    label,
-                    kind: CompletionItemKind::Snippet,
-                    edit,
-                    source_range: ctx.source_range(analysis),
-                    relevance: CompletionRelevance::default(),
-                }
-            };
-            return vec![item].into();
-        };
-
-        if ancestor.is_error() {
-            let mut cursor = ancestor.walk();
-            let mut child_tokens = ancestor.untyped_children(&mut cursor);
-            let first = child_tokens.next().unwrap_or(ancestor);
-            // Don't complete if inside {{  }}
-            if ast::node_is!(
-                first,
-                ast::blade::symbols::LBraceLBrace | ast::blade::symbols::LBraceNotNot
-            ) {
-                let stray_tokens = child_tokens.collect::<Vec<_>>();
-                if let &[.., snd_last, last] = stray_tokens.as_slice() {
-                    if ast::node_is!(
-                        last,
-                        ast::blade::symbols::RBraceRBrace | ast::blade::symbols::NotNotRBrace
-                    ) || (last.is::<ast::blade::symbols::RBrace>()
-                        && ast::node_is!(
-                            snd_last,
-                            ast::blade::symbols::RBrace | ast::blade::symbols::Not
-                        ))
-                    {
-                        return None;
-                    }
-                }
-            }
-        }
-    }
-
-    cov_mark::hit!(echo_complete);
-
-    let lbrace = TextSize::of('{');
-    let delete_range = {
-        let offset = ctx.position.offset;
-        let double_lbrace = TextSize::of("{{");
-        let range = TextRange::at(
-            offset.checked_sub(double_lbrace).unwrap_or(offset),
-            double_lbrace,
-        );
-        let contents = ctx.db.contents(&ctx.position.path).unwrap();
-        let no_braces = contents[range].replace('{', "");
-        match no_braces.len() {
-            1 => {
-                if no_braces == "!" {
-                    Some(range)
-                } else {
-                    Some(TextRange::at(
-                        offset.checked_sub(lbrace).unwrap_or(offset),
-                        lbrace,
-                    ))
-                }
-            }
-            0 => Some(range),
-            _ => unreachable!(),
-        }
-    };
-
-    let cmps = ["{{ $0 }}", "{!! $0 !!}"]
-        .into_iter()
-        .map(|cmp| {
-            let mut builder = TextEdit::builder();
-            if let Some(range) = delete_range {
-                cov_mark::hit!(delete_range);
-                builder.delete(range);
-            }
-            builder.insert(ctx.position.offset, cmp.to_owned());
-            let label = cmp.replace("$0", "");
-            let edit = builder.finish();
-            CompletionItem {
-                lookup: SmolStr::new(&label),
-                label,
-                kind: CompletionItemKind::Snippet,
-                edit,
-                source_range: ctx.source_range(analysis),
-                relevance: CompletionRelevance::default(),
-            }
-        })
-        .collect();
-    Some(cmps)
-}
-
 #[derive(Clone)]
 pub struct CompletionContext<'a> {
     db: &'a RootDatabase,
@@ -602,7 +481,6 @@ pub enum ContextAnalysis<'a> {
     String(ast::blade::String<'a>),
 }
 
-#[cfg(not(coverage))]
 impl<'a> std::fmt::Debug for ContextAnalysis<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -633,7 +511,6 @@ pub enum Tag<'a> {
     Html(Either<ast::blade::StartTag<'a>, ast::blade::SelfClosingTag<'a>>),
 }
 
-#[cfg(not(coverage))]
 impl<'a> std::fmt::Debug for Tag<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
