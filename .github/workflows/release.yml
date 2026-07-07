@@ -2,10 +2,10 @@ name: Release
 
 on:
   push:
-#  branches:
-#    - main
-   tags:
-     - "*.*.*"
+  branches:
+    - main
+#  tags:
+#    - "*.*.*"
 
 jobs:
   build-binary-and-extension:
@@ -35,17 +35,19 @@ jobs:
           cache: "npm"
           cache-dependency-path: editors/vscode/package-lock.json
       - name: Build binary executable and VS Code extension
-        run: node dist.js ${{ matrix.target }} ${{ matrix.code_target }} ${{ matrix.artifact_name }} ${{ github.ref_name }}
+        run: node dist.js ${{ matrix.target }} ${{ matrix.code_target }} ${{ matrix.artifact_name }}
       - name: Upload binary artifact
         uses: actions/upload-artifact@v4
         with:
-          name: blase-${{ matrix.target }}
+          if-no-files-found: error
+          name: blase-exe-${{ matrix.target }}
           path: target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
       - name: Upload VSIX artifact
         uses: actions/upload-artifact@v4
         with:
-          name: vsix-${{ matrix.code_target }}
-          path: editors/vscode/blase-${{ github.ref_name }}-${{ matrix.code_target }}.vsix
+          if-no-files-found: error
+          name: blase-vsix-${{ matrix.code_target }}
+          path: editors/vscode/blase-${{ matrix.code_target }}.vsix
 
   release:
     name: Upload to GitHub Release
@@ -56,16 +58,20 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: blase-x86_64-unknown-linux-gnu
+          name: blase-exe-x86_64-unknown-linux-gnu
+          if-no-files-found: error
       - uses: actions/download-artifact@v4
         with:
-          name: blase-x86_64-pc-windows-msvc
+          name: blase-exe-x86_64-pc-windows-msvc
+          if-no-files-found: error
       - uses: actions/download-artifact@v4
         with:
-          name: vsix-linux-x64
+          name: blase-vsix-linux-x64
+          if-no-files-found: error
       - uses: actions/download-artifact@v4
         with:
-          name: vsix-win32-x64
+          name: blase-vsix-win32-x64
+          if-no-files-found: error
       - name: Upload artifacts to release
         uses: softprops/action-gh-release@v2
         with:

@@ -22,14 +22,7 @@ const runCmd = (cmd, ...args) => {
 
 const isGithubActions = () => process.env.GITHUB_ACTIONS === 'true';
 
-let [_node, _script, rust_target, code_target, bin_name, tag, ..._] = process.argv;
-
-tag = tag ?? (() => {
-    const out = cproc.execSync('git describe', {
-        encoding: 'utf8',
-    }).toString().trim();
-    return out;
-})();
+let [_node, _script, rust_target, code_target, bin_name, ..._] = process.argv;
 
 rust_target = rust_target ?? 'x86_64-pc-windows-msvc';
 code_target = code_target ?? 'win32-x64';
@@ -62,6 +55,6 @@ withDir(EXT_DIR, () => {
         'npx --no-install',
         'vsce package',
         '--target', code_target,
-        '--out', `blase-${tag}-${code_target}.vsix`,
+        '--out', `blase-${code_target}.vsix`,
     );
 });
