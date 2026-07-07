@@ -2,10 +2,10 @@ name: Release
 
 on:
   push:
-    branches:
-      - main
-#   tags:
-#     - "*.*.*"
+#    branches:
+#      - main
+    tags:
+      - "*.*.*"
 
 jobs:
   build-binary-and-extension:
@@ -59,19 +59,15 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: blase-exe-x86_64-unknown-linux-gnu
-          if-no-files-found: error
       - uses: actions/download-artifact@v4
         with:
           name: blase-exe-x86_64-pc-windows-msvc
-          if-no-files-found: error
       - uses: actions/download-artifact@v4
         with:
           name: blase-vsix-linux-x64
-          if-no-files-found: error
       - uses: actions/download-artifact@v4
         with:
           name: blase-vsix-win32-x64
-          if-no-files-found: error
       - name: Upload artifacts to release
         uses: softprops/action-gh-release@v2
         with:
