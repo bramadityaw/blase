@@ -789,9 +789,15 @@ impl DocumentId for ComponentId {
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Component {
     pub(crate) id: ComponentId,
+}
+
+impl Component {
+    pub fn kind(&self, db: &dyn DocumentDatabase) -> ComponentKind {
+        self.id.kind(db)
+    }
 }
 
 #[derive(Clone, PartialEq, Eq)]

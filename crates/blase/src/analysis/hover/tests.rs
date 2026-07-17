@@ -40,7 +40,7 @@ fn no_hover_elsewhere() {
 class Foo extends Component
 {
     public function __construct(
-        $world.
+        $world,
     ){}
 }
 //- /resources/views/components/foo.blade.php
@@ -98,7 +98,7 @@ fn test_hover_on_class_component() {
 class Foo extends Component
 {
     public function __construct(
-        $world.
+        $world,
     ){}
 }
 //- /resources/views/components/foo.blade.php
@@ -114,6 +114,45 @@ Hello {{ $world }}
             ```blade
             <x-foo world="">
             ```
+        "#]],
+    );
+}
+
+#[test]
+fn hover_on_class_component_with_php_doc() {
+    check(
+        r#"
+//- /app/View/Components/Foo.php
+<?php
+/**
+*  This is a class comment
+*/
+class Foo extends Component
+{
+    /**
+    *  This is a constructor comment
+    *  @param any $world
+    */
+    public function __construct(
+        $world,
+    ){}
+}
+//- /resources/views/components/foo.blade.php
+Hello {{ $world }}
+
+//- /resources/views/index.blade.php
+<x-f$0oo>
+"#,
+        expect![[r#"
+            *x-foo*
+            *Project Path*: app\View\Components\Foo.php
+            ___
+            ```blade
+            <x-foo world="">
+            ```
+            This is a constructor comment
+
+            @param any $world
         "#]],
     );
 }

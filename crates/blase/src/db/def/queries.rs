@@ -4,7 +4,7 @@ pub(crate) const ALL_COMPONENTS_AND_LAYOUTS: &'static str = r#"
 ((element [(start_tag (tag_name) @tag) (self_closing_tag (tag_name) @tag)]) (#match? @tag "^x-([a-zA-Z\-]+::)?([a-zA-Z\-]\.?)+[a-zA-Z\-]+")) @component
 "#;
 
-pub fn component_and_layout_named(name: &str) -> String {
+pub(crate) fn component_and_layout_named(name: &str) -> String {
     format!(
         r#"
 ((element [(start_tag (tag_name) @tag) (self_closing_tag (tag_name) @tag)]) (#match? @tag "^{}")) @component
@@ -12,6 +12,16 @@ pub fn component_and_layout_named(name: &str) -> String {
         name
     )
 }
+
+pub(crate) const COMMENTS_FOR_CLASS_COMPONENTS: &'static str = r#"
+((class_declaration
+   (base_clause (name) @class)
+   body: (declaration_list
+     (comment) @doc
+     ((method_declaration name: (name) @method
+      (#eq? @method "__construct")))))
+ (#eq? @class "Component"))
+"#;
 
 pub(crate) const VIEW_INCLUDE_STRING: &'static str = r#"
 (inline_directive

@@ -23,7 +23,10 @@ async function startClient() {
 	};
 
 	const clientOptions: LanguageClientOptions = {
-		documentSelector: [{ scheme: 'file', language: 'blade' }]
+		documentSelector: [
+                    { scheme: 'file', language: 'php' },
+                    { scheme: 'file', language: 'blade' },
+                ]
 	};
 
 	client = new LanguageClient('blase', 'Blase', serverExecutable, clientOptions);

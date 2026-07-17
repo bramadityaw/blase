@@ -112,6 +112,7 @@ dependencies = [
  "line-index",
  "macros",
  "memchr",
+ "phpdoc-parser",
  "proptest",
  "salsa",
  "serde",
@@ -1002,6 +1003,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "67eabc2ef2a60eb7faa00097bd1ffdb5bd28e62bf39990626a582201b7a754e5"
 dependencies = [
  "siphasher",
+]
+
+[[package]]
+name = "phpdoc-parser"
+version = "0.18.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c4cebe14125ad0e9d588f822b82fac5f450406e7c5d12c37f029f4cfe132828a"
+dependencies = [
+ "serde",
 ]
 
 [[package]]

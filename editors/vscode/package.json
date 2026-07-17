@@ -11,7 +11,8 @@
     "Other"
   ],
   "activationEvents": [
-    "onLanguage:blade"
+    "onLanguage:blade",
+    "onLanguage:php"
   ],
   "contributes": {
     "commands": [

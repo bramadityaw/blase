@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::db::{
     def::DocumentId,
     documentation::{Documentation, HasDocs},
@@ -64,7 +66,7 @@ fn markup(
     buf.push_str(horizontal_rule);
     format_to!(buf, "```blade\n{}\n```", source_code);
     if let Some(doc) = doc {
-        let doc = String::from(doc);
+        let doc = doc.render();
         format_to!(buf, "\n{}", doc.trim());
     }
     Markup(buf)
@@ -76,7 +78,7 @@ pub struct HoverResult {
     pub(crate) range: TextRange,
 }
 
-#[non_exhaustive]
+#[derive(Clone, Debug)]
 enum Hoverable {
     Component(Component),
     Layout(Layout),
@@ -113,9 +115,8 @@ pub fn hover(
 
     match hoverable {
         Hoverable::Component(component) => {
-            let rel_path = component
-                .id
-                .path(db)
+            let path = component.id.path(db);
+            let rel_path = path
                 .strip_prefix(config.workspace_folder())
                 .expect("Component is not in the workspace folder. This is a bug");
             let mut label = format!("<{}", component.name(db).tag_name());
@@ -137,12 +138,17 @@ pub fn hover(
             );
             let docs = component.docs(db);
             let markup = markup(rel_path.to_string(), label, docs, is_neovim);
+            let hover_text: Option<Arc<str>> = db.contents(path).and_then(|contents| {
+                contents
+                    .get::<std::ops::Range<usize>>(node.byte_range())
+                    .map(Arc::from)
+            });
+            tracing::info!(markup = markup.to_string(), ?hover_text);
             Some(HoverResult { markup, range })
         }
         Hoverable::Layout(layout) => {
-            let rel_path = layout
-                .id
-                .path(db)
+            let path = layout.id.path(db);
+            let rel_path = path
                 .strip_prefix(config.workspace_folder())
                 .expect("Layout is not in the workspace folder. This is a bug");
             let tag_name = &layout.name(db).tag_name();
@@ -154,6 +160,12 @@ pub fn hover(
                 TextSize::new(node.byte_range().end as u32),
             );
             let markup = markup(rel_path.to_string(), label, None, is_neovim);
+            let hover_text: Option<Arc<str>> = db.contents(path).and_then(|contents| {
+                contents
+                    .get::<std::ops::Range<usize>>(node.byte_range())
+                    .map(Arc::from)
+            });
+            tracing::info!(markup = markup.to_string(), ?hover_text);
             Some(HoverResult { markup, range })
         }
     }
