@@ -101,7 +101,7 @@ impl HasDocs for Component {
                 let contents = document.contents(db);
                 let mut cursor = QueryCursor::new();
                 let query =
-                    Query::new(&root.language(), queries::COMMENTS_FOR_CLASS_COMPONENTS).unwrap();
+                    Query::new(&root.language(), queries::COMMENTS_FOR_CLASS_COMPONENTS).ok()?;
                 let mut matches = cursor.matches(&query, *root, contents.as_bytes());
                 let comment = (|| {
                     while let Some(m) = matches.next() {
