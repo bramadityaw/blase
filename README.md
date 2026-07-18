@@ -42,7 +42,7 @@ Download the binary executable for your platform and use the following config to
 ```lua
 vim.lsp.config.blase = {
     cmd = { 'path/to/blase' },
-    filetypes = { 'blade' },
+    filetypes = { 'blade', 'php' },
     root_markers = { 'artisan', 'composer.json', '.git' },
 }
 vim.lsp.enable 'blase'

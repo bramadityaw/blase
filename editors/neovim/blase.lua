@@ -1,6 +1,6 @@
 ---@type vim.lsp.Config
 return {
 	cmd = { "blase" },
-	filetypes = { "blade" },
+	filetypes = { "blade", "php" },
 	root_markers = { "artisan", "composer.json", ".git" },
 }
