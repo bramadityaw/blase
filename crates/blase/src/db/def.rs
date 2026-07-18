@@ -1,14 +1,15 @@
 //! This module defines data models of semantic objects
 //! in a Blade template
 
-use std::sync::Arc;
+use std::{collections::HashSet, sync::Arc};
 
 use camino::{Utf8Path, Utf8PathBuf};
 use convert_case::ccase;
 use either::Either;
 use itertools::Itertools;
 use smol_str::SmolStr;
-use type_sitter::{HasChild, Node};
+use tree_sitter::{Query, QueryCursor, StreamingIterator};
+use type_sitter::{HasChild, Node, UntypedNode};
 
 use crate::{
     config::Config,
@@ -135,6 +136,69 @@ impl ViewName {
 pub struct ComponentSignature {
     pub name: ComponentName,
     pub attrs: Option<Arc<[ComponentAttr]>>,
+    pub slots: Option<SlotCandidates>,
+}
+
+#[derive(Clone, PartialEq)]
+pub struct SlotCandidates {
+    set: HashSet<Slot>,
+}
+
+#[derive(Clone, PartialEq, Eq, Hash)]
+pub enum Slot {
+    /// {{ $slot }}
+    Default,
+    /// {{ $foo }}, {{ $bar }}, etc.
+    Named(SmolStr),
+}
+
+impl SlotCandidates {
+    /// Checks if the component or layout has the default {{ $slot }}
+    pub fn has_default(&self) -> bool {
+        self.set.contains(&Slot::Default)
+    }
+
+    pub fn get_all(&self) -> impl Iterator<Item = &Slot> {
+        self.set.iter()
+    }
+}
+
+#[salsa::tracked]
+impl SlotCandidates {
+    pub fn query(db: &dyn DocumentDatabase, id: impl DocumentId) -> Option<Self> {
+        let document = id.document(db);
+
+        let root = document.root_node();
+        let root = root.raw();
+        let contents = document.contents(db);
+        let mut cursor = QueryCursor::new();
+        let query = Query::new(&root.language(), queries::SLOT_CANDIDATE_NAMES).ok()?;
+        let mut matches = cursor.matches(&query, *root, contents.as_bytes());
+
+        let mut set = HashSet::new();
+
+        while let Some(m) = matches.next() {
+            for m in m.captures {
+                let node = UntypedNode::new(m.node);
+                let Ok(name) = node.downcast::<ast::blade::Name>() else {
+                    continue;
+                };
+
+                let name = document.text_for_node(db, name)?;
+                let slot = match name {
+                    "slot" => Slot::Default,
+                    name => Slot::Named(SmolStr::new(name)),
+                };
+                set.insert(slot);
+            }
+        }
+
+        if set.is_empty() {
+            return None;
+        }
+
+        Some(Self { set })
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -291,7 +355,6 @@ impl ComponentAttr {
         }
     }
 }
-
 #[salsa::tracked]
 impl ComponentSignature {
     pub fn query(db: &dyn DefDatabase, id: ComponentId) -> Arc<ComponentSignature> {
@@ -304,7 +367,8 @@ impl ComponentSignature {
             0 => None,
             _ => Some(Arc::from(attrs)),
         };
-        Arc::new(Self { name, attrs })
+        let slots = SlotCandidates::query(db, id);
+        Arc::new(Self { name, attrs, slots })
     }
 }
 

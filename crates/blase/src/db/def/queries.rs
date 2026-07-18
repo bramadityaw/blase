@@ -13,6 +13,12 @@ pub(crate) fn component_and_layout_named(name: &str) -> String {
     )
 }
 
+pub(crate) const SLOT_CANDIDATE_NAMES: &'static str = r#"
+(php_statement
+  (variable_name
+    (name) @slot))
+"#;
+
 pub(crate) const COMMENTS_FOR_CLASS_COMPONENTS: &'static str = r#"
 ((class_declaration
    (base_clause (name) @class)

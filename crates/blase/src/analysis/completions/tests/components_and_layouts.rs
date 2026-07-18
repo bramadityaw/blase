@@ -3,6 +3,42 @@ use expect_test::expect;
 use super::*;
 
 #[test]
+fn component_with_default_slot_edit() {
+    check_edit(
+        "x-foo",
+        r#"
+//- /resources/views/components/foo.blade.php
+{{ $slot }}
+//- /resources/views/index.blade.php
+f$0
+        "#,
+        expect![[r#"
+            <x-foo>
+                $0
+            </x-foo>
+        "#]],
+    );
+}
+
+#[test]
+fn component_with_named_slot_edit() {
+    check_edit(
+        "x-foo",
+        r#"
+//- /resources/views/components/foo.blade.php
+{{ $foo }}
+//- /resources/views/index.blade.php
+f$0
+        "#,
+        expect![[r#"
+            <x-foo>
+                $0
+            </x-foo>
+        "#]],
+    );
+}
+
+#[test]
 fn component_and_layout_completion() {
     check(
         r#"

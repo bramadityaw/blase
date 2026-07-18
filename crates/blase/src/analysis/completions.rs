@@ -210,6 +210,7 @@ fn component_completion_item(
     let signature = &component.signature(db);
     let attributes = &signature.attrs;
     let component_name = &signature.name;
+    let slots = &signature.slots;
     let label = component_name.tag_name();
 
     let mut builder = TextEdit::builder();
@@ -229,12 +230,21 @@ fn component_completion_item(
             macros::format_to!(buf, " {}=\"${}\"", name, i);
             i += 1;
             if i == len {
+                if slots.is_some() {
+                    continue;
+                }
                 i = 0;
             }
         }
     }
 
-    buf.push_str("/>");
+    if slots.is_some() {
+        buf.push_str(">");
+        buf.push_str("\n    $0");
+        macros::format_to!(buf, "\n</x-{}>", component_name);
+    } else {
+        buf.push_str("/>");
+    }
 
     builder.insert(name_range.start(), buf);
 
@@ -470,14 +480,15 @@ fn get_nearest_child<'a, N: Node<'a>>(node: N, offset: usize) -> UntypedNode<'a>
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum ContextAnalysis<'a> {
-    // The cursor is inside or after a directive
+    /// The cursor is inside or after a directive
     Directive(Directive),
-    // The cursor is inside an element; specifically the element's start tag or self-closing tag
+    /// The cursor is inside an element; specifically the element's start tag or self-closing tag
     Tag { kind: Tag<'a> },
-    // The cursor is in a Text or Document node.
-    // If ident is Some, then the cursor is after an identifier and records the beginning offset of
-    // that identifier and the identifier itself
+    /// The cursor is in a Text or Document node.
+    /// If ident is Some, then the cursor is after an identifier and records the beginning offset of
+    /// that identifier and the identifier itself
     Document { name: Option<(u32, Name)> },
+    /// The cursor is inside a 'string' node
     String(ast::blade::String<'a>),
 }
 
